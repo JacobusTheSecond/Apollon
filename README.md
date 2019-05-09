@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a projet by me and Vincent, under the instruction of Prof. Klein. 
+This is a project by me and Vincent, under the instruction of Prof. Klein. 
 
 The task is, to build a tool, that extracts a feature called "persistent Homology" from given picutres, and clusters them, based on this feature.
 
