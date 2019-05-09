@@ -18,4 +18,4 @@ Now given this Cell-Complex filtration, given by the Čech complex at every nonz
 
 ## Persistence Clustering
 
-Now given two such Persistence Diagrams, we want to calculate some sort of distance for the two. For this we chose the Wasserstein Distance, with the Bottleneck Distance beeing a special case of it. Since we dont know a sufficiently quick algorithm to calcuate the Bottleneck Distance yet, we chose to approximate it, with the Wasserstein Distance with sufficiently large p.
+Now given two such Persistence Diagrams, we want to calculate some sort of distance for the two. For this we chose the [Wasserstein Distance](https://en.wikipedia.org/wiki/Wasserstein_metric), with the Bottleneck Distance beeing a special case of it, namely if p is infinity. Since we dont know a sufficiently quick algorithm to calcuate the Bottleneck Distance yet, we chose to approximate it, with the Wasserstein Distance with sufficiently large p.
