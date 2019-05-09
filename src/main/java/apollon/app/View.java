@@ -1,5 +1,6 @@
-package apollon;
+package apollon.app;
 
+import apollon.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;

@@ -1,5 +1,7 @@
 package apollon;
 
+import apollon.app.AbstractApp;
+import apollon.app.View;
 import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;
 import com.panayotis.gnuplot.style.PlotStyle;

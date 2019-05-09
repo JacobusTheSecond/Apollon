@@ -1,5 +1,7 @@
 package apollon;
 
+import apollon.app.AbstractApp;
+import apollon.app.View;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 

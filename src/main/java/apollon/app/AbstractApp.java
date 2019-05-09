@@ -1,4 +1,4 @@
-package apollon;
+package apollon.app;
 
 import org.jetbrains.annotations.NotNull;
 
