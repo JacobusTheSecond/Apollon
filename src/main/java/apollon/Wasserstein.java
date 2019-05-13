@@ -97,6 +97,7 @@ public class Wasserstein {
             return 0;
         }, edge -> capacities[edge]);
 
+        // TODO: new EdmondsKarpMFImpl<>(graph).calculateMinCut(s, t)
         this.flow = new boolean[edges.get()];
         MinimumCostFlowAlgorithm.MinimumCostFlow<Integer> flow = new CapacityScalingMinimumCostFlow<Integer, Integer>().getMinimumCostFlow(problem);
         for (int edge : graph.edgeSet()) {
