@@ -22,8 +22,28 @@ public class Wasserstein extends AbstractGraphDistance {
 
     private boolean[] flow;
 
-    public Wasserstein() {
+    private int p;
+
+    public Wasserstein(int p){
         super(SimpleDirectedWeightedGraph::new);
+        if(p <= 0){
+            this.p = 1;
+        }else{
+            this.p = p;
+        }
+
+    }
+
+    public Wasserstein() {
+        this(1);
+    }
+
+    public void setP(int p){
+        this.p = p;
+    }
+
+    public int getP(){
+        return this.p;
     }
 
     @Override
@@ -46,8 +66,8 @@ public class Wasserstein extends AbstractGraphDistance {
         Arrays.fill(capacities, 1);
         setEdgeCapacities(y.length - x.length, sToH);
 
-        setEdgeWeights((a, b) -> factor(distance(a, b)), xToY);
-        setEdgeWeights((a, b) -> factor(distanceToDiagonal(b)), hToY);
+        setEdgeWeights((a, b) -> factor(exponent(distance(a, b),p)), xToY);
+        setEdgeWeights((a, b) -> factor(exponent(distanceToDiagonal(b),p)), hToY);
 
         MinimumCostFlowProblem<Integer, Integer> problem = new MinimumCostFlowProblem.MinimumCostFlowProblemImpl<>(getGraph(), node -> {
             if (node == s) {
@@ -62,7 +82,7 @@ public class Wasserstein extends AbstractGraphDistance {
         this.flow = new boolean[getEdgeCount()];
         MinimumCostFlowAlgorithm.MinimumCostFlow<Integer> flow = new CapacityScalingMinimumCostFlow<Integer, Integer>().getMinimumCostFlow(problem);
         forEachEdge(edge -> this.flow[edge] = flow.getFlow(edge) > 0);
-        return defactor(flow.getCost());
+        return root(defactor(flow.getCost()),p);
     }
 
     private void setEdgeCapacities(int value, @NotNull int[] edges) {

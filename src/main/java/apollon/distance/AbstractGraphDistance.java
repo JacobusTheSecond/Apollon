@@ -166,6 +166,14 @@ public abstract class AbstractGraphDistance extends AbstractDistance {
         return Math.round(FACTOR * value);
     }
 
+    protected double exponent(double value, int exponent) {
+        return Math.pow(value,exponent);
+    }
+
+    protected double root(double base, double n) {
+        return Math.pow(Math.E, Math.log(base)/n);
+    }
+
     protected double defactor(double value) {
         return value / FACTOR;
     }

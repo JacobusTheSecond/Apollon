@@ -38,6 +38,10 @@ public class DistanceApp extends AbstractApp {
         render();
     }
 
+    public void setP(int p){
+        wasserstein.setP(p);
+    }
+
     @Override
     public void keyPressed(int code, @NotNull View view) {
         switch (code) {
@@ -46,6 +50,21 @@ public class DistanceApp extends AbstractApp {
                 return;
             case KeyEvent.VK_DELETE:
                 clear();
+                return;
+            case KeyEvent.VK_1:
+                setP(1);
+                return;
+            case KeyEvent.VK_2:
+                setP(2);
+                return;
+            case KeyEvent.VK_3:
+                setP(3);
+                return;
+            case KeyEvent.VK_4:
+                setP(4);
+                return;
+            case KeyEvent.VK_5:
+                setP(5);
         }
     }
 
@@ -99,7 +118,7 @@ public class DistanceApp extends AbstractApp {
         wasserstein.forEachY((x, y) -> GeometryUtil.draw(x, y, g));
 
         g.setColor(Color.BLACK);
-        g.drawString("Wasserstein: " + wasserstein.getDistance(), 5, 10);
+        g.drawString("Wasserstein_"+wasserstein.getP()+": " + wasserstein.getDistance(), 5, 10);
     }
 
     private void renderBottleneck(@NotNull Graphics g) {
