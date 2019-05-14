@@ -92,6 +92,9 @@ public class WassersteinApp extends AbstractApp {
         g.setColor(Color.GREEN);
         wasserstein.forEachXY((x, y) -> GeometryUtil.draw(x, y, g));
         wasserstein.forEachY((x, y) -> GeometryUtil.draw(x, y, g));
+
+        g.setColor(Color.BLACK);
+        g.drawString("Wasserstein Distance: " + wasserstein.getValue(), 0, 10);
     }
 
     private void compute() {

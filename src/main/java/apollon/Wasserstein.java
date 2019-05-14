@@ -40,6 +40,8 @@ public class Wasserstein {
 
     private boolean computed = false;
 
+    private double flowValue;
+
     public void compute(@NotNull Collection<PointD> x, @NotNull Collection<PointD> y) {
         clear();
         if (x.size() <= y.size()) {
@@ -102,6 +104,7 @@ public class Wasserstein {
         for (int edge : graph.edgeSet()) {
             this.flow[edge] = flow.getFlow(edge) > 0;
         }
+        flowValue = flow.getCost()/FACTOR;
         computed = true;
     }
 
@@ -193,6 +196,10 @@ public class Wasserstein {
             PointD d = new PointD(mid, mid);
             operation.accept(y, d);
         });
+    }
+
+    public double getValue(){
+        return flowValue;
     }
 
     @FunctionalInterface
