@@ -5,11 +5,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jgrapht.alg.flow.GusfieldGomoryHuCutTree;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.kynosarges.tektosyne.geometry.PointD;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 public class Bottleneck extends AbstractGraphDistance {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bottleneck.class);
+
     private int s, t;
 
     private int[] x, y;
@@ -34,7 +38,7 @@ public class Bottleneck extends AbstractGraphDistance {
         int h = createVertex();
 
         sToX = createEdges(1, s, x);
-        sToH = createEdges(1, s, h);
+        sToH = createEdges(y.length, s, h);
         xToY = createEdges(1, x, y);
         hToY = createEdges(1, h, y);
         yToT = createEdges(1, y, t);
@@ -43,6 +47,10 @@ public class Bottleneck extends AbstractGraphDistance {
 
         //TODO Apply easy bounds
         max = GeometryUtil.findMin(edges.length, this::hasFlow);
+        if (max == -1) {
+            LOGGER.warn("AAAAAH");
+            return 0;
+        }
         return edges[max].getCost();
     }
 
@@ -74,9 +82,9 @@ public class Bottleneck extends AbstractGraphDistance {
     }
 
     public void forEachEdge(@NotNull BiConsumer<PointD, PointD> operation) {
-        for (int i = 0; i < max; i++) {
-            //            edges[i].run(operation);
-        }
+        // for (int i = 0; i < max; i++) {
+        //     edges[i].run(operation);
+        // }
     }
 
     public void forMaxEdge(@NotNull BiConsumer<PointD, PointD> operation) {

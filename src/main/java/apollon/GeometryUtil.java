@@ -127,28 +127,6 @@ public class GeometryUtil {
         catch (Exception ignored) {}
     }
 
-    public static <T> int findMax(int start, @NotNull List<T> list, @NotNull Predicate<T> predicate) {
-        return findMax(start, list.size(), list::get, predicate);
-    }
-
-    public static <T> int findMax(int start, @NotNull T[] array, @NotNull Predicate<T> predicate) {
-        return findMax(start, array.length, index -> array[index], predicate);
-    }
-
-    public static <T> int findMax(int start, int length, @NotNull IntFunction<T> function, @NotNull Predicate<T> predicate) {
-        return findMax(start, length, index -> predicate.test(function.apply(index)));
-    }
-
-    public static int findMax(int start, int length, @NotNull IntPredicate predicate) {
-        if (length == 0) {
-            return -1;
-        }
-        if (predicate.test(start)) {
-            return start + 1 + findMax(length - start - 1, index -> predicate.test(index + start + 1));
-        }
-        return start > 0 ? findMax(start, predicate) : -1;
-    }
-
     public static <T> int findMax(@NotNull List<T> list, @NotNull Predicate<T> predicate) {
         return findMax(list.size(), list::get, predicate);
     }
@@ -180,28 +158,6 @@ public class GeometryUtil {
         return predicate.test(min) ? min : min - 1;
     }
 
-    public static <T> int findMin(int start, @NotNull List<T> list, @NotNull Predicate<T> predicate) {
-        return findMin(start, list.size(), list::get, predicate);
-    }
-
-    public static <T> int findMin(int start, @NotNull T[] array, @NotNull Predicate<T> predicate) {
-        return findMin(start, array.length, index -> array[index], predicate);
-    }
-
-    public static <T> int findMin(int start, int length, @NotNull IntFunction<T> function, @NotNull Predicate<T> predicate) {
-        return findMin(start, length, index -> predicate.test(function.apply(index)));
-    }
-
-    public static int findMin(int start, int length, @NotNull IntPredicate predicate) {
-        if (length == 0) {
-            return -1;
-        }
-        if (predicate.test(start)) {
-            return start > 0 ? findMin(start, predicate) : -1;
-        }
-        return start + 1 + findMin(length - start - 1, index -> predicate.test(index + start + 1));
-    }
-
     public static <T> int findMin(@NotNull List<T> list, @NotNull Predicate<T> predicate) {
         return findMin(list.size(), list::get, predicate);
     }
@@ -215,6 +171,24 @@ public class GeometryUtil {
     }
 
     public static int findMin(int length, @NotNull IntPredicate predicate) {
-        return findMax(length, index -> predicate.test(length - 1 - index));
+        if (length == 0) {
+            return -1;
+        }
+        int min = 0;
+        int max = length - 1;
+        int index;
+        while (min < max) {
+            index = (min + max) / 2;
+            if (predicate.test(index)) {
+                max = index - 1;
+            }
+            else {
+                min = index + 1;
+            }
+        }
+        if (predicate.test(min)) {
+            return min;
+        }
+        return min == length - 1 ? -1 : min + 1;
     }
 }
