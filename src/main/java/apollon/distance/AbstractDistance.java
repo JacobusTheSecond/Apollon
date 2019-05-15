@@ -69,7 +69,7 @@ public abstract class AbstractDistance implements Distance {
         return yPoints.size();
     }
 
-    protected void clear() {
+    public void clear() {
         computed = false;
         xPoints.clear();
         yPoints.clear();

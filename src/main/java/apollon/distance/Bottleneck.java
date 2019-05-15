@@ -2,18 +2,15 @@ package apollon.distance;
 
 import apollon.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
-import org.jgrapht.alg.flow.GusfieldGomoryHuCutTree;
-import org.jgrapht.graph.SimpleWeightedGraph;
+import org.jgrapht.alg.flow.PushRelabelMFImpl;
+import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
 import org.kynosarges.tektosyne.geometry.PointD;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.stream.IntStream;
 
 public class Bottleneck extends AbstractGraphDistance {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Bottleneck.class);
-
     private int s, t;
 
     private int[] x, y;
@@ -22,11 +19,9 @@ public class Bottleneck extends AbstractGraphDistance {
 
     private Edge[] edges;
 
-    private int max;
+    private boolean[] flow;
 
-    public Bottleneck() {
-        super(SimpleWeightedGraph::new);
-    }
+    private int max;
 
     @Override
     protected double compute() {
@@ -35,26 +30,37 @@ public class Bottleneck extends AbstractGraphDistance {
 
         s = createVertex();
         t = createVertex();
-        int h = createVertex();
+        int h = isDifferent() ? createVertex() : -1;
 
         sToX = createEdges(1, s, x);
-        sToH = createEdges(y.length, s, h);
+        sToH = isDifferent() ? createEdges(y.length - x.length, s, h) : new int[0];
         xToY = createEdges(1, x, y);
-        hToY = createEdges(1, h, y);
+        hToY = isDifferent() ? createEdges(1, h, y) : new int[0];
         yToT = createEdges(1, y, t);
 
         edges = computeSortedEdges();
 
         //TODO Apply easy bounds
         max = GeometryUtil.findMin(edges.length, this::hasFlow);
-        if (max == -1) {
-            LOGGER.warn("AAAAAH");
-            return 0;
+        addRemoveEdges(max);
+        MaximumFlowAlgorithm.MaximumFlow<Integer> flow = new PushRelabelMFImpl<>(getGraph()).getMaximumFlow(s, t);
+        this.flow = new boolean[edges.length];
+        for (int i = 0; i < max; i++) {
+            this.flow[i] = flow.getFlow(edges[i].getEdge()) > 0;
         }
         return edges[max].getCost();
     }
 
+    protected boolean isDifferent() {
+        return x.length < y.length;
+    }
+
     private boolean hasFlow(int index) {
+        addRemoveEdges(index);
+        return new PushRelabelMFImpl<>(getGraph()).calculateMinCut(s, t) == y.length;
+    }
+
+    private void addRemoveEdges(int index) {
         for (int i = 0; i < edges.length; i++) {
             if (i <= index) {
                 edges[i].add();
@@ -63,7 +69,6 @@ public class Bottleneck extends AbstractGraphDistance {
                 edges[i].remove();
             }
         }
-        return new GusfieldGomoryHuCutTree<>(getGraph()).calculateMinCut(s, t) == y.length;
     }
 
     @NotNull
@@ -82,9 +87,7 @@ public class Bottleneck extends AbstractGraphDistance {
     }
 
     public void forEachEdge(@NotNull BiConsumer<PointD, PointD> operation) {
-        // for (int i = 0; i < max; i++) {
-        //     edges[i].run(operation);
-        // }
+        IntStream.range(0, edges.length).filter(index -> flow[index]).mapToObj(index -> edges[index]).forEach(edge -> edge.run(operation));
     }
 
     public void forMaxEdge(@NotNull BiConsumer<PointD, PointD> operation) {
@@ -112,6 +115,10 @@ public class Bottleneck extends AbstractGraphDistance {
             cost = h ? distanceToDiagonal(target) : distance(source, target);
         }
 
+        public int getEdge() {
+            return edge;
+        }
+
         public double getCost() {
             return cost;
         }
@@ -125,7 +132,7 @@ public class Bottleneck extends AbstractGraphDistance {
 
         public void add() {
             if (!active) {
-                addEdge(source, target, edge, cost);
+                addEdge(source, target, edge, 1);
                 active = true;
             }
         }

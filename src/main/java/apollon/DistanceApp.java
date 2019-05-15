@@ -22,6 +22,10 @@ public class DistanceApp extends AbstractApp {
 
     private final List<Point> y = new ArrayList<>();
 
+    private boolean drawWasserstein = true;
+
+    private boolean drawBottleneck = true;
+
     public DistanceApp() {
         super(1920, 1080);
         render();
@@ -35,6 +39,7 @@ public class DistanceApp extends AbstractApp {
         else if (button == MouseEvent.BUTTON3) {
             this.y.add(new Point(x, y));
         }
+        clearDistances();
         render();
     }
 
@@ -46,13 +51,27 @@ public class DistanceApp extends AbstractApp {
                 return;
             case KeyEvent.VK_DELETE:
                 clear();
+                return;
+            case KeyEvent.VK_W:
+                drawWasserstein = !drawWasserstein;
+                render();
+                return;
+            case KeyEvent.VK_B:
+                drawBottleneck = !drawBottleneck;
+                render();
         }
     }
 
     private void clear() {
         x.clear();
         y.clear();
+        clearDistances();
         render();
+    }
+
+    private void clearDistances() {
+        wasserstein.clear();
+        bottleneck.clear();
     }
 
     @Override
@@ -94,10 +113,11 @@ public class DistanceApp extends AbstractApp {
         if (!wasserstein.isComputed()) {
             return;
         }
-        g.setColor(Color.GREEN);
-        wasserstein.forEachXY((x, y) -> GeometryUtil.draw(x, y, g));
-        wasserstein.forEachY((x, y) -> GeometryUtil.draw(x, y, g));
-
+        if (drawWasserstein) {
+            g.setColor(Color.GREEN);
+            wasserstein.forEachXY((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+            wasserstein.forEachY((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+        }
         g.setColor(Color.BLACK);
         g.drawString("Wasserstein: " + wasserstein.getDistance(), 5, 10);
     }
@@ -106,11 +126,12 @@ public class DistanceApp extends AbstractApp {
         if (!bottleneck.isComputed()) {
             return;
         }
-        g.setColor(Color.BLUE);
-        bottleneck.forEachEdge((x, y) -> GeometryUtil.draw(x, y, g));
-        g.setColor(Color.RED);
-        bottleneck.forMaxEdge((x, y) -> GeometryUtil.draw(x, y, g));
-
+        if (drawBottleneck) {
+            g.setColor(Color.BLUE);
+            bottleneck.forEachEdge((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+            g.setColor(Color.RED);
+            bottleneck.forMaxEdge((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+        }
         g.setColor(Color.BLACK);
         g.drawString("Bottleneck: " + bottleneck.getDistance(), 5, 25);
     }

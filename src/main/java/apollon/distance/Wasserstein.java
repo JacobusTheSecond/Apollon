@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jgrapht.alg.flow.mincost.CapacityScalingMinimumCostFlow;
 import org.jgrapht.alg.flow.mincost.MinimumCostFlowProblem;
 import org.jgrapht.alg.interfaces.MinimumCostFlowAlgorithm;
-import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 import org.kynosarges.tektosyne.geometry.PointD;
 
 import java.util.Arrays;
@@ -22,10 +21,6 @@ public class Wasserstein extends AbstractGraphDistance {
 
     private boolean[] flow;
 
-    public Wasserstein() {
-        super(SimpleDirectedWeightedGraph::new);
-    }
-
     @Override
     protected double compute() {
         x = createVertices(getXPoints());
@@ -33,12 +28,12 @@ public class Wasserstein extends AbstractGraphDistance {
 
         s = createVertex();
         t = createVertex();
-        int h = createVertex();
+        int h = isDifferent() ? createVertex() : -1;
 
         sToX = createEdges(0, s, x);
-        sToH = createEdges(0, s, h);
+        sToH = isDifferent() ? createEdges(0, s, h) : new int[0];
         xToY = createEdges(0, x, y);
-        hToY = createEdges(0, h, y);
+        hToY = isDifferent() ? createEdges(0, h, y) : new int[0];
         yToT = createEdges(0, y, t);
 
         capacities = new int[getEdgeCount()];
@@ -63,6 +58,10 @@ public class Wasserstein extends AbstractGraphDistance {
         MinimumCostFlowAlgorithm.MinimumCostFlow<Integer> flow = new CapacityScalingMinimumCostFlow<Integer, Integer>().getMinimumCostFlow(problem);
         forEachEdge(edge -> this.flow[edge] = flow.getFlow(edge) > 0);
         return defactor(flow.getCost());
+    }
+
+    protected boolean isDifferent() {
+        return x.length < y.length;
     }
 
     private void setEdgeCapacities(int value, @NotNull int[] edges) {
