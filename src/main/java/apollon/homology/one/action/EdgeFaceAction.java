@@ -2,18 +2,19 @@ package apollon.homology.one.action;
 
 import apollon.homology.one.Circle;
 import apollon.homology.one.HomologyOne;
+import apollon.homology.one.Site;
 import org.jetbrains.annotations.NotNull;
 
 public class EdgeFaceAction extends Action {
     private final Circle circle;
 
-    private final int a;
+    private final Site a;
 
-    private final int b;
+    private final Site b;
 
     private final int edge;
 
-    public EdgeFaceAction(int a, int b, int edge, @NotNull Circle circle, double radius) {
+    public EdgeFaceAction(@NotNull Site a, @NotNull Site b, int edge, @NotNull Circle circle, double radius) {
         super(radius);
         this.circle = circle;
         this.a = a;
@@ -23,8 +24,18 @@ public class EdgeFaceAction extends Action {
 
     @Override
     public void execute(@NotNull HomologyOne homology) {
-        homology.addEdge(a, b, edge, getRadius());
+        homology.addEdge(a, b, edge);
         homology.addRelation(circle, getRadius());
+    }
+
+    @Override
+    public void remove(@NotNull int... edges) {
+        circle.remove(edges);
+    }
+
+    @Override
+    public void replace(int edge, @NotNull int... edges) {
+        circle.replace(edge, edges);
     }
 
     @Override

@@ -18,6 +18,16 @@ public class FaceAction extends Action {
     }
 
     @Override
+    public void remove(@NotNull int... edges) {
+        circle.remove(edges);
+    }
+
+    @Override
+    public void replace(int edge, @NotNull int... edges) {
+        circle.replace(edge, edges);
+    }
+
+    @Override
     public String toString() {
         return "Face: " + circle;
     }

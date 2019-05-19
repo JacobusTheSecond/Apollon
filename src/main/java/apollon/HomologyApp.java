@@ -5,6 +5,7 @@ import apollon.app.View;
 import apollon.feature.Harris;
 import apollon.homology.one.HomologyOne;
 import apollon.homology.zero.HomologyZero;
+import apollon.util.GeometryUtil;
 import apollon.voronoi.Voronoi;
 import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;

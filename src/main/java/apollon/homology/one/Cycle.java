@@ -2,7 +2,7 @@ package apollon.homology.one;
 
 import org.jetbrains.annotations.NotNull;
 
-public class Cycle implements Comparable<Cycle> {
+public class Cycle implements EdgeContainer, Comparable<Cycle> {
     private final Circle circle;
 
     private final double born;
@@ -37,6 +37,22 @@ public class Cycle implements Comparable<Cycle> {
     @NotNull
     public Circle getCircle() {
         return circle;
+    }
+
+    @Override
+    public void remove(@NotNull int[] edges) {
+        circle.remove(edges);
+    }
+
+    @Override
+    public void replace(int edge, @NotNull int[] edges) {
+        circle.replace(edge, edges);
+    }
+
+    public void killIfEmpty(double radius) {
+        if (circle.isEmpty()) {
+            kill(radius);
+        }
     }
 
     @Override

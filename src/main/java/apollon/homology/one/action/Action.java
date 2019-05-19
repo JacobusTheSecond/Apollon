@@ -1,9 +1,10 @@
 package apollon.homology.one.action;
 
+import apollon.homology.one.EdgeContainer;
 import apollon.homology.one.HomologyOne;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class Action implements Comparable<Action> {
+public abstract class Action implements EdgeContainer, Comparable<Action> {
     private final double radius;
 
     protected Action(double radius) {

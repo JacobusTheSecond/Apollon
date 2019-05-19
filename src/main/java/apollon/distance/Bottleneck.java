@@ -1,6 +1,6 @@
 package apollon.distance;
 
-import apollon.GeometryUtil;
+import apollon.util.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.alg.flow.PushRelabelMFImpl;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;

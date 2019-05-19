@@ -1,6 +1,6 @@
 package apollon.voronoi;
 
-import apollon.GeometryUtil;
+import apollon.util.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.kynosarges.tektosyne.geometry.VoronoiEdge;
@@ -125,6 +125,17 @@ public class VEdge implements Comparable<VEdge> {
 
     public double getLength() {
         return length;
+    }
+
+    public int getOtherSite(int site) {
+        return getSiteAIndex() == site ? getSiteBIndex() : getSiteAIndex();
+    }
+
+    public int getOtherSite(@NotNull VEdge edge) {
+        if (getSiteAIndex() == edge.getSiteAIndex() || getSiteAIndex() == edge.getSiteBIndex()) {
+            return getSiteBIndex();
+        }
+        return getSiteAIndex();
     }
 
     @Override

@@ -1,4 +1,4 @@
-package apollon;
+package apollon.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
@@ -63,7 +63,7 @@ public class GeometryUtil {
     }
 
     public static void draw(@NotNull String name, @NotNull Point a, @NotNull Point b, @NotNull Graphics g) {
-        g.drawString(name, (a.x + b.x) / 2 + GeometryUtil.RADIUS, (a.y + b.y) / 2);
+        g.drawString(name, (a.x + b.x) / 2 + RADIUS, (a.y + b.y) / 2);
         draw(a, b, g);
     }
 
@@ -80,7 +80,7 @@ public class GeometryUtil {
     }
 
     public static void draw(@NotNull String name, @NotNull Point point, @NotNull Graphics g) {
-        g.drawString(name, point.x + GeometryUtil.RADIUS, point.y);
+        g.drawString(name, point.x + RADIUS, point.y);
         draw(point, g);
     }
 
@@ -89,7 +89,16 @@ public class GeometryUtil {
     }
 
     public static void draw(@NotNull Point point, @NotNull Graphics g) {
-        g.fillOval(point.x - GeometryUtil.RADIUS, point.y - GeometryUtil.RADIUS, GeometryUtil.DIAMETER, GeometryUtil.DIAMETER);
+        g.fillOval(point.x - RADIUS, point.y - RADIUS, DIAMETER, DIAMETER);
+    }
+
+    public static void drawCircle(@NotNull String name, @NotNull PointD point, int radius, @NotNull Graphics g) {
+        drawCircle(name, convert(point), radius, g);
+    }
+
+    public static void drawCircle(@NotNull String name, @NotNull Point point, int radius, @NotNull Graphics g) {
+        g.drawString(name, point.x + radius + RADIUS, point.y);
+        drawCircle(point, radius, g);
     }
 
     public static void drawCircle(@NotNull PointD point, int radius, @NotNull Graphics g) {

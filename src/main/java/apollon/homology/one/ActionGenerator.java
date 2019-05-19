@@ -1,10 +1,10 @@
 package apollon.homology.one;
 
-import apollon.GeometryUtil;
 import apollon.homology.one.action.Action;
 import apollon.homology.one.action.EdgeAction;
 import apollon.homology.one.action.EdgeFaceAction;
 import apollon.homology.one.action.FaceAction;
+import apollon.util.GeometryUtil;
 import apollon.voronoi.VEdge;
 import apollon.voronoi.Voronoi;
 import org.jetbrains.annotations.NotNull;
@@ -47,18 +47,36 @@ public class ActionGenerator {
         VEdge[] edges = voronoi.getEdges(edgeIndices);
         PointD[] sites = getSites(edges);
         if (GeometryUtil.isInside(vertex, sites)) {
-            actions.add(new FaceAction(new Circle(edgeIndices), sites[0].subtract(vertex).length()));
+            actions.add(new FaceAction(createCircle(edges), sites[0].subtract(vertex).length()));
             return;
         }
         VEdge edge = Arrays.stream(edges).max(Comparator.naturalOrder()).orElseThrow(RuntimeException::new);
         ignoredEdges[edge.getIndex()] = true;
-        actions.add(new EdgeFaceAction(edge.getSiteAIndex(), edge.getSiteBIndex(), edge.getIndex(), new Circle(edgeIndices), edge.getLength() / 2));
+        actions.add(new EdgeFaceAction(getSite(edge.getSiteAIndex()), getSite(edge.getSiteBIndex()), edge.getIndex(), createCircle(edges), edge.getLength() / 2));
     }
 
     private void computeEdge(@NotNull VEdge edge) {
         if (!ignoredEdges[edge.getIndex()]) {
-            actions.add(new EdgeAction(edge.getSiteAIndex(), edge.getSiteBIndex(), edge.getIndex(), edge.getLength() / 2));
+            actions.add(new EdgeAction(getSite(edge.getSiteAIndex()), getSite(edge.getSiteBIndex()), edge.getIndex(), edge.getLength() / 2));
         }
+    }
+
+    @NotNull
+    private Circle createCircle(@NotNull VEdge[] edges) {
+        Circle circle = new Circle();
+        int current = edges[0].getOtherSite(edges[1]);
+        int next;
+        for (VEdge edge : edges) {
+            next = edge.getOtherSite(current);
+            circle.append(current <= next ? edge.getIndex() : Graph.inverse(edge.getIndex()));
+            current = next;
+        }
+        return circle;
+    }
+
+    @NotNull
+    private Site getSite(int site) {
+        return graph.getSite(site);
     }
 
     @NotNull

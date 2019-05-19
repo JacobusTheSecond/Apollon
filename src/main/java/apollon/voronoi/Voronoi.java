@@ -1,6 +1,6 @@
 package apollon.voronoi;
 
-import apollon.GeometryUtil;
+import apollon.util.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.kynosarges.tektosyne.geometry.RectD;

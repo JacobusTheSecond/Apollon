@@ -1,5 +1,6 @@
 package apollon;
 
+import apollon.util.GeometryUtil;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;

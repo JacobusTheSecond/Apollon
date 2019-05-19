@@ -1,11 +1,12 @@
 package apollon.homology.one;
 
-import apollon.GeometryUtil;
+import apollon.util.GeometryUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.GraphPath;
 import org.jgrapht.Graphs;
 import org.jgrapht.alg.shortestpath.DijkstraShortestPath;
-import org.jgrapht.graph.Multigraph;
+import org.jgrapht.graph.Pseudograph;
 import org.kynosarges.tektosyne.geometry.PointD;
 
 import java.awt.*;
@@ -14,7 +15,7 @@ import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 public class Graph {
-    private final Multigraph<Integer, Integer> graph = new Multigraph<>(null, null, false);
+    private final Pseudograph<Site, Integer> graph = new Pseudograph<>(null, null, false);
 
     public void clear() {
         graph.removeAllVertices(new HashSet<>(graph.vertexSet()));
@@ -22,21 +23,38 @@ public class Graph {
 
     public void init(int size) {
         clear();
-        IntStream.range(0, size).forEach(graph::addVertex);
+        IntStream.range(0, size).mapToObj(Site::new).forEach(graph::addVertex);
     }
 
-    public void addEdge(int a, int b, int edge) {
+    public void addEdge(@NotNull Site a, @NotNull Site b, int edge) {
         graph.addEdge(a, b, edge);
     }
 
     @NotNull
-    public Optional<Circle> find(int a, int b) {
-        return Optional.ofNullable(new DijkstraShortestPath<>(graph).getPath(a, b)).map(GraphPath::getEdgeList).map(GeometryUtil::toArray).map(Circle::new);
+    public Optional<Circle> find(@NotNull Site a, @NotNull Site b) {
+        GraphPath<Site, Integer> path = new DijkstraShortestPath<>(graph).getPath(a, b);
+        if (path == null) {
+            return Optional.empty();
+        }
+        Circle circle = new Circle();
+        Site current = path.getStartVertex();
+        Site next;
+        for (int edge : path.getEdgeList()) {
+            next = getOtherSite(edge, current);
+            circle.append(current.index() <= next.index() ? edge : Graph.inverse(edge));
+            current = next;
+        }
+        return Optional.of(circle);
     }
 
     @NotNull
-    public int[] getSites() {
-        return GeometryUtil.toArray(graph.vertexSet());
+    public Set<Site> getSites() {
+        return graph.vertexSet();
+    }
+
+    @NotNull
+    public Site getSite(int index) {
+        return getSites().stream().filter(site -> site.getIndex() == index).findFirst().orElseThrow(RuntimeException::new);
     }
 
     @NotNull
@@ -46,40 +64,118 @@ public class Graph {
         return edges;
     }
 
-    public int getSameSite(int a, int b) {
-        int site = graph.getEdgeSource(a);
-        if (site == graph.getEdgeSource(b) || site == graph.getEdgeTarget(b)) {
-            return site;
-        }
-        return graph.getEdgeTarget(a);
-    }
-
-    public int getOtherSite(int edge, int site) {
+    @NotNull
+    public Site getOtherSite(int edge, @NotNull Site site) {
         return Graphs.getOppositeVertex(graph, edge, site);
     }
 
     public void render(@NotNull Graphics g, @NotNull IntFunction<PointD> sitePoints) {
         g.setColor(Color.CYAN);
-        graph.vertexSet().forEach(vertex -> GeometryUtil.draw("" + vertex, sitePoints.apply(vertex), g));
+        graph.vertexSet().forEach(vertex -> GeometryUtil.draw("" + vertex, sitePoints.apply(vertex.getIndex()), g));
 
         g.setColor(Color.CYAN);
-        Map<Set<Integer>, Set<Integer>> multiEdges = new HashMap<>();
+        Map<Set<Site>, Set<Integer>> multiEdges = new HashMap<>();
         graph.edgeSet().forEach(edge -> multiEdges.computeIfAbsent(getSites(edge), k -> new HashSet<>()).add(edge));
         multiEdges.forEach((sites, edges) -> {
-            Iterator<Integer> iterator = sites.iterator();
-            int a = iterator.next();
-            int b = iterator.next();
-            GeometryUtil.draw(edges.toString(), sitePoints.apply(a), sitePoints.apply(b), g);
+            if (sites.size() == 1) {
+                GeometryUtil.drawCircle(edges.toString(), sitePoints.apply(sites.iterator().next().getIndex()), 10, g);
+                return;
+            }
+            Iterator<Site> iterator = sites.iterator();
+            Site a = iterator.next();
+            Site b = iterator.next();
+            GeometryUtil.draw(edges.toString(), sitePoints.apply(a.getIndex()), sitePoints.apply(b.getIndex()), g);
         });
     }
 
     @NotNull
-    private Set<Integer> getSites(int edge) {
+    private Set<Site> getSites(@NotNull int... edges) {
+        return IntStream.of(edges).mapToObj(this::getSites).reduce(new HashSet<>(), (a, b) -> {
+            a.addAll(b);
+            return a;
+        });
+    }
+
+    @NotNull
+    private Set<Site> getSites(int edge) {
+        edge = positive(edge);
         return new HashSet<>(Arrays.asList(graph.getEdgeSource(edge), graph.getEdgeTarget(edge)));
     }
 
     @Override
     public String toString() {
         return graph.toString();
+    }
+
+    public boolean hasNoLoops(@NotNull Circle circle) {
+        for (int edge : circle) {
+            if (isLoop(edge)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isNonLoop(int edge) {
+        return !isLoop(edge);
+    }
+
+    private boolean isLoop(int edge) {
+        edge = positive(edge);
+        return graph.getEdgeSource(edge).equals(graph.getEdgeTarget(edge));
+    }
+
+    public boolean hasOnlyLoops(@NotNull Circle circle) {
+        for (int edge : circle) {
+            if (isNonLoop(edge)) {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public void remove(@NotNull int... edges) {
+        Set<Site> sites = getSites(edges);
+        Site elderly = Collections.min(sites);
+        IntStream.of(edges).map(Graph::positive).forEach(graph::removeEdge);
+        Map<Integer, Site> oldEdges = new HashMap<>();
+        sites.forEach(site -> graph.edgesOf(site).forEach(edge -> oldEdges.put(edge, Graphs.getOppositeVertex(graph, edge, site))));
+        sites.forEach(graph::removeVertex);
+        sites.forEach(site -> site.set(elderly));
+        graph.addVertex(elderly);
+        oldEdges.forEach((edge, target) -> graph.addEdge(elderly, target, edge));
+    }
+
+    public int getSingleNonLoop(@NotNull Circle circle) {
+        for (int edge : circle.getSingleEdges()) {
+            if (isNonLoop(edge)) {
+                return edge;
+            }
+        }
+        throw new RuntimeException("Cannot find single non-loop: " + circle);
+    }
+
+    @NotNull
+    public int[] getNonLoops(@NotNull Circle circle) {
+        return circle.stream().filter(this::isNonLoop).map(Graph::positive).toArray();
+    }
+
+    public static boolean equals(int a, int b) {
+        return a == b || a == inverse(b);
+    }
+
+    @NotNull
+    public static int[] inverse(@NotNull int... edges) {
+        int[] inverse = IntStream.of(edges).map(Graph::inverse).toArray();
+        ArrayUtils.reverse(inverse);
+        return inverse;
+    }
+
+    public static int inverse(int edge) {
+        return -edge - 1;
+    }
+
+    public static int positive(int edge) {
+        return edge >= 0 ? edge : inverse(edge);
     }
 }

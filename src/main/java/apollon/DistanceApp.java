@@ -4,6 +4,7 @@ import apollon.app.AbstractApp;
 import apollon.app.View;
 import apollon.distance.Bottleneck;
 import apollon.distance.Wasserstein;
+import apollon.util.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
