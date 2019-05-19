@@ -92,6 +92,14 @@ public class GeometryUtil {
         g.fillOval(point.x - GeometryUtil.RADIUS, point.y - GeometryUtil.RADIUS, GeometryUtil.DIAMETER, GeometryUtil.DIAMETER);
     }
 
+    public static void drawCircle(@NotNull PointD point, int radius, @NotNull Graphics g) {
+        drawCircle(convert(point), radius, g);
+    }
+
+    public static void drawCircle(@NotNull Point point, int radius, @NotNull Graphics g) {
+        g.drawOval(point.x - radius, point.y - radius, 2 * radius, 2 * radius);
+    }
+
     @NotNull
     public static int[] toArray(@NotNull Collection<Integer> integers) {
         int[] array = new int[integers.size()];

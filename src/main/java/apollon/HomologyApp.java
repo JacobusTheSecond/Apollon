@@ -2,25 +2,29 @@ package apollon;
 
 import apollon.app.AbstractApp;
 import apollon.app.View;
+import apollon.feature.Harris;
+import apollon.homology.one.HomologyOne;
+import apollon.homology.zero.HomologyZero;
+import apollon.voronoi.Voronoi;
 import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;
 import com.panayotis.gnuplot.style.PlotStyle;
 import com.panayotis.gnuplot.style.Style;
-import apollon.homology.one.HomologyOne;
-import apollon.homology.zero.HomologyZero;
-import apollon.voronoi.Voronoi;
 import org.jetbrains.annotations.NotNull;
+import org.kynosarges.tektosyne.geometry.PointD;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
-public class VoronoiApp extends AbstractApp {
-    private final List<Point> points = new ArrayList<>();
+public class HomologyApp extends AbstractApp {
+    private final List<PointD> points = new ArrayList<>();
 
     private final Voronoi voronoi = new Voronoi();
 
@@ -38,7 +42,7 @@ public class VoronoiApp extends AbstractApp {
 
     private int selected = -1;
 
-    public VoronoiApp() {
+    public HomologyApp() {
         super(1920, 1080);
         render();
     }
@@ -55,7 +59,7 @@ public class VoronoiApp extends AbstractApp {
 
     private int findPoint(int x, int y) {
         for (int i = 0; i < points.size(); i++) {
-            Point point = points.get(i);
+            PointD point = points.get(i);
             if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < GeometryUtil.RADIUS_SQUARED) {
                 return i;
             }
@@ -78,7 +82,7 @@ public class VoronoiApp extends AbstractApp {
 
     private void pressed(int x, int y, int button) {
         if (button == MouseEvent.BUTTON1) {
-            points.add(new Point(x, y));
+            points.add(new PointD(x, y));
             update();
             render();
         }
@@ -95,18 +99,21 @@ public class VoronoiApp extends AbstractApp {
     @Override
     public void mouseDrag(int x, int y, int modifiers, @NotNull View view) {
         if ((modifiers & MouseEvent.BUTTON1_DOWN_MASK) != 0) {
-            getSelected().ifPresent(selected -> {
-                selected.x = x;
-                selected.y = y;
-                update();
-                render();
-            });
+            updateSelected(x, y);
         }
     }
 
     @NotNull
-    private Optional<Point> getSelected() {
+    private Optional<PointD> getSelected() {
         return selected >= 0 ? Optional.of(points.get(selected)) : Optional.empty();
+    }
+
+    private void updateSelected(int x, int y) {
+        if (selected >= 0) {
+            points.set(selected, new PointD(x, y));
+            update();
+            render();
+        }
     }
 
     @Override
@@ -156,7 +163,23 @@ public class VoronoiApp extends AbstractApp {
                 return;
             case KeyEvent.VK_P:
                 plot();
+                return;
+            case KeyEvent.VK_O:
+                load();
         }
+    }
+
+    private void load() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        File file = chooser.getSelectedFile();
+        List<PointD> points = Harris.extract(file.getAbsolutePath(), getWidth(), getHeight());
+        clear();
+        this.points.addAll(points);
+        update();
+        render();
     }
 
     private void plot() {
@@ -223,21 +246,17 @@ public class VoronoiApp extends AbstractApp {
 
     private void renderPoints(@NotNull Graphics g) {
         for (int i = 0; i < points.size(); i++) {
-            Point point = points.get(i);
+            PointD point = points.get(i);
             g.setColor(selected >= 0 && i == selected ? Color.DARK_GRAY : Color.BLACK);
-            renderPoint(point, g);
+            GeometryUtil.draw(point, g);
             renderCircle(point, g);
         }
     }
 
-    private void renderPoint(@NotNull Point point, @NotNull Graphics g) {
-        g.fillOval(point.x - GeometryUtil.RADIUS, point.y - GeometryUtil.RADIUS, GeometryUtil.DIAMETER, GeometryUtil.DIAMETER);
-    }
-
-    private void renderCircle(@NotNull Point point, @NotNull Graphics g) {
+    private void renderCircle(@NotNull PointD point, @NotNull Graphics g) {
         if (radius > GeometryUtil.RADIUS) {
             g.setColor(Color.GREEN);
-            g.drawOval(point.x - radius, point.y - radius, 2 * radius, 2 * radius);
+            GeometryUtil.drawCircle(point, radius, g);
         }
     }
 
@@ -267,13 +286,13 @@ public class VoronoiApp extends AbstractApp {
     }
 
     private void update() {
-        voronoi.compute(GeometryUtil.toPointD(points), getWidth(), getHeight());
+        voronoi.compute(points, getWidth(), getHeight());
         homologyZero.compute();
         homologyOne.compute();
     }
 
     public static void main(String[] args) {
-        new VoronoiApp().await();
+        new HomologyApp().await();
         System.exit(0);
     }
 }
