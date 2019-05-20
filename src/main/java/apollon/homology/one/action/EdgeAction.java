@@ -6,6 +6,8 @@ import apollon.homology.one.Site;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+
 public class EdgeAction extends Action {
     private final Site a;
 
@@ -23,6 +25,17 @@ public class EdgeAction extends Action {
     @Override
     public void execute(@NotNull HomologyOne homology) {
         homology.addEdgeAndCycle(a, b, edge, getRadius());
+    }
+
+    @NotNull
+    @Override
+    public Color getColor() {
+        return Color.CYAN;
+    }
+
+    @Override
+    protected int getIndex() {
+        return 0;
     }
 
     @Override

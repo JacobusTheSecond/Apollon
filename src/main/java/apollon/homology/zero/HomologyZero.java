@@ -1,11 +1,13 @@
 package apollon.homology.zero;
 
+import apollon.util.GeometryUtil;
 import apollon.voronoi.VEdge;
 import apollon.voronoi.Voronoi;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 
 public class HomologyZero {
     private final Voronoi voronoi;
@@ -70,12 +72,12 @@ public class HomologyZero {
     public void render(@NotNull Graphics g) {
         if (!voronoi.isEmpty()) {
             g.setColor(Color.BLACK);
-            g.drawString("Hom0: " + this, 0, 10);
+            g.drawString("Homology 0: " + this, 5, 10);
         }
     }
 
     @Override
     public String toString() {
-        return Arrays.toString(homology);
+        return "[" + DoubleStream.of(homology).mapToObj(GeometryUtil::round).collect(Collectors.joining(", ")) + "]";
     }
 }

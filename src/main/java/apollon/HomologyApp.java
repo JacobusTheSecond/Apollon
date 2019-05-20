@@ -11,6 +11,7 @@ import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;
 import com.panayotis.gnuplot.style.PlotStyle;
 import com.panayotis.gnuplot.style.Style;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
@@ -18,10 +19,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.File;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class HomologyApp extends AbstractApp {
@@ -165,12 +168,52 @@ public class HomologyApp extends AbstractApp {
             case KeyEvent.VK_P:
                 plot();
                 return;
+            case KeyEvent.VK_I:
+                loadImage();
+                return;
             case KeyEvent.VK_O:
                 load();
+                return;
+            case KeyEvent.VK_S:
+                save();
         }
     }
 
     private void load() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        List<String> lines;
+        try {
+            InputStream stream = new FileInputStream(chooser.getSelectedFile());
+            lines = IOUtils.readLines(stream, StandardCharsets.UTF_8);
+            stream.close();
+        }
+        catch (Exception e) {
+            return;
+        }
+        clear();
+        lines.stream().map(GeometryUtil::load).forEach(points::add);
+        update();
+        render();
+    }
+
+    private void save() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showSaveDialog(getView()) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        try {
+            OutputStream stream = new FileOutputStream(chooser.getSelectedFile());
+            IOUtils.write(points.stream().map(GeometryUtil::save).collect(Collectors.joining("\n")), stream, StandardCharsets.UTF_8);
+            stream.flush();
+            stream.close();
+        }
+        catch (Exception ignored) {}
+    }
+
+    private void loadImage() {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
             return;
@@ -277,7 +320,7 @@ public class HomologyApp extends AbstractApp {
 
         if (drawSiteEdges) {
             g.setColor(Color.RED);
-            voronoi.forEachEdge((edge, index) -> GeometryUtil.draw("" + edge.getLength(), edge.getSiteA(), edge.getSiteB(), g));
+            voronoi.forEachEdge((edge, index) -> GeometryUtil.draw("" + GeometryUtil.round(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
         }
     }
 

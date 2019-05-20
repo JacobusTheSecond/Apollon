@@ -161,18 +161,6 @@ public class HomologyOne {
         return column;
     }
 
-    public void render(@NotNull Graphics g) {
-        graph.render(g, voronoi::getSite);
-        if (actions.isEmpty()) {
-            renderHomology(g);
-        }
-    }
-
-    private void renderHomology(@NotNull Graphics g) {
-        g.setColor(Color.BLACK);
-        g.drawString("Hom1: " + this, 0, 30);
-    }
-
     @NotNull
     private Stream<Cycle> alive() {
         return all().filter(Cycle::isAlive);
@@ -188,8 +176,33 @@ public class HomologyOne {
         return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
     }
 
+    public void render(@NotNull Graphics g) {
+        graph.render(g, voronoi::getSite);
+        renderHomology(g);
+    }
+
+    private void renderHomology(@NotNull Graphics g) {
+        int y = 30;
+        g.setColor(Color.BLACK);
+        g.drawString("Homology 1:", 5, y);
+        y += 20;
+        for (Cycle cycle : cycles) {
+            g.setColor(cycle.isAlive() ? Color.GREEN : Color.RED);
+            g.drawString(cycle.toString(), 10, y);
+            y += 20;
+        }
+        g.setColor(Color.BLACK);
+        g.drawString("Actions:", 5, y);
+        y += 20;
+        for (Action action : actions) {
+            g.setColor(action.getColor());
+            g.drawString(action.toString(), 10, y);
+            y += 20;
+        }
+    }
+
     @Override
     public String toString() {
-        return cycles.stream().map(cycle -> "(" + cycle.getBorn() + ", " + cycle.getDied() + ")").collect(Collectors.toList()).toString();
+        return "[" + cycles.stream().map(Object::toString).collect(Collectors.joining("\r\n")) + "]";
     }
 }

@@ -5,6 +5,8 @@ import apollon.homology.one.HomologyOne;
 import apollon.homology.one.Site;
 import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+
 public class EdgeFaceAction extends Action {
     private final Circle circle;
 
@@ -28,6 +30,17 @@ public class EdgeFaceAction extends Action {
         homology.addRelation(circle, getRadius());
     }
 
+    @NotNull
+    @Override
+    public Color getColor() {
+        return Color.ORANGE;
+    }
+
+    @Override
+    protected int getIndex() {
+        return 2;
+    }
+
     @Override
     public void remove(@NotNull int... edges) {
         circle.remove(edges);
@@ -40,6 +53,6 @@ public class EdgeFaceAction extends Action {
 
     @Override
     public String toString() {
-        return "EdgeFace: " + circle;
+        return "EdgeFace: " + edge + " (" + a + " - " + b + ") " + circle;
     }
 }

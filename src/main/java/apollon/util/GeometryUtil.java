@@ -31,7 +31,7 @@ public class GeometryUtil {
         }
         double detA = (determinant(point, c) - determinant(a, c)) / denominator;
         double detB = (determinant(a, b) - determinant(point, b)) / denominator;
-        return detA > 0 && detB > 0 && detA + detB < 1;
+        return detA >= 0 && detB >= 0 && detA + detB <= 1;
     }
 
     private static double determinant(@NotNull PointD a, @NotNull PointD b) {
@@ -207,5 +207,26 @@ public class GeometryUtil {
             return min;
         }
         return min == length - 1 ? -1 : min + 1;
+    }
+
+    @NotNull
+    public static String round(double value) {
+        if (Double.isInfinite(value)) {
+            return "" + value;
+        }
+        return "" + (double) Math.round(1000 * value) / 1000;
+    }
+
+    @NotNull
+    public static PointD load(@NotNull String value) {
+        int comma = value.indexOf(',');
+        double x = Double.parseDouble(value.substring(0, comma));
+        double y = Double.parseDouble(value.substring(comma + 1));
+        return new PointD(x, y);
+    }
+
+    @NotNull
+    public static String save(@NotNull PointD point) {
+        return point.x + "," + point.y;
     }
 }

@@ -78,7 +78,7 @@ public class Graph {
         graph.edgeSet().forEach(edge -> multiEdges.computeIfAbsent(getSites(edge), k -> new HashSet<>()).add(edge));
         multiEdges.forEach((sites, edges) -> {
             if (sites.size() == 1) {
-                GeometryUtil.drawCircle(edges.toString(), sitePoints.apply(sites.iterator().next().getIndex()), 10, g);
+                drawLoop(edges.toString(), sitePoints.apply(sites.iterator().next().getIndex()), g);
                 return;
             }
             Iterator<Site> iterator = sites.iterator();
@@ -86,6 +86,10 @@ public class Graph {
             Site b = iterator.next();
             GeometryUtil.draw(edges.toString(), sitePoints.apply(a.getIndex()), sitePoints.apply(b.getIndex()), g);
         });
+    }
+
+    private void drawLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
+        GeometryUtil.drawCircle(name, point.add(new PointD(GeometryUtil.RADIUS, -GeometryUtil.RADIUS)), 10, g);
     }
 
     @NotNull
@@ -108,12 +112,7 @@ public class Graph {
     }
 
     public boolean hasNoLoops(@NotNull Circle circle) {
-        for (int edge : circle) {
-            if (isLoop(edge)) {
-                return false;
-            }
-        }
-        return true;
+        return circle.stream().noneMatch(this::isLoop);
     }
 
     private boolean isNonLoop(int edge) {
@@ -126,12 +125,7 @@ public class Graph {
     }
 
     public boolean hasOnlyLoops(@NotNull Circle circle) {
-        for (int edge : circle) {
-            if (isNonLoop(edge)) {
-                return false;
-            }
-        }
-        return false;
+        return circle.stream().noneMatch(this::isNonLoop);
     }
 
     public void remove(@NotNull int... edges) {

@@ -1,5 +1,6 @@
 package apollon.homology.one;
 
+import apollon.util.GeometryUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class Cycle implements EdgeContainer, Comparable<Cycle> {
@@ -62,6 +63,9 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
 
     @Override
     public String toString() {
-        return (isAlive() ? "Alive: " : "Dead: ") + circle.toString();
+        if (isAlive()) {
+            return "Alive: (" + GeometryUtil.round(born) + ") " + circle;
+        }
+        return "Dead: (" + GeometryUtil.round(born) + " - " + GeometryUtil.round(died) + ") " + GeometryUtil.round(died - born);
     }
 }
