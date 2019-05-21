@@ -1,6 +1,6 @@
 package apollon.app;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -131,7 +131,7 @@ public class View extends JFrame {
     }
 
     public void await() {
-        GeometryUtil.await(latch);
+        Util.await(latch);
     }
 
     public interface Listener {

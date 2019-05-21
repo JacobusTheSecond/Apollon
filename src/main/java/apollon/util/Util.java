@@ -1,9 +1,16 @@
 package apollon.util;
 
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
+import javax.swing.*;
 import java.awt.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
@@ -12,14 +19,14 @@ import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class GeometryUtil {
+public class Util {
     public static final int RADIUS = 8;
 
     public static final int RADIUS_SQUARED = (int) Math.pow(RADIUS, 2);
 
     public static final int DIAMETER = 2 * RADIUS;
 
-    private GeometryUtil() {}
+    private Util() {}
 
     public static boolean isInside(@NotNull PointD point, @NotNull PointD[] triangle) {
         PointD a = triangle[0];
@@ -50,12 +57,12 @@ public class GeometryUtil {
 
     @NotNull
     public static List<PointD> toPointD(@NotNull Collection<Point> points) {
-        return points.stream().map(GeometryUtil::convert).collect(Collectors.toList());
+        return points.stream().map(Util::convert).collect(Collectors.toList());
     }
 
     @NotNull
     public static List<Point> toPoint(@NotNull Collection<PointD> points) {
-        return points.stream().map(GeometryUtil::convert).collect(Collectors.toList());
+        return points.stream().map(Util::convert).collect(Collectors.toList());
     }
 
     public static void draw(@NotNull String name, @NotNull PointD a, @NotNull PointD b, @NotNull Graphics g) {
@@ -228,5 +235,37 @@ public class GeometryUtil {
     @NotNull
     public static String save(@NotNull PointD point) {
         return point.x + "," + point.y;
+    }
+
+    public static void save(@NotNull Component component, @NotNull String data) {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showSaveDialog(component) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+        try {
+            OutputStream stream = new FileOutputStream(chooser.getSelectedFile());
+            IOUtils.write(data, stream, StandardCharsets.UTF_8);
+            stream.flush();
+            stream.close();
+        }
+        catch (Exception ignored) {}
+    }
+
+    @NotNull
+    public static Optional<List<String>> load(@NotNull Component component) {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(component) != JFileChooser.APPROVE_OPTION) {
+            return Optional.empty();
+        }
+        List<String> lines;
+        try {
+            InputStream stream = new FileInputStream(chooser.getSelectedFile());
+            lines = IOUtils.readLines(stream, StandardCharsets.UTF_8);
+            stream.close();
+        }
+        catch (Exception e) {
+            return Optional.empty();
+        }
+        return Optional.of(lines);
     }
 }

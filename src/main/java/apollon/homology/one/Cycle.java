@@ -1,7 +1,9 @@
 package apollon.homology.one;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Set;
 
 public class Cycle implements EdgeContainer, Comparable<Cycle> {
     private final Circle circle;
@@ -56,6 +58,10 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
         }
     }
 
+    public boolean containsAny(@NotNull Set<Integer> edges) {
+        return circle.containsAny(edges);
+    }
+
     @Override
     public int compareTo(@NotNull Cycle o) {
         return Double.compare(born, o.born);
@@ -64,8 +70,8 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
     @Override
     public String toString() {
         if (isAlive()) {
-            return "Alive: (" + GeometryUtil.round(born) + ") " + circle;
+            return "Alive: (" + Util.round(born) + ") " + circle;
         }
-        return "Dead: (" + GeometryUtil.round(born) + " - " + GeometryUtil.round(died) + ") " + GeometryUtil.round(died - born);
+        return "Dead: (" + Util.round(born) + " - " + Util.round(died) + ") " + Util.round(died - born);
     }
 }

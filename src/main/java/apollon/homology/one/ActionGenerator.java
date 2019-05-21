@@ -4,7 +4,7 @@ import apollon.homology.one.action.Action;
 import apollon.homology.one.action.EdgeAction;
 import apollon.homology.one.action.EdgeFaceAction;
 import apollon.homology.one.action.FaceAction;
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import apollon.voronoi.VEdge;
 import apollon.voronoi.Voronoi;
 import org.jetbrains.annotations.NotNull;
@@ -46,7 +46,7 @@ public class ActionGenerator {
         }
         VEdge[] edges = voronoi.getEdges(edgeIndices);
         PointD[] sites = getSites(edges);
-        if (GeometryUtil.isInside(vertex, sites)) {
+        if (Util.isInside(vertex, sites)) {
             actions.add(new FaceAction(createCircle(edges), sites[0].subtract(vertex).length()));
             return;
         }
@@ -86,6 +86,6 @@ public class ActionGenerator {
             sites.add(edge.getSiteAIndex());
             sites.add(edge.getSiteBIndex());
         }
-        return voronoi.getSites(GeometryUtil.toArray(sites));
+        return voronoi.getSites(Util.toArray(sites));
     }
 }

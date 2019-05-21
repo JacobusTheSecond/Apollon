@@ -5,13 +5,12 @@ import apollon.app.View;
 import apollon.feature.Harris;
 import apollon.homology.one.HomologyOne;
 import apollon.homology.zero.HomologyZero;
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import apollon.voronoi.Voronoi;
 import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;
 import com.panayotis.gnuplot.style.PlotStyle;
 import com.panayotis.gnuplot.style.Style;
-import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
@@ -19,13 +18,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class HomologyApp extends AbstractApp {
     private final List<PointD> points = new ArrayList<>();
@@ -42,7 +41,7 @@ public class HomologyApp extends AbstractApp {
 
     private boolean drawSiteEdges = true;
 
-    private int radius = GeometryUtil.RADIUS;
+    private int radius = Util.RADIUS;
 
     private int selected = -1;
 
@@ -61,10 +60,15 @@ public class HomologyApp extends AbstractApp {
         pressed(x, y, button);
     }
 
+    private boolean isPoint(@NotNull PointD point) {
+        Point p = Util.convert(point);
+        return findPoint(p.x, p.y) != -1;
+    }
+
     private int findPoint(int x, int y) {
         for (int i = 0; i < points.size(); i++) {
             PointD point = points.get(i);
-            if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < GeometryUtil.RADIUS_SQUARED) {
+            if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < Util.RADIUS_SQUARED) {
                 return i;
             }
         }
@@ -161,9 +165,12 @@ public class HomologyApp extends AbstractApp {
                 homologyOne.executeActions();
                 render();
                 return;
-            case KeyEvent.VK_R:
+            case KeyEvent.VK_BACK_SPACE:
                 homologyOne.compute();
                 render();
+                return;
+            case KeyEvent.VK_R:
+                randomize();
                 return;
             case KeyEvent.VK_P:
                 plot();
@@ -176,41 +183,31 @@ public class HomologyApp extends AbstractApp {
                 return;
             case KeyEvent.VK_S:
                 save();
+                return;
+            case KeyEvent.VK_X:
+                export();
         }
     }
 
     private void load() {
-        JFileChooser chooser = new JFileChooser();
-        if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
-            return;
-        }
-        List<String> lines;
-        try {
-            InputStream stream = new FileInputStream(chooser.getSelectedFile());
-            lines = IOUtils.readLines(stream, StandardCharsets.UTF_8);
-            stream.close();
-        }
-        catch (Exception e) {
-            return;
-        }
-        clear();
-        lines.stream().map(GeometryUtil::load).forEach(points::add);
-        update();
-        render();
+        Util.load(getView()).ifPresent(lines -> {
+            clear();
+            lines.stream().map(Util::load).forEach(points::add);
+            update();
+            render();
+        });
+    }
+
+    private void export() {
+        save(Stream.of(homologyOne.plot()).map(point -> new PointD(point[0], point[1])).map(Util::save).collect(Collectors.joining("\n")));
     }
 
     private void save() {
-        JFileChooser chooser = new JFileChooser();
-        if (chooser.showSaveDialog(getView()) != JFileChooser.APPROVE_OPTION) {
-            return;
-        }
-        try {
-            OutputStream stream = new FileOutputStream(chooser.getSelectedFile());
-            IOUtils.write(points.stream().map(GeometryUtil::save).collect(Collectors.joining("\n")), stream, StandardCharsets.UTF_8);
-            stream.flush();
-            stream.close();
-        }
-        catch (Exception ignored) {}
+        save(points.stream().map(Util::save).collect(Collectors.joining("\n")));
+    }
+
+    private void save(@NotNull String data) {
+        Util.save(getView(), data);
     }
 
     private void loadImage() {
@@ -240,6 +237,18 @@ public class HomologyApp extends AbstractApp {
         gnuPlot.plot();
     }
 
+    private void randomize() {
+        PointD point;
+        for (int i = 0; i < 10; i++) {
+            do {
+                point = new PointD(Math.random() * getWidth(), Math.random() * getHeight());
+            } while (isPoint(point));
+            points.add(point);
+        }
+        update();
+        render();
+    }
+
     private void clear() {
         points.clear();
         selected = -1;
@@ -248,7 +257,7 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void changeRadius(int delta) {
-        radius = Math.max(GeometryUtil.RADIUS, radius + delta);
+        radius = Math.max(Util.RADIUS, radius + delta);
         render();
     }
 
@@ -291,16 +300,16 @@ public class HomologyApp extends AbstractApp {
     private void renderPoints(@NotNull Graphics g) {
         for (int i = 0; i < points.size(); i++) {
             PointD point = points.get(i);
-            g.setColor(selected >= 0 && i == selected ? Color.DARK_GRAY : Color.BLACK);
-            GeometryUtil.draw(point, g);
+            g.setColor(selected >= 0 && i == selected ? Color.LIGHT_GRAY : Color.DARK_GRAY);
+            Util.draw(point, g);
             renderCircle(point, g);
         }
     }
 
     private void renderCircle(@NotNull PointD point, @NotNull Graphics g) {
-        if (radius > GeometryUtil.RADIUS) {
+        if (radius > Util.RADIUS) {
             g.setColor(Color.GREEN);
-            GeometryUtil.drawCircle(point, radius, g);
+            Util.drawCircle(point, radius, g);
         }
     }
 
@@ -310,17 +319,17 @@ public class HomologyApp extends AbstractApp {
         }
         if (drawVertices) {
             g.setColor(Color.BLUE);
-            voronoi.forEachVertex((vertex, index) -> GeometryUtil.draw(vertex, g));
+            voronoi.forEachVertex((vertex, index) -> Util.draw(vertex, g));
         }
 
         if (drawVertexEdges) {
             g.setColor(Color.BLACK);
-            voronoi.forEachEdge(edge -> GeometryUtil.draw(edge.getVertexA(), edge.getVertexB(), g));
+            voronoi.forEachEdge(edge -> Util.draw(edge.getVertexA(), edge.getVertexB(), g));
         }
 
         if (drawSiteEdges) {
             g.setColor(Color.RED);
-            voronoi.forEachEdge((edge, index) -> GeometryUtil.draw("" + GeometryUtil.round(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
+            voronoi.forEachEdge((edge, index) -> Util.draw("" + Util.round(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
         }
     }
 

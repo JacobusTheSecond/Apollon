@@ -1,6 +1,6 @@
 package apollon.voronoi;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.kynosarges.tektosyne.geometry.RectD;
@@ -84,7 +84,7 @@ public class Voronoi {
         for (int i = 0; i < size; i++) {
             //noinspection unchecked
             Set<Integer> list = (Set<Integer>) edges[i];
-            result[i] = list != null ? GeometryUtil.toArray(list) : new int[0];
+            result[i] = list != null ? Util.toArray(list) : new int[0];
         }
         return result;
     }

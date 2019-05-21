@@ -1,6 +1,6 @@
 package apollon.voronoi;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.kynosarges.tektosyne.geometry.VoronoiEdge;
@@ -67,12 +67,12 @@ public class VEdge implements Comparable<VEdge> {
 
     @NotNull
     public Point getSiteA() {
-        return GeometryUtil.convert(getDSiteA());
+        return Util.convert(getDSiteA());
     }
 
     @NotNull
     public Point getSiteB() {
-        return GeometryUtil.convert(getDSiteB());
+        return Util.convert(getDSiteB());
     }
 
     @NotNull
@@ -105,12 +105,12 @@ public class VEdge implements Comparable<VEdge> {
 
     @NotNull
     public Point getVertexA() {
-        return GeometryUtil.convert(getDVertexA());
+        return Util.convert(getDVertexA());
     }
 
     @NotNull
     public Point getVertexB() {
-        return GeometryUtil.convert(getDVertexB());
+        return Util.convert(getDVertexB());
     }
 
     @NotNull

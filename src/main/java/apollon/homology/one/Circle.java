@@ -1,6 +1,6 @@
 package apollon.homology.one;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -36,8 +36,8 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
         }
         boolean modified = false;
         int inverse = Graph.inverse(edge);
-        List<Integer> positive = GeometryUtil.toList(edges);
-        List<Integer> negative = GeometryUtil.toList(Graph.inverse(edges));
+        List<Integer> positive = Util.toList(edges);
+        List<Integer> negative = Util.toList(Graph.inverse(edges));
         for (int i = 0; i < size(); i++) {
             int replace = get(i);
             if (replace == edge || replace == inverse) {
@@ -54,7 +54,7 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
 
     @Override
     public void remove(@NotNull int... edges) {
-        Set<Integer> set = GeometryUtil.toSet(edges);
+        Set<Integer> set = Util.toSet(edges);
         IntStream.of(edges).map(Graph::inverse).forEach(set::add);
         if (this.edges.removeAll(set)) {
             revalidate();
@@ -91,6 +91,10 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
         return edges.stream().mapToInt(Integer::intValue);
     }
 
+    public boolean containsAny(@NotNull Set<Integer> edges) {
+        return stream().map(Graph::positive).distinct().anyMatch(edges::contains);
+    }
+
     @Override
     public String toString() {
         return Arrays.toString(stream().map(edge -> edge >= 0 ? edge : edge + 1).toArray());
@@ -121,8 +125,8 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
         if (inverse) {
             index = this.edges.indexOf(Graph.inverse(edge));
         }
-        int[] lower = GeometryUtil.toArray(this.edges.subList(0, index));
-        int[] upper = GeometryUtil.toArray(this.edges.subList(index + 1, size()));
+        int[] lower = Util.toArray(this.edges.subList(0, index));
+        int[] upper = Util.toArray(this.edges.subList(index + 1, size()));
         if (inverse) {
             if (upper.length > 0) {
                 System.arraycopy(upper, 0, edges, 0, upper.length);

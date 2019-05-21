@@ -1,6 +1,6 @@
 package apollon.homology.zero;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import apollon.voronoi.VEdge;
 import apollon.voronoi.Voronoi;
 import org.jetbrains.annotations.NotNull;
@@ -78,6 +78,6 @@ public class HomologyZero {
 
     @Override
     public String toString() {
-        return "[" + DoubleStream.of(homology).mapToObj(GeometryUtil::round).collect(Collectors.joining(", ")) + "]";
+        return "[" + DoubleStream.of(homology).mapToObj(Util::round).collect(Collectors.joining(", ")) + "]";
     }
 }

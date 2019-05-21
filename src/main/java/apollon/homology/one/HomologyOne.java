@@ -177,7 +177,7 @@ public class HomologyOne {
     }
 
     public void render(@NotNull Graphics g) {
-        graph.render(g, voronoi::getSite);
+        graph.render(g, voronoi::getSite, cycles);
         renderHomology(g);
     }
 

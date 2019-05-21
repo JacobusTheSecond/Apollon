@@ -1,6 +1,6 @@
 package apollon.homology.one;
 
-import apollon.util.GeometryUtil;
+import apollon.util.Util;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.GraphPath;
@@ -10,6 +10,7 @@ import org.jgrapht.graph.Pseudograph;
 import org.kynosarges.tektosyne.geometry.PointD;
 
 import java.awt.*;
+import java.util.List;
 import java.util.*;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
@@ -59,7 +60,7 @@ public class Graph {
 
     @NotNull
     public int[] getEdgeIndices() {
-        int[] edges = GeometryUtil.toArray(graph.edgeSet());
+        int[] edges = Util.toArray(graph.edgeSet());
         Arrays.sort(edges);
         return edges;
     }
@@ -69,14 +70,14 @@ public class Graph {
         return Graphs.getOppositeVertex(graph, edge, site);
     }
 
-    public void render(@NotNull Graphics g, @NotNull IntFunction<PointD> sitePoints) {
-        g.setColor(Color.CYAN);
-        graph.vertexSet().forEach(vertex -> GeometryUtil.draw("" + vertex, sitePoints.apply(vertex.getIndex()), g));
+    public void render(@NotNull Graphics g, @NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles) {
+        g.setColor(Color.BLACK);
+        graph.vertexSet().forEach(vertex -> Util.draw("" + vertex, sitePoints.apply(vertex.getIndex()), g));
 
-        g.setColor(Color.CYAN);
         Map<Set<Site>, Set<Integer>> multiEdges = new HashMap<>();
         graph.edgeSet().forEach(edge -> multiEdges.computeIfAbsent(getSites(edge), k -> new HashSet<>()).add(edge));
         multiEdges.forEach((sites, edges) -> {
+            g.setColor(cycles.stream().anyMatch(cycle -> cycle.containsAny(edges)) ? Color.GREEN : Color.BLUE);
             if (sites.size() == 1) {
                 drawLoop(edges.toString(), sitePoints.apply(sites.iterator().next().getIndex()), g);
                 return;
@@ -84,12 +85,12 @@ public class Graph {
             Iterator<Site> iterator = sites.iterator();
             Site a = iterator.next();
             Site b = iterator.next();
-            GeometryUtil.draw(edges.toString(), sitePoints.apply(a.getIndex()), sitePoints.apply(b.getIndex()), g);
+            Util.draw(edges.toString(), sitePoints.apply(a.getIndex()), sitePoints.apply(b.getIndex()), g);
         });
     }
 
     private void drawLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
-        GeometryUtil.drawCircle(name, point.add(new PointD(GeometryUtil.RADIUS, -GeometryUtil.RADIUS)), 10, g);
+        Util.drawCircle(name, point.add(new PointD(Util.RADIUS, -Util.RADIUS)), 10, g);
     }
 
     @NotNull
@@ -152,6 +153,10 @@ public class Graph {
     @NotNull
     public int[] getNonLoops(@NotNull Circle circle) {
         return circle.stream().filter(this::isNonLoop).map(Graph::positive).toArray();
+    }
+
+    public static boolean contains(@NotNull int[] edges, int edge) {
+        return IntStream.of(edges).anyMatch(e -> equals(e, edge));
     }
 
     public static boolean equals(int a, int b) {

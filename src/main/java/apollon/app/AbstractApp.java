@@ -2,11 +2,19 @@ package apollon.app;
 
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
 public abstract class AbstractApp implements View.Listener {
+    static {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception ignored) {}
+    }
+
     private final View view;
 
     private BufferedImage image;
