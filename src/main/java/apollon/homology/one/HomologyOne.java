@@ -10,12 +10,11 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class HomologyOne {
     private final List<Cycle> cycles = new ArrayList<>();
-
-    private final List<Circle> relations = new ArrayList<>();
 
     private final List<Action> actions = new ArrayList<>();
 
@@ -37,7 +36,6 @@ public class HomologyOne {
 
     private void init() {
         cycles.clear();
-        relations.clear();
         actions.clear();
         graph.init(voronoi.getSitesCount());
     }
@@ -54,24 +52,72 @@ public class HomologyOne {
         }
     }
 
-    public void addEdge(int a, int b, int edge, double radius) {
-        Optional<Circle> optionalCircle = graph.find(a, b);
-        graph.addEdge(a, b, edge);
-        optionalCircle.ifPresent(circle -> addCycle(new Circle(edge, circle.getEdges()), radius));
+    public void addEdgeAndCycle(@NotNull Site source, @NotNull Site target, int edge, double radius) {
+        Optional<Circle> optionalCircle = graph.find(source, target);
+        addEdge(source, target, edge);
+        optionalCircle.ifPresent(circle -> addCycle(circle.append(Graph.inverse(edge)), radius));
     }
 
-    public void addCycle(@NotNull Circle circle, double radius) {
+    public void addEdge(@NotNull Site source, @NotNull Site target, int edge) {
+        graph.addEdge(source, target, edge);
+    }
+
+    private void addCycle(@NotNull Circle circle, double radius) {
         cycles.add(new Cycle(circle, radius));
         cycles.sort(Comparator.naturalOrder());
     }
 
     public void addRelation(@NotNull Circle circle, double radius) {
-        relations.add(circle);
+        if (circle.isEmpty()) {
+            return;
+        }
+        if (circle.size() == 1 || graph.hasNoLoops(circle)) {
+            remove(circle.getEdges());
+        }
+        else if (graph.hasOnlyLoops(circle)) {
+            replaceLoop(circle);
+        }
+        else {
+            replaceNonLoop(circle);
+        }
+        killEmptyCycles(radius);
         killObsoleteCycles(radius);
+    }
+
+    private void replaceLoop(@NotNull Circle circle) {
+        int edge = circle.getSingleEdge();
+        int[] edges = circle.getInverse(edge);
+        replace(edge, edges);
+        graph.remove(edge);
+    }
+
+    private void replaceNonLoop(@NotNull Circle circle) {
+        int edge = graph.getSingleNonLoop(circle);
+        int[] edges = circle.getInverse(edge);
+        replace(edge, edges);
+        remove(graph.getNonLoops(circle));
+    }
+
+    private void replace(int edge, @NotNull int[] edges) {
+        actions.forEach(action -> action.replace(edge, edges));
+        cycles.forEach(cycle -> cycle.replace(edge, edges));
+    }
+
+    private void remove(@NotNull int... edges) {
+        actions.forEach(action -> action.remove(edges));
+        cycles.forEach(cycle -> cycle.remove(edges));
+        graph.remove(edges);
+    }
+
+    private void killEmptyCycles(double radius) {
+        alive().forEach(cycle -> cycle.killIfEmpty(radius));
     }
 
     private void killObsoleteCycles(double radius) {
         List<Cycle> cycles = alive().collect(Collectors.toList());
+        if (cycles.size() < 2) {
+            return;
+        }
         SimpleMatrix matrix = createMatrix(cycles);
         SimpleMatrix nullSpace = matrix.svd().nullSpace();
         while (nullSpace.numRows() > 0 && nullSpace.numCols() > 0) {
@@ -100,10 +146,7 @@ public class HomologyOne {
     @NotNull
     private SimpleMatrix createMatrix(@NotNull List<Cycle> cycles) {
         int[] allEdges = graph.getEdgeIndices();
-        List<Circle> circles = new ArrayList<>();
-        cycles.stream().map(Cycle::getCircle).forEach(circles::add);
-        circles.addAll(relations);
-        double[][] columns = circles.stream().map(Circle::getEdges).map(this::direct).map(edges -> getColumn(edges, allEdges)).toArray(double[][]::new);
+        double[][] columns = cycles.stream().map(Cycle::getCircle).map(Circle::getEdges).map(edges -> getColumn(edges, allEdges)).toArray(double[][]::new);
         SimpleMatrix matrix = new SimpleMatrix(allEdges.length, columns.length);
         for (int i = 0; i < columns.length; i++) {
             matrix.setColumn(i, 0, columns[i]);
@@ -112,40 +155,10 @@ public class HomologyOne {
     }
 
     @NotNull
-    private int[] direct(@NotNull int[] edges) {
-        int[] directed = new int[edges.length];
-        int start = graph.getSameSite(edges[0], edges[edges.length - 1]);
-        int end;
-        for (int i = 0; i < edges.length; i++) {
-            int edge = edges[i];
-            end = graph.getOtherSite(edge, start);
-            directed[i] = start < end ? edge : -edge - 1;
-            start = end;
-        }
-        return directed;
-    }
-
-    @NotNull
     private double[] getColumn(@NotNull int[] edges, @NotNull int[] allEdges) {
         double[] column = new double[allEdges.length];
-        for (int directedEdge : edges) {
-            boolean positive = directedEdge >= 0;
-            int edge = positive ? directedEdge : -directedEdge - 1;
-            column[ArrayUtils.indexOf(allEdges, edge)] += positive ? 1 : -1;
-        }
+        IntStream.of(edges).forEach(edge -> column[ArrayUtils.indexOf(allEdges, Graph.positive(edge))] += edge);
         return column;
-    }
-
-    public void render(@NotNull Graphics g) {
-        graph.render(g, voronoi::getSite);
-        if (actions.isEmpty()) {
-            renderHomology(g);
-        }
-    }
-
-    private void renderHomology(@NotNull Graphics g) {
-        g.setColor(Color.BLACK);
-        g.drawString("Hom1: " + this, 0, 30);
     }
 
     @NotNull
@@ -163,8 +176,33 @@ public class HomologyOne {
         return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
     }
 
+    public void render(@NotNull Graphics g) {
+        graph.render(voronoi::getSite, cycles, g);
+        renderHomology(g);
+    }
+
+    private void renderHomology(@NotNull Graphics g) {
+        int y = 30;
+        g.setColor(Color.BLACK);
+        g.drawString("Homology 1:", 5, y);
+        y += 20;
+        for (Cycle cycle : cycles) {
+            g.setColor(cycle.isAlive() ? Color.GREEN : Color.RED);
+            g.drawString(cycle.toString(), 10, y);
+            y += 20;
+        }
+        g.setColor(Color.BLACK);
+        g.drawString("Actions:", 5, y);
+        y += 20;
+        for (Action action : actions) {
+            g.setColor(action.getColor());
+            g.drawString(action.toString(), 10, y);
+            y += 20;
+        }
+    }
+
     @Override
     public String toString() {
-        return cycles.stream().map(cycle -> "(" + cycle.getBorn() + ", " + cycle.getDied() + ")").collect(Collectors.toList()).toString();
+        return "[" + cycles.stream().map(Object::toString).collect(Collectors.joining("\r\n")) + "]";
     }
 }

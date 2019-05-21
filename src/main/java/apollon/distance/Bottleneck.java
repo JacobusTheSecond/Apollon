@@ -1,6 +1,6 @@
 package apollon.distance;
 
-import apollon.GeometryUtil;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.alg.flow.PushRelabelMFImpl;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
@@ -41,7 +41,7 @@ public class Bottleneck extends AbstractGraphDistance {
         edges = computeSortedEdges();
 
         //TODO Apply easy bounds
-        max = GeometryUtil.findMin(edges.length, this::hasFlow);
+        max = Util.findMin(edges.length, this::hasFlow);
         addRemoveEdges(max);
         MaximumFlowAlgorithm.MaximumFlow<Integer> flow = new PushRelabelMFImpl<>(getGraph()).getMaximumFlow(s, t);
         this.flow = new boolean[edges.length];

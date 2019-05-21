@@ -1,9 +1,12 @@
 package apollon.homology.one.action;
 
+import apollon.homology.one.EdgeContainer;
 import apollon.homology.one.HomologyOne;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class Action implements Comparable<Action> {
+import java.awt.*;
+
+public abstract class Action implements EdgeContainer, Comparable<Action> {
     private final double radius;
 
     protected Action(double radius) {
@@ -16,8 +19,17 @@ public abstract class Action implements Comparable<Action> {
 
     @Override
     public int compareTo(@NotNull Action o) {
-        return Double.compare(radius, o.radius);
+        int difference = Double.compare(radius, o.radius);
+        if (difference != 0) {
+            return difference;
+        }
+        return Integer.compare(getIndex(), o.getIndex());
     }
 
     public abstract void execute(@NotNull HomologyOne homology);
+
+    @NotNull
+    public abstract Color getColor();
+
+    protected abstract int getIndex();
 }

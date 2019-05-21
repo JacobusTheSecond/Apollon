@@ -4,6 +4,7 @@ import apollon.app.AbstractApp;
 import apollon.app.View;
 import apollon.distance.Bottleneck;
 import apollon.distance.Wasserstein;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
@@ -18,9 +19,9 @@ public class DistanceApp extends AbstractApp {
 
     private final Bottleneck bottleneck = new Bottleneck();
 
-    private final List<Point> x = new ArrayList<>();
+    private final List<PointD> x = new ArrayList<>();
 
-    private final List<Point> y = new ArrayList<>();
+    private final List<PointD> y = new ArrayList<>();
 
     private boolean drawWasserstein = true;
 
@@ -34,10 +35,10 @@ public class DistanceApp extends AbstractApp {
     @Override
     public void mousePressed(int x, int y, int button, @NotNull View view) {
         if (button == MouseEvent.BUTTON1) {
-            this.x.add(new Point(x, y));
+            this.x.add(new PointD(x, y));
         }
         else if (button == MouseEvent.BUTTON3) {
-            this.y.add(new Point(x, y));
+            this.y.add(new PointD(x, y));
         }
         clearDistances();
         render();
@@ -59,7 +60,28 @@ public class DistanceApp extends AbstractApp {
             case KeyEvent.VK_B:
                 drawBottleneck = !drawBottleneck;
                 render();
+                return;
+            case KeyEvent.VK_O:
+                load(true);
+                return;
+            case KeyEvent.VK_P:
+                load(false);
         }
+    }
+
+    private void load(boolean x) {
+        List<PointD> points = x ? this.x : y;
+        Util.load(getView()).ifPresent(lines -> {
+            clear(points);
+            lines.stream().map(Util::load).forEach(points::add);
+            render();
+        });
+    }
+
+    private void clear(@NotNull List<PointD> points) {
+        points.clear();
+        clearDistances();
+        render();
     }
 
     private void clear() {
@@ -99,14 +121,14 @@ public class DistanceApp extends AbstractApp {
     private void renderDiagonal(@NotNull Graphics g) {
         g.setColor(Color.BLACK);
         int max = Math.max(getWidth(), getHeight());
-        GeometryUtil.draw(new PointD(), new PointD(max, max), g);
+        Util.draw(new PointD(), new PointD(max, max), g);
     }
 
     private void renderPoints(@NotNull Graphics g) {
         g.setColor(Color.RED);
-        x.forEach(point -> GeometryUtil.draw(point, g));
+        x.forEach(point -> Util.draw(point, g));
         g.setColor(Color.BLUE);
-        y.forEach(point -> GeometryUtil.draw(point, g));
+        y.forEach(point -> Util.draw(point, g));
     }
 
     private void renderWasserstein(@NotNull Graphics g) {
@@ -115,8 +137,8 @@ public class DistanceApp extends AbstractApp {
         }
         if (drawWasserstein) {
             g.setColor(Color.GREEN);
-            wasserstein.forEachXY((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
-            wasserstein.forEachY((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+            wasserstein.forEachXY((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
+            wasserstein.forEachY((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
         }
         g.setColor(Color.BLACK);
         g.drawString("Wasserstein: " + wasserstein.getDistance(), 5, 10);
@@ -128,17 +150,15 @@ public class DistanceApp extends AbstractApp {
         }
         if (drawBottleneck) {
             g.setColor(Color.BLUE);
-            bottleneck.forEachEdge((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+            bottleneck.forEachEdge((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
             g.setColor(Color.RED);
-            bottleneck.forMaxEdge((x, y) -> GeometryUtil.draw("" + x.subtract(y).length(), x, y, g));
+            bottleneck.forMaxEdge((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
         }
         g.setColor(Color.BLACK);
         g.drawString("Bottleneck: " + bottleneck.getDistance(), 5, 25);
     }
 
     private void compute() {
-        List<PointD> x = GeometryUtil.toPointD(this.x);
-        List<PointD> y = GeometryUtil.toPointD(this.y);
         wasserstein.compute(x, y);
         bottleneck.compute(x, y);
         render();

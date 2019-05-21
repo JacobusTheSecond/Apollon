@@ -1,5 +1,6 @@
 package apollon;
 
+import apollon.util.Util;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Assert;
@@ -7,7 +8,7 @@ import org.junit.Test;
 
 import java.util.function.IntPredicate;
 
-public class GeometryUtilTest {
+public class UtilTest {
     @Test
     public void testFindMax() {
         int[] values = new int[]{0, 1, 2, 3, 4, 5, 6};
@@ -30,9 +31,9 @@ public class GeometryUtilTest {
     }
 
     private void checkMax(int index, @NotNull int[] array, @NotNull IntPredicate predicate) {
-        Assert.assertEquals(index, GeometryUtil.findMax(array.length, predicate));
-        Assert.assertEquals(index, GeometryUtil.findMax(ArrayUtils.toObject(array), predicate::test));
-        Assert.assertEquals(index, GeometryUtil.findMax(GeometryUtil.toList(array), predicate::test));
+        Assert.assertEquals(index, Util.findMax(array.length, predicate));
+        Assert.assertEquals(index, Util.findMax(ArrayUtils.toObject(array), predicate::test));
+        Assert.assertEquals(index, Util.findMax(Util.toList(array), predicate::test));
     }
 
     @Test
@@ -57,8 +58,8 @@ public class GeometryUtilTest {
     }
 
     private void checkMin(int index, @NotNull int[] array, @NotNull IntPredicate predicate) {
-        Assert.assertEquals(index, GeometryUtil.findMin(array.length, predicate));
-        Assert.assertEquals(index, GeometryUtil.findMin(ArrayUtils.toObject(array), predicate::test));
-        Assert.assertEquals(index, GeometryUtil.findMin(GeometryUtil.toList(array), predicate::test));
+        Assert.assertEquals(index, Util.findMin(array.length, predicate));
+        Assert.assertEquals(index, Util.findMin(ArrayUtils.toObject(array), predicate::test));
+        Assert.assertEquals(index, Util.findMin(Util.toList(array), predicate::test));
     }
 }

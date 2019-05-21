@@ -5,6 +5,7 @@ import apollon.app.View;
 import apollon.feature.Harris;
 import apollon.homology.one.HomologyOne;
 import apollon.homology.zero.HomologyZero;
+import apollon.util.Util;
 import apollon.voronoi.Voronoi;
 import com.panayotis.gnuplot.GNUPlot;
 import com.panayotis.gnuplot.plot.DataSetPlot;
@@ -21,7 +22,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class HomologyApp extends AbstractApp {
     private final List<PointD> points = new ArrayList<>();
@@ -37,8 +40,6 @@ public class HomologyApp extends AbstractApp {
     private boolean drawVertices = true;
 
     private boolean drawSiteEdges = true;
-
-    private int radius = GeometryUtil.RADIUS;
 
     private int selected = -1;
 
@@ -57,10 +58,15 @@ public class HomologyApp extends AbstractApp {
         pressed(x, y, button);
     }
 
+    private boolean isPoint(@NotNull PointD point) {
+        Point p = Util.convert(point);
+        return findPoint(p.x, p.y) != -1;
+    }
+
     private int findPoint(int x, int y) {
         for (int i = 0; i < points.size(); i++) {
             PointD point = points.get(i);
-            if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < GeometryUtil.RADIUS_SQUARED) {
+            if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < Util.RADIUS_SQUARED) {
                 return i;
             }
         }
@@ -122,18 +128,6 @@ public class HomologyApp extends AbstractApp {
             case KeyEvent.VK_ESCAPE:
                 close();
                 return;
-            case KeyEvent.VK_ADD:
-                changeRadius(1);
-                return;
-            case KeyEvent.VK_SUBTRACT:
-                changeRadius(-1);
-                return;
-            case KeyEvent.VK_PLUS:
-                changeRadius(true);
-                return;
-            case KeyEvent.VK_MINUS:
-                changeRadius(false);
-                return;
             case KeyEvent.VK_DELETE:
                 clear();
                 return;
@@ -157,19 +151,52 @@ public class HomologyApp extends AbstractApp {
                 homologyOne.executeActions();
                 render();
                 return;
-            case KeyEvent.VK_R:
+            case KeyEvent.VK_BACK_SPACE:
                 homologyOne.compute();
                 render();
+                return;
+            case KeyEvent.VK_R:
+                randomize();
                 return;
             case KeyEvent.VK_P:
                 plot();
                 return;
+            case KeyEvent.VK_I:
+                loadImage();
+                return;
             case KeyEvent.VK_O:
                 load();
+                return;
+            case KeyEvent.VK_S:
+                save();
+                return;
+            case KeyEvent.VK_X:
+                export();
         }
     }
 
     private void load() {
+        Util.load(getView()).ifPresent(lines -> {
+            clear();
+            lines.stream().map(Util::load).forEach(points::add);
+            update();
+            render();
+        });
+    }
+
+    private void export() {
+        save(Stream.of(homologyOne.plot()).map(point -> new PointD(point[0], point[1])).map(Util::save).collect(Collectors.joining("\n")));
+    }
+
+    private void save() {
+        save(points.stream().map(Util::save).collect(Collectors.joining("\n")));
+    }
+
+    private void save(@NotNull String data) {
+        Util.save(getView(), data);
+    }
+
+    private void loadImage() {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
             return;
@@ -196,23 +223,23 @@ public class HomologyApp extends AbstractApp {
         gnuPlot.plot();
     }
 
+    private void randomize() {
+        PointD point;
+        for (int i = 0; i < 10; i++) {
+            do {
+                point = new PointD(Math.random() * getWidth(), Math.random() * getHeight());
+            } while (isPoint(point));
+            points.add(point);
+        }
+        update();
+        render();
+    }
+
     private void clear() {
         points.clear();
         selected = -1;
         update();
         render();
-    }
-
-    private void changeRadius(int delta) {
-        radius = Math.max(GeometryUtil.RADIUS, radius + delta);
-        render();
-    }
-
-    private void changeRadius(boolean up) {
-        if (!voronoi.isEmpty()) {
-            radius = voronoi.nextRadius(radius, up);
-            render();
-        }
     }
 
     @Override
@@ -227,8 +254,8 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void updateTitle() {
-        StringBuilder title = new StringBuilder("Radius: " + radius);
-        getSelected().ifPresent(selected -> title.append(", Position: ").append(selected.x).append(", ").append(selected.y));
+        StringBuilder title = new StringBuilder();
+        getSelected().ifPresent(selected -> title.append("Position: ").append(selected.x).append(", ").append(selected.y));
         getView().setTitle(title.toString());
     }
 
@@ -245,19 +272,8 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void renderPoints(@NotNull Graphics g) {
-        for (int i = 0; i < points.size(); i++) {
-            PointD point = points.get(i);
-            g.setColor(selected >= 0 && i == selected ? Color.DARK_GRAY : Color.BLACK);
-            GeometryUtil.draw(point, g);
-            renderCircle(point, g);
-        }
-    }
-
-    private void renderCircle(@NotNull PointD point, @NotNull Graphics g) {
-        if (radius > GeometryUtil.RADIUS) {
-            g.setColor(Color.GREEN);
-            GeometryUtil.drawCircle(point, radius, g);
-        }
+        g.setColor(Color.DARK_GRAY);
+        points.forEach(point -> Util.draw(point, g));
     }
 
     private void renderVoronoi(@NotNull Graphics g) {
@@ -266,17 +282,17 @@ public class HomologyApp extends AbstractApp {
         }
         if (drawVertices) {
             g.setColor(Color.BLUE);
-            voronoi.forEachVertex((vertex, index) -> GeometryUtil.draw(vertex, g));
+            voronoi.forEachVertex((vertex, index) -> Util.draw(vertex, g));
         }
 
         if (drawVertexEdges) {
             g.setColor(Color.BLACK);
-            voronoi.forEachEdge(edge -> GeometryUtil.draw(edge.getVertexA(), edge.getVertexB(), g));
+            voronoi.forEachEdge(edge -> Util.draw(edge.getVertexA(), edge.getVertexB(), g));
         }
 
         if (drawSiteEdges) {
             g.setColor(Color.RED);
-            voronoi.forEachEdge((edge, index) -> GeometryUtil.draw("" + edge.getLength(), edge.getSiteA(), edge.getSiteB(), g));
+            voronoi.forEachEdge((edge, index) -> Util.draw("" + Util.display(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
         }
     }
 
