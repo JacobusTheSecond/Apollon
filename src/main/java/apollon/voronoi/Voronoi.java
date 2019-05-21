@@ -15,7 +15,6 @@ import java.util.function.ObjIntConsumer;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 
-//TODO Add radius delta (just adding each edge length is wrong)
 public class Voronoi {
     private PointD[] sites = null;
 
@@ -24,8 +23,6 @@ public class Voronoi {
     private VEdge[] edges = null;
 
     private int[][] vertexEdges = null;
-
-    private int[][] siteEdges = null;
 
     private int sitesCount;
 
@@ -62,7 +59,6 @@ public class Voronoi {
         edges = Arrays.stream(results.voronoiEdges).map(edge -> new VEdge(this, edge)).sorted().toArray(VEdge[]::new);
         edgesCount = edges.length;
         IntStream.range(0, edgesCount).forEach(i -> edges[i].setIndex(i));
-        siteEdges = computeEdges(sites.length, VEdge::getSiteAIndex, VEdge::getSiteBIndex);
         vertexEdges = computeEdges(vertices.length, VEdge::getVertexAIndex, VEdge::getVertexBIndex);
     }
 
@@ -89,29 +85,6 @@ public class Voronoi {
         return result;
     }
 
-    public int nextRadius(int radius, boolean up) {
-        if (up) {
-            for (VEdge edge : edges) {
-                int length = (int) Math.round(edge.getLength() / 2);
-                if (radius < length) {
-                    return length;
-                }
-            }
-            return radius;
-        }
-        for (int i = sitesCount - 1; i >= 0; i--) {
-            int length = (int) Math.round(edges[i].getLength() / 2);
-            if (length < radius) {
-                return length;
-            }
-        }
-        return radius;
-    }
-
-    public void forEachVertex(@NotNull Consumer<PointD> operation) {
-        forEachVertex((vertex, index) -> operation.accept(vertex));
-    }
-
     public void forEachVertex(@NotNull ObjIntConsumer<PointD> operation) {
         IntStream.range(0, vertices.length).forEach(i -> operation.accept(vertices[i], i));
     }
@@ -125,23 +98,8 @@ public class Voronoi {
     }
 
     @NotNull
-    public VEdge[] getVertexEdges(int vertex) {
-        return IntStream.of(getVertexEdgeIndices(vertex)).mapToObj(this::getEdge).toArray(VEdge[]::new);
-    }
-
-    @NotNull
     public int[] getVertexEdgeIndices(int vertex) {
         return vertexEdges[vertex];
-    }
-
-    @NotNull
-    public VEdge[] getSiteEdges(int site) {
-        return IntStream.of(getSiteEdgeIndices(site)).mapToObj(this::getEdge).toArray(VEdge[]::new);
-    }
-
-    @NotNull
-    public int[] getSiteEdgeIndices(int site) {
-        return siteEdges[site];
     }
 
     @NotNull
@@ -162,11 +120,6 @@ public class Voronoi {
     @NotNull
     public PointD[] getSites(int[] sites) {
         return IntStream.of(sites).mapToObj(this::getSite).toArray(PointD[]::new);
-    }
-
-    @NotNull
-    public PointD[] getVertices(int[] vertices) {
-        return IntStream.of(vertices).mapToObj(this::getVertex).toArray(PointD[]::new);
     }
 
     @NotNull

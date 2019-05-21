@@ -41,8 +41,6 @@ public class HomologyApp extends AbstractApp {
 
     private boolean drawSiteEdges = true;
 
-    private int radius = Util.RADIUS;
-
     private int selected = -1;
 
     public HomologyApp() {
@@ -129,18 +127,6 @@ public class HomologyApp extends AbstractApp {
         switch (code) {
             case KeyEvent.VK_ESCAPE:
                 close();
-                return;
-            case KeyEvent.VK_ADD:
-                changeRadius(1);
-                return;
-            case KeyEvent.VK_SUBTRACT:
-                changeRadius(-1);
-                return;
-            case KeyEvent.VK_PLUS:
-                changeRadius(true);
-                return;
-            case KeyEvent.VK_MINUS:
-                changeRadius(false);
                 return;
             case KeyEvent.VK_DELETE:
                 clear();
@@ -256,18 +242,6 @@ public class HomologyApp extends AbstractApp {
         render();
     }
 
-    private void changeRadius(int delta) {
-        radius = Math.max(Util.RADIUS, radius + delta);
-        render();
-    }
-
-    private void changeRadius(boolean up) {
-        if (!voronoi.isEmpty()) {
-            radius = voronoi.nextRadius(radius, up);
-            render();
-        }
-    }
-
     @Override
     protected void resized() {
         update();
@@ -280,8 +254,8 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void updateTitle() {
-        StringBuilder title = new StringBuilder("Radius: " + radius);
-        getSelected().ifPresent(selected -> title.append(", Position: ").append(selected.x).append(", ").append(selected.y));
+        StringBuilder title = new StringBuilder();
+        getSelected().ifPresent(selected -> title.append("Position: ").append(selected.x).append(", ").append(selected.y));
         getView().setTitle(title.toString());
     }
 
@@ -298,19 +272,8 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void renderPoints(@NotNull Graphics g) {
-        for (int i = 0; i < points.size(); i++) {
-            PointD point = points.get(i);
-            g.setColor(selected >= 0 && i == selected ? Color.LIGHT_GRAY : Color.DARK_GRAY);
-            Util.draw(point, g);
-            renderCircle(point, g);
-        }
-    }
-
-    private void renderCircle(@NotNull PointD point, @NotNull Graphics g) {
-        if (radius > Util.RADIUS) {
-            g.setColor(Color.GREEN);
-            Util.drawCircle(point, radius, g);
-        }
+        g.setColor(Color.DARK_GRAY);
+        points.forEach(point -> Util.draw(point, g));
     }
 
     private void renderVoronoi(@NotNull Graphics g) {
