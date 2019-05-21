@@ -1,14 +1,14 @@
 package apollon.homology.one;
 
-import org.apache.commons.lang3.ArrayUtils;
 import apollon.homology.one.action.Action;
 import apollon.voronoi.Voronoi;
+import org.apache.commons.lang3.ArrayUtils;
 import org.ejml.simple.SimpleMatrix;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -42,13 +42,13 @@ public class HomologyOne {
         graph.init(voronoi.getSitesCount());
     }
 
-    public void executeActions() {
+    public synchronized void executeActions() {
         while (!actions.isEmpty()) {
             actions.remove(0).execute(this);
         }
     }
 
-    public void executeNextAction() {
+    public synchronized void executeNextAction() {
         if (!actions.isEmpty()) {
             actions.remove(0).execute(this);
         }

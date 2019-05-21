@@ -2,14 +2,13 @@ package apollon.distance;
 
 import org.jetbrains.annotations.NotNull;
 import org.jgrapht.Graph;
+import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 import org.kynosarges.tektosyne.geometry.PointD;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiFunction;
 import java.util.function.IntConsumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public abstract class AbstractGraphDistance extends AbstractDistance {
@@ -21,18 +20,14 @@ public abstract class AbstractGraphDistance extends AbstractDistance {
 
     private final AtomicInteger edges = new AtomicInteger();
 
-    private final Graph<Integer, Integer> graph;
-
-    protected AbstractGraphDistance(@NotNull BiFunction<Supplier<Integer>, Supplier<Integer>, Graph<Integer, Integer>> constructor) {
-        graph = constructor.apply(vertices::getAndIncrement, edges::getAndIncrement);
-    }
+    private final Graph<Integer, Integer> graph = new SimpleDirectedWeightedGraph<>(vertices::getAndIncrement, edges::getAndIncrement);
 
     @Override
-    protected void clear() {
+    public void clear() {
         super.clear();
+        graph.removeAllVertices(new HashSet<>(graph.vertexSet()));
         vertices.set(0);
         edges.set(0);
-        graph.removeAllVertices(new HashSet<>(graph.vertexSet()));
     }
 
     @NotNull
