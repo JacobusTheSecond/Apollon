@@ -27,13 +27,13 @@ public class Graph {
         IntStream.range(0, size).mapToObj(Site::new).forEach(graph::addVertex);
     }
 
-    public void addEdge(@NotNull Site a, @NotNull Site b, int edge) {
-        graph.addEdge(a, b, edge);
+    public void addEdge(@NotNull Site source, @NotNull Site target, int edge) {
+        graph.addEdge(source, target, edge);
     }
 
     @NotNull
-    public Optional<Circle> find(@NotNull Site a, @NotNull Site b) {
-        GraphPath<Site, Integer> path = new DijkstraShortestPath<>(graph).getPath(a, b);
+    public Optional<Circle> find(@NotNull Site source, @NotNull Site target) {
+        GraphPath<Site, Integer> path = new DijkstraShortestPath<>(graph).getPath(source, target);
         if (path == null) {
             return Optional.empty();
         }
@@ -42,7 +42,7 @@ public class Graph {
         Site next;
         for (int edge : path.getEdgeList()) {
             next = getOtherSite(edge, current);
-            circle.append(current.index() <= next.index() ? edge : Graph.inverse(edge));
+            circle.append(graph.getEdgeSource(edge).equals(current) ? edge : Graph.inverse(edge));
             current = next;
         }
         return Optional.of(circle);
@@ -66,31 +66,51 @@ public class Graph {
     }
 
     @NotNull
-    public Site getOtherSite(int edge, @NotNull Site site) {
+    private Site getOtherSite(int edge, @NotNull Site site) {
         return Graphs.getOppositeVertex(graph, edge, site);
     }
 
-    public void render(@NotNull Graphics g, @NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles) {
-        g.setColor(Color.BLACK);
-        graph.vertexSet().forEach(vertex -> Util.draw("" + vertex, sitePoints.apply(vertex.getIndex()), g));
-
-        Map<Set<Site>, Set<Integer>> multiEdges = new HashMap<>();
-        graph.edgeSet().forEach(edge -> multiEdges.computeIfAbsent(getSites(edge), k -> new HashSet<>()).add(edge));
-        multiEdges.forEach((sites, edges) -> {
-            g.setColor(cycles.stream().anyMatch(cycle -> cycle.containsAny(edges)) ? Color.GREEN : Color.BLUE);
-            if (sites.size() == 1) {
-                drawLoop(edges.toString(), sitePoints.apply(sites.iterator().next().getIndex()), g);
-                return;
-            }
-            Iterator<Site> iterator = sites.iterator();
-            Site a = iterator.next();
-            Site b = iterator.next();
-            Util.draw(edges.toString(), sitePoints.apply(a.getIndex()), sitePoints.apply(b.getIndex()), g);
-        });
+    public void render(@NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles, @NotNull Graphics g) {
+        renderSites(sitePoints, g);
+        renderEdges(sitePoints, cycles, g);
     }
 
-    private void drawLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
-        Util.drawCircle(name, point.add(new PointD(Util.RADIUS, -Util.RADIUS)), 10, g);
+    private void renderSites(@NotNull IntFunction<PointD> sitePoints, @NotNull Graphics g) {
+        g.setColor(Color.BLACK);
+        graph.vertexSet().forEach(vertex -> Util.draw(vertex.toString(), sitePoints.apply(vertex.getIndex()), g));
+    }
+
+    private void renderEdges(@NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles, @NotNull Graphics g) {
+        Map<Set<Site>, Set<Integer>> multiEdges = new HashMap<>();
+        graph.edgeSet().forEach(edge -> multiEdges.computeIfAbsent(getSites(edge), k -> new HashSet<>()).add(edge));
+        multiEdges.forEach((sites, edges) -> renderEdge(sites, edges, sitePoints, cycles, g));
+    }
+
+    private void renderEdge(@NotNull Set<Site> sites, @NotNull Set<Integer> edges, @NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles, @NotNull Graphics g) {
+        g.setColor(cycles.stream().anyMatch(cycle -> cycle.containsAny(edges)) ? Color.GREEN : Color.BLUE);
+        if (sites.size() == 1) {
+            renderLoop(toString(edges), sitePoints.apply(sites.iterator().next().getIndex()), g);
+            return;
+        }
+        Site source = graph.getEdgeSource(edges.iterator().next());
+        Site target = sites.stream().filter(site -> !site.equals(source)).findFirst().orElseThrow(RuntimeException::new);
+        PointD a = sitePoints.apply(source.getIndex());
+        PointD b = sitePoints.apply(target.getIndex());
+        if (edges.stream().map(graph::getEdgeSource).noneMatch(site -> site.equals(target))) {
+            Util.drawArrow(toString(edges), a, b, g);
+            return;
+        }
+        int[] directed = edges.stream().mapToInt(Integer::intValue).sorted().map(edge -> graph.getEdgeSource(edge).equals(source) ? edge : -edge).toArray();
+        Util.drawArrow(Arrays.toString(directed), a, b, g);
+    }
+
+    @NotNull
+    private String toString(@NotNull Collection<Integer> edges) {
+        return Arrays.toString(edges.stream().mapToInt(Integer::intValue).sorted().toArray());
+    }
+
+    private void renderLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
+        Util.drawCircle(name, point.add(new PointD(Util.DIAMETER, 0)), Util.DIAMETER, g);
     }
 
     @NotNull
@@ -134,11 +154,24 @@ public class Graph {
         Site elderly = Collections.min(sites);
         IntStream.of(edges).map(Graph::positive).forEach(graph::removeEdge);
         Map<Integer, Site> oldEdges = new HashMap<>();
-        sites.forEach(site -> graph.edgesOf(site).forEach(edge -> oldEdges.put(edge, Graphs.getOppositeVertex(graph, edge, site))));
+        Set<Integer> positiveEdges = new HashSet<>();
+        sites.forEach(site -> graph.edgesOf(site).forEach(edge -> {
+            oldEdges.put(edge, Graphs.getOppositeVertex(graph, edge, site));
+            if (graph.getEdgeSource(edge).equals(site)) {
+                positiveEdges.add(edge);
+            }
+        }));
         sites.forEach(graph::removeVertex);
         sites.forEach(site -> site.set(elderly));
         graph.addVertex(elderly);
-        oldEdges.forEach((edge, target) -> graph.addEdge(elderly, target, edge));
+        oldEdges.forEach((edge, site) -> {
+            if (positiveEdges.contains(edge)) {
+                graph.addEdge(elderly, site, edge);
+            }
+            else {
+                graph.addEdge(site, elderly, edge);
+            }
+        });
     }
 
     public int getSingleNonLoop(@NotNull Circle circle) {
@@ -153,10 +186,6 @@ public class Graph {
     @NotNull
     public int[] getNonLoops(@NotNull Circle circle) {
         return circle.stream().filter(this::isNonLoop).map(Graph::positive).toArray();
-    }
-
-    public static boolean contains(@NotNull int[] edges, int edge) {
-        return IntStream.of(edges).anyMatch(e -> equals(e, edge));
     }
 
     public static boolean equals(int a, int b) {
@@ -176,5 +205,10 @@ public class Graph {
 
     public static int positive(int edge) {
         return edge >= 0 ? edge : inverse(edge);
+    }
+
+    @NotNull
+    public static String toString(int edge) {
+        return edge >= 0 ? "" + edge : "-" + positive(edge);
     }
 }

@@ -52,7 +52,7 @@ public class Util {
 
     @NotNull
     public static Point convert(@NotNull PointD point) {
-        return new Point((int) Math.round(point.x), (int) Math.round(point.y));
+        return new Point(round(point.x), round(point.y));
     }
 
     @NotNull
@@ -63,6 +63,16 @@ public class Util {
     @NotNull
     public static List<Point> toPoint(@NotNull Collection<PointD> points) {
         return points.stream().map(Util::convert).collect(Collectors.toList());
+    }
+
+    public static void drawArrow(@NotNull String name, @NotNull PointD a, @NotNull PointD b, @NotNull Graphics g) {
+        draw(name, a, b, g);
+        PointD dir = b.subtract(a).normalize();
+        PointD normal = new PointD(RADIUS * dir.y, -RADIUS * dir.x);
+        dir = new PointD(dir.x * DIAMETER, dir.y * DIAMETER);
+        int[] x = new int[]{round(b.x), round(b.x - dir.x + normal.x), round(b.x - dir.x - normal.x)};
+        int[] y = new int[]{round(b.y), round(b.y - dir.y + normal.y), round(b.y - dir.y - normal.y)};
+        g.fillPolygon(x, y, 3);
     }
 
     public static void draw(@NotNull String name, @NotNull PointD a, @NotNull PointD b, @NotNull Graphics g) {
@@ -104,7 +114,7 @@ public class Util {
     }
 
     public static void drawCircle(@NotNull String name, @NotNull Point point, int radius, @NotNull Graphics g) {
-        g.drawString(name, point.x + radius + RADIUS, point.y);
+        g.drawString(name, point.x, point.y - radius - RADIUS);
         drawCircle(point, radius, g);
     }
 
@@ -216,12 +226,16 @@ public class Util {
         return min == length - 1 ? -1 : min + 1;
     }
 
+    public static int round(double value) {
+        return (int) Math.round(value);
+    }
+
     @NotNull
-    public static String round(double value) {
+    public static String display(double value) {
         if (Double.isInfinite(value)) {
             return "" + value;
         }
-        return "" + (double) Math.round(1000 * value) / 1000;
+        return "" + (double) round(1000 * value) / 1000;
     }
 
     @NotNull

@@ -52,17 +52,17 @@ public class HomologyOne {
         }
     }
 
-    public void addEdgeAndCycle(@NotNull Site a, @NotNull Site b, int edge, double radius) {
-        Optional<Circle> optionalCircle = graph.find(a, b);
-        addEdge(a, b, edge);
-        optionalCircle.ifPresent(circle -> addCycle(circle.append(edge), radius));
+    public void addEdgeAndCycle(@NotNull Site source, @NotNull Site target, int edge, double radius) {
+        Optional<Circle> optionalCircle = graph.find(source, target);
+        addEdge(source, target, edge);
+        optionalCircle.ifPresent(circle -> addCycle(circle.append(Graph.inverse(edge)), radius));
     }
 
-    public void addEdge(@NotNull Site a, @NotNull Site b, int edge) {
-        graph.addEdge(a, b, edge);
+    public void addEdge(@NotNull Site source, @NotNull Site target, int edge) {
+        graph.addEdge(source, target, edge);
     }
 
-    public void addCycle(@NotNull Circle circle, double radius) {
+    private void addCycle(@NotNull Circle circle, double radius) {
         cycles.add(new Cycle(circle, radius));
         cycles.sort(Comparator.naturalOrder());
     }
@@ -177,7 +177,7 @@ public class HomologyOne {
     }
 
     public void render(@NotNull Graphics g) {
-        graph.render(g, voronoi::getSite, cycles);
+        graph.render(voronoi::getSite, cycles, g);
         renderHomology(g);
     }
 

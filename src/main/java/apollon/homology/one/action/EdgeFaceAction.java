@@ -10,23 +10,28 @@ import java.awt.*;
 public class EdgeFaceAction extends Action {
     private final Circle circle;
 
-    private final Site a;
+    private final Site source;
 
-    private final Site b;
+    private final Site target;
 
     private final int edge;
 
     public EdgeFaceAction(@NotNull Site a, @NotNull Site b, int edge, @NotNull Circle circle, double radius) {
         super(radius);
         this.circle = circle;
-        this.a = a;
-        this.b = b;
+        if (a.index() > b.index()) {
+            Site temp = b;
+            b = a;
+            a = temp;
+        }
+        source = a;
+        target = b;
         this.edge = edge;
     }
 
     @Override
     public void execute(@NotNull HomologyOne homology) {
-        homology.addEdge(a, b, edge);
+        homology.addEdge(source, target, edge);
         homology.addRelation(circle, getRadius());
     }
 
@@ -53,6 +58,6 @@ public class EdgeFaceAction extends Action {
 
     @Override
     public String toString() {
-        return "EdgeFace: " + edge + " (" + a + " - " + b + ") " + circle;
+        return "EdgeFace: " + edge + " (" + source + " - " + target + ") " + circle;
     }
 }

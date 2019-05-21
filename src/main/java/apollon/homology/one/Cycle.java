@@ -70,8 +70,8 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
     @Override
     public String toString() {
         if (isAlive()) {
-            return "Alive: (" + Util.round(born) + ") " + circle;
+            return "Alive: (" + Util.display(born) + ") " + circle;
         }
-        return "Dead: (" + Util.round(born) + " - " + Util.round(died) + ") " + Util.round(died - born);
+        return "Dead: (" + Util.display(born) + " - " + Util.display(died) + ") " + Util.display(died - born);
     }
 }

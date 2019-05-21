@@ -292,7 +292,7 @@ public class HomologyApp extends AbstractApp {
 
         if (drawSiteEdges) {
             g.setColor(Color.RED);
-            voronoi.forEachEdge((edge, index) -> Util.draw("" + Util.round(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
+            voronoi.forEachEdge((edge, index) -> Util.draw("" + Util.display(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
         }
     }
 

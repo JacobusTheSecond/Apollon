@@ -78,6 +78,6 @@ public class HomologyZero {
 
     @Override
     public String toString() {
-        return "[" + DoubleStream.of(homology).mapToObj(Util::round).collect(Collectors.joining(", ")) + "]";
+        return "[" + DoubleStream.of(homology).mapToObj(Util::display).collect(Collectors.joining(", ")) + "]";
     }
 }

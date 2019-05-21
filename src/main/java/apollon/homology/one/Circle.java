@@ -9,6 +9,8 @@ import java.util.stream.IntStream;
 public class Circle implements EdgeContainer, Iterable<Integer> {
     private final List<Integer> edges = new ArrayList<>();
 
+    public Circle() {}
+
     public Circle(@NotNull int... edges) {
         IntStream.of(edges).forEach(this::append);
     }
@@ -97,7 +99,7 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
 
     @Override
     public String toString() {
-        return Arrays.toString(stream().map(edge -> edge >= 0 ? edge : edge + 1).toArray());
+        return Arrays.toString(stream().mapToObj(Graph::toString).toArray(String[]::new));
     }
 
     @NotNull

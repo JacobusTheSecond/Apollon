@@ -9,22 +9,27 @@ import org.jetbrains.annotations.NotNull;
 import java.awt.*;
 
 public class EdgeAction extends Action {
-    private final Site a;
+    private final Site source;
 
-    private final Site b;
+    private final Site target;
 
     private final int edge;
 
     public EdgeAction(@NotNull Site a, @NotNull Site b, int edge, double radius) {
         super(radius);
-        this.a = a;
-        this.b = b;
+        if (a.index() > b.index()) {
+            Site temp = b;
+            b = a;
+            a = temp;
+        }
+        source = a;
+        target = b;
         this.edge = edge;
     }
 
     @Override
     public void execute(@NotNull HomologyOne homology) {
-        homology.addEdgeAndCycle(a, b, edge, getRadius());
+        homology.addEdgeAndCycle(source, target, edge, getRadius());
     }
 
     @NotNull
@@ -54,6 +59,6 @@ public class EdgeAction extends Action {
 
     @Override
     public String toString() {
-        return "Edge: " + edge + " (" + a + " - " + b + ")";
+        return "Edge: " + edge + " (" + source + " - " + target + ")";
     }
 }
