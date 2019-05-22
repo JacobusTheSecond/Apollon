@@ -73,11 +73,9 @@ public class HomologyOne {
         }
         if (circle.size() == 1 || graph.hasNoLoops(circle)) {
             remove(circle.getEdges());
-        }
-        else if (graph.hasOnlyLoops(circle)) {
+        } else if (graph.hasOnlyLoops(circle)) {
             replaceLoop(circle);
-        }
-        else {
+        } else {
             replaceNonLoop(circle);
         }
         killEmptyCycles(radius);
@@ -176,29 +174,35 @@ public class HomologyOne {
         return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
     }
 
-    public void render(@NotNull Graphics g) {
+    public void render(@NotNull Graphics g, int width) {
         graph.render(voronoi::getSite, cycles, g);
-        renderHomology(g);
+        renderHomology(g, width);
     }
 
-    private void renderHomology(@NotNull Graphics g) {
-        int y = 30;
+    private void renderHomology(@NotNull Graphics g, int width) {
+        int y = 10;
         g.setColor(Color.BLACK);
-        g.drawString("Homology 1:", 5, y);
+        g.drawString("Cycles:", 5, y);
         y += 20;
         for (Cycle cycle : cycles) {
             g.setColor(cycle.isAlive() ? Color.GREEN : Color.RED);
             g.drawString(cycle.toString(), 10, y);
             y += 20;
         }
+
+        y = 10;
         g.setColor(Color.BLACK);
-        g.drawString("Actions:", 5, y);
+        renderString("Actions:", y, g, width);
         y += 20;
         for (Action action : actions) {
             g.setColor(action.getColor());
-            g.drawString(action.toString(), 10, y);
+            renderString(action.toString(), y, g, width);
             y += 20;
         }
+    }
+
+    private void renderString(@NotNull String value, int y, @NotNull Graphics g, int width) {
+        g.drawString(value, width - g.getFontMetrics().stringWidth(value) - 5, y);
     }
 
     @Override

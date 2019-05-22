@@ -69,13 +69,6 @@ public class HomologyZero {
         return index;
     }
 
-    public void render(@NotNull Graphics g) {
-        if (!voronoi.isEmpty()) {
-            g.setColor(Color.BLACK);
-            g.drawString("Homology 0: " + this, 5, 10);
-        }
-    }
-
     @Override
     public String toString() {
         return "[" + DoubleStream.of(homology).mapToObj(Util::display).collect(Collectors.joining(", ")) + "]";

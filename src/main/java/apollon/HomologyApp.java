@@ -77,8 +77,7 @@ public class HomologyApp extends AbstractApp {
         if (button == MouseEvent.BUTTON1 || button == MouseEvent.BUTTON3) {
             if (button == MouseEvent.BUTTON1) {
                 selected = index;
-            }
-            else {
+            } else {
                 points.remove(index);
                 update();
             }
@@ -297,8 +296,7 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void renderHomology(@NotNull Graphics g) {
-        homologyZero.render(g);
-        homologyOne.render(g);
+        homologyOne.render(g, getWidth());
     }
 
     private void update() {
