@@ -51,6 +51,7 @@ public class HomologyApp extends AbstractApp {
     public HomologyApp() {
         init();
         render();
+        show();
     }
 
     private void init() {
@@ -185,6 +186,9 @@ public class HomologyApp extends AbstractApp {
         menu.add(createVoronoiMenuItem());
         menu.add(createVerticesMenuItem());
         menu.addSeparator();
+        menu.add(createIncreaseRadiusMenuItem());
+        menu.add(createDecreaseRadiusMenuItem());
+        menu.addSeparator();
         menu.add(createPlotMenuItem());
         return menu;
     }
@@ -252,6 +256,28 @@ public class HomologyApp extends AbstractApp {
     }
 
     @NotNull
+    private JMenuItem createIncreaseRadiusMenuItem() {
+        JMenuItem item = new JMenuItem("Increase radius - Ctrl+Scroll");
+        item.setMnemonic('I');
+        item.addActionListener(e -> {
+            Util.increaseRadius();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createDecreaseRadiusMenuItem() {
+        JMenuItem item = new JMenuItem("Decrease radius - Ctrl+Scroll");
+        item.setMnemonic('r');
+        item.addActionListener(e -> {
+            Util.decreaseRadius();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
     private JMenuItem createPlotMenuItem() {
         JMenuItem item = new JMenuItem("Plot");
         item.setMnemonic('P');
@@ -281,19 +307,21 @@ public class HomologyApp extends AbstractApp {
         pressed(x, y, button);
     }
 
+    @Override
+    public void mouseWheelMoved(int x, int y, int rotation, int modifiers, @NotNull View view) {
+        if ((modifiers & InputEvent.CTRL_DOWN_MASK) != 0) {
+            Util.changeRadius(-rotation);
+            render();
+        }
+    }
+
     private boolean isPoint(@NotNull PointD point) {
         Point p = Util.convert(point);
         return findPoint(p.x, p.y) != -1;
     }
 
     private int findPoint(int x, int y) {
-        for (int i = 0; i < points.size(); i++) {
-            PointD point = points.get(i);
-            if (Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < Util.RADIUS_SQUARED) {
-                return i;
-            }
-        }
-        return -1;
+        return IntStream.range(0, points.size()).filter(i -> Util.isTouching(x, y, points.get(i))).findFirst().orElse(-1);
     }
 
     private void pointPressed(int index, int button) {

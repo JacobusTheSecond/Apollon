@@ -84,8 +84,8 @@ public class View extends JFrame {
         initContainer();
         initMenu();
         pack();
-        initListeners();
         setLocationRelativeTo(null);
+        initListeners();
     }
 
     private void initContainer() {
@@ -105,6 +105,12 @@ public class View extends JFrame {
             @Override
             public void mouseReleased(MouseEvent e) {
                 listener.mouseReleased(e.getX(), e.getY(), e.getButton(), View.this);
+            }
+        });
+        canvas.addMouseWheelListener(new MouseAdapter() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                listener.mouseWheelMoved(e.getX(), e.getY(), e.getWheelRotation(), e.getModifiersEx(), View.this);
             }
         });
         canvas.addMouseMotionListener(new MouseMotionAdapter() {
@@ -191,6 +197,8 @@ public class View extends JFrame {
         default void mouseMove(int x, int y, @NotNull View view) {}
 
         default void mouseDrag(int x, int y, int modifiers, @NotNull View view) {}
+
+        default void mouseWheelMoved(int x, int y, int rotation, int modifiers, @NotNull View view) {}
 
         default void keyPressed(int code, int modifiers, @NotNull View view) {}
 

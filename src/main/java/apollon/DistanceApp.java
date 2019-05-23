@@ -29,6 +29,7 @@ public class DistanceApp extends AbstractApp {
 
     public DistanceApp() {
         render();
+        show();
     }
 
     @Override

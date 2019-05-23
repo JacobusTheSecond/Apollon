@@ -23,12 +23,14 @@ public abstract class AbstractApp implements View.Listener {
     public AbstractApp() {
         image = new BufferedImage(800, 600, BufferedImage.TYPE_INT_RGB);
         view = new View(this);
-        view.setVisible(true);
     }
 
     public AbstractApp(int width, int height) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         view = new View(image, this);
+    }
+
+    public void show() {
         view.setVisible(true);
     }
 

@@ -89,7 +89,7 @@ public class Graph {
     private void renderEdge(@NotNull Set<Site> sites, @NotNull Set<Integer> edges, @NotNull IntFunction<PointD> sitePoints, @NotNull List<Cycle> cycles, @NotNull Graphics g) {
         g.setColor(cycles.stream().anyMatch(cycle -> cycle.containsAny(edges)) ? Color.GREEN : Color.BLUE);
         if (sites.size() == 1) {
-            renderLoop(toString(edges), sitePoints.apply(sites.iterator().next().getIndex()), g);
+            Util.drawLoop(toString(edges), sitePoints.apply(sites.iterator().next().getIndex()), g);
             return;
         }
         Site source = graph.getEdgeSource(edges.iterator().next());
@@ -107,10 +107,6 @@ public class Graph {
     @NotNull
     private String toString(@NotNull Collection<Integer> edges) {
         return Arrays.toString(edges.stream().mapToInt(Integer::intValue).sorted().toArray());
-    }
-
-    private void renderLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
-        Util.drawCircle(name, point.add(new PointD(Util.DIAMETER, 0)), Util.DIAMETER, g);
     }
 
     @NotNull

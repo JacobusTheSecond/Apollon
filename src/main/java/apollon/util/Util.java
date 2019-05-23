@@ -20,13 +20,56 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Util {
-    public static final int RADIUS = 8;
+    private static int radius;
 
-    public static final int RADIUS_SQUARED = (int) Math.pow(RADIUS, 2);
+    private static int radiusSquared;
 
-    public static final int DIAMETER = 2 * RADIUS;
+    private static int diameter;
+
+    static {
+        setRadius(8);
+    }
 
     private Util() {}
+
+    public static void changeRadius(int delta) {
+        setRadius(getRadius() + delta);
+    }
+
+    public static void increaseRadius() {
+        changeRadius(1);
+    }
+
+    public static void decreaseRadius() {
+        changeRadius(-1);
+    }
+
+    public static void setRadius(int radius) {
+        radius = Math.max(1, radius);
+        Util.radius = radius;
+        radiusSquared = radius * radius;
+        diameter = 2 * radius;
+    }
+
+    public static int getRadius() {
+        return radius;
+    }
+
+    public static int getRadiusSquared() {
+        return radiusSquared;
+    }
+
+    public static int getDiameter() {
+        return diameter;
+    }
+
+    public static void drawLoop(@NotNull String name, @NotNull PointD point, @NotNull Graphics g) {
+        drawCircle(name, point.add(new PointD(getDiameter(), 0)), getDiameter(), g);
+    }
+
+    public static boolean isTouching(int x, int y, @NotNull PointD point) {
+        return Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2) < getRadiusSquared();
+    }
 
     public static boolean isInside(@NotNull PointD point, @NotNull PointD[] triangle) {
         PointD a = triangle[0];
@@ -68,8 +111,8 @@ public class Util {
     public static void drawArrow(@NotNull String name, @NotNull PointD a, @NotNull PointD b, @NotNull Graphics g) {
         draw(name, a, b, g);
         PointD dir = b.subtract(a).normalize();
-        PointD normal = new PointD(RADIUS * dir.y, -RADIUS * dir.x);
-        dir = new PointD(dir.x * DIAMETER, dir.y * DIAMETER);
+        PointD normal = new PointD(getRadius() * dir.y, -getRadius() * dir.x);
+        dir = new PointD(dir.x * getDiameter(), dir.y * getDiameter());
         int[] x = new int[]{round(b.x), round(b.x - dir.x + normal.x), round(b.x - dir.x - normal.x)};
         int[] y = new int[]{round(b.y), round(b.y - dir.y + normal.y), round(b.y - dir.y - normal.y)};
         g.fillPolygon(x, y, 3);
@@ -80,7 +123,7 @@ public class Util {
     }
 
     public static void draw(@NotNull String name, @NotNull Point a, @NotNull Point b, @NotNull Graphics g) {
-        g.drawString(name, (a.x + b.x) / 2 + RADIUS, (a.y + b.y) / 2);
+        g.drawString(name, (a.x + b.x) / 2 + getRadius(), (a.y + b.y) / 2);
         draw(a, b, g);
     }
 
@@ -97,7 +140,7 @@ public class Util {
     }
 
     public static void draw(@NotNull String name, @NotNull Point point, @NotNull Graphics g) {
-        g.drawString(name, point.x + RADIUS, point.y);
+        g.drawString(name, point.x + getRadius(), point.y);
         draw(point, g);
     }
 
@@ -106,7 +149,7 @@ public class Util {
     }
 
     public static void draw(@NotNull Point point, @NotNull Graphics g) {
-        g.fillOval(point.x - RADIUS, point.y - RADIUS, DIAMETER, DIAMETER);
+        g.fillOval(point.x - getRadius(), point.y - getRadius(), getDiameter(), getDiameter());
     }
 
     public static void drawCircle(@NotNull String name, @NotNull PointD point, int radius, @NotNull Graphics g) {
@@ -114,7 +157,7 @@ public class Util {
     }
 
     public static void drawCircle(@NotNull String name, @NotNull Point point, int radius, @NotNull Graphics g) {
-        g.drawString(name, point.x, point.y - radius - RADIUS);
+        g.drawString(name, point.x, point.y - radius - getRadius());
         drawCircle(point, radius, g);
     }
 
