@@ -28,7 +28,6 @@ public class DistanceApp extends AbstractApp {
     private boolean drawBottleneck = true;
 
     public DistanceApp() {
-        super(1920, 1080);
         render();
     }
 
@@ -45,7 +44,7 @@ public class DistanceApp extends AbstractApp {
     }
 
     @Override
-    public void keyPressed(int code, @NotNull View view) {
+    public void keyPressed(int code, int modifiers, @NotNull View view) {
         switch (code) {
             case KeyEvent.VK_SPACE:
                 compute();

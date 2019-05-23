@@ -73,9 +73,11 @@ public class HomologyOne {
         }
         if (circle.size() == 1 || graph.hasNoLoops(circle)) {
             remove(circle.getEdges());
-        } else if (graph.hasOnlyLoops(circle)) {
+        }
+        else if (graph.hasOnlyLoops(circle)) {
             replaceLoop(circle);
-        } else {
+        }
+        else {
             replaceNonLoop(circle);
         }
         killEmptyCycles(radius);
@@ -174,23 +176,24 @@ public class HomologyOne {
         return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
     }
 
-    public void render(@NotNull Graphics g, int width) {
+    public void render(@NotNull Graphics g) {
         graph.render(voronoi::getSite, cycles, g);
-        renderHomology(g, width);
     }
 
-    private void renderHomology(@NotNull Graphics g, int width) {
+    public void renderCycles(@NotNull Graphics g) {
         int y = 10;
         g.setColor(Color.BLACK);
         g.drawString("Cycles:", 5, y);
         y += 20;
-        for (Cycle cycle : cycles) {
+        for (Cycle cycle : all().sorted(this::compareCycles).toArray(Cycle[]::new)) {
             g.setColor(cycle.isAlive() ? Color.GREEN : Color.RED);
             g.drawString(cycle.toString(), 10, y);
             y += 20;
         }
+    }
 
-        y = 10;
+    public void renderActions(@NotNull Graphics g, int width) {
+        int y = 10;
         g.setColor(Color.BLACK);
         renderString("Actions:", y, g, width);
         y += 20;
@@ -199,6 +202,14 @@ public class HomologyOne {
             renderString(action.toString(), y, g, width);
             y += 20;
         }
+    }
+
+    private int compareCycles(@NotNull Cycle a, @NotNull Cycle b) {
+        int difference = -Boolean.compare(a.isAlive(), b.isAlive());
+        if (difference != 0) {
+            return difference;
+        }
+        return a.compareTo(b);
     }
 
     private void renderString(@NotNull String value, int y, @NotNull Graphics g, int width) {

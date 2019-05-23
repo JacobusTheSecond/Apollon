@@ -16,6 +16,7 @@ import org.kynosarges.tektosyne.geometry.PointD;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -35,17 +36,239 @@ public class HomologyApp extends AbstractApp {
 
     private final HomologyOne homologyOne = new HomologyOne(voronoi);
 
-    private boolean drawVertexEdges = true;
+    private boolean drawVoronoiEdges;
 
-    private boolean drawVertices = true;
+    private boolean drawVoronoiVertices;
 
-    private boolean drawSiteEdges = true;
+    private boolean drawDelaunayEdges;
+
+    private boolean drawCycles = true;
+
+    private boolean drawActions = true;
 
     private int selected = -1;
 
     public HomologyApp() {
-        super(1920, 1080);
+        init();
         render();
+    }
+
+    private void init() {
+        addMenu(createFileMenu());
+        addMenu(createEditMenu());
+        addMenu(createViewMenu());
+    }
+
+    @NotNull
+    private JMenu createFileMenu() {
+        JMenu menu = new JMenu("File");
+        menu.setMnemonic('F');
+        menu.add(createOpenMenuItem());
+        menu.add(createSaveMenuItem());
+        menu.addSeparator();
+        menu.add(createImportMenuItem());
+        menu.add(createExportMenuItem());
+        menu.addSeparator();
+        menu.add(createCloseMenuItem());
+        return menu;
+    }
+
+    @NotNull
+    private JMenuItem createOpenMenuItem() {
+        JMenuItem item = new JMenuItem("Open");
+        item.setMnemonic('O');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> open());
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createSaveMenuItem() {
+        JMenuItem item = new JMenuItem("Save");
+        item.setMnemonic('S');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> save());
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createImportMenuItem() {
+        JMenuItem item = new JMenuItem("Import");
+        item.setMnemonic('I');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> importImage());
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createExportMenuItem() {
+        JMenuItem item = new JMenuItem("Export");
+        item.setMnemonic('E');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> export());
+        return item;
+    }
+
+    @NotNull
+    private JMenu createEditMenu() {
+        JMenu menu = new JMenu("Edit");
+        menu.setMnemonic('E');
+        menu.add(createNextActionMenuItem());
+        menu.add(createAllActionsMenuItem());
+        menu.add(createResetMenuItem());
+        menu.addSeparator();
+        menu.add(createClearMenuItem());
+        menu.add(createRandomizeMenuItem());
+        return menu;
+    }
+
+    @NotNull
+    private JMenuItem createNextActionMenuItem() {
+        JMenuItem item = new JMenuItem("Execute next action - Space");
+        item.setMnemonic('n');
+        item.addActionListener(e -> {
+            homologyOne.executeNextAction();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createAllActionsMenuItem() {
+        JMenuItem item = new JMenuItem("Execute all actions");
+        item.setMnemonic('a');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0));
+        item.addActionListener(e -> {
+            homologyOne.executeActions();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createResetMenuItem() {
+        JMenuItem item = new JMenuItem("Reset");
+        item.setMnemonic('R');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> {
+            homologyOne.compute();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createClearMenuItem() {
+        JMenuItem item = new JMenuItem("Clear");
+        item.setMnemonic('C');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
+        item.addActionListener(e -> clear());
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createRandomizeMenuItem() {
+        JMenuItem item = new JMenuItem("Add random points - Ctrl+R");
+        item.setMnemonic('p');
+        item.addActionListener(e -> addRandomPoints());
+        return item;
+    }
+
+    @NotNull
+    private JMenu createViewMenu() {
+        JMenu menu = new JMenu("View");
+        menu.setMnemonic('V');
+        menu.add(createCyclesMenuItem());
+        menu.add(createActionsMenuItem());
+        menu.addSeparator();
+        menu.add(createDelaunayMenuItem());
+        menu.add(createVoronoiMenuItem());
+        menu.add(createVerticesMenuItem());
+        menu.addSeparator();
+        menu.add(createPlotMenuItem());
+        return menu;
+    }
+
+    @NotNull
+    private JMenuItem createCyclesMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Show cycles");
+        item.setSelected(true);
+        item.setMnemonic('c');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK));
+        item.addChangeListener(e -> {
+            drawCycles = item.isSelected();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createActionsMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Show actions");
+        item.setSelected(true);
+        item.setMnemonic('a');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, InputEvent.CTRL_DOWN_MASK));
+        item.addChangeListener(e -> {
+            drawActions = item.isSelected();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createDelaunayMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Show Delaunay edges");
+        item.setMnemonic('D');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
+        item.addChangeListener(e -> {
+            drawDelaunayEdges = item.isSelected();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createVoronoiMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Show Voronoi edges");
+        item.setMnemonic('E');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
+        item.addChangeListener(e -> {
+            drawVoronoiEdges = item.isSelected();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createVerticesMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Show Voronoi Vertices");
+        item.setMnemonic('V');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK));
+        item.addChangeListener(e -> {
+            drawVoronoiVertices = item.isSelected();
+            render();
+        });
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createPlotMenuItem() {
+        JMenuItem item = new JMenuItem("Plot");
+        item.setMnemonic('P');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> plot());
+        return item;
+    }
+
+    @Override
+    public void keyPressed(int code, int modifiers, @NotNull View view) {
+        if (code == KeyEvent.VK_SPACE) {
+            homologyOne.executeNextAction();
+            render();
+        }
+        else if (code == KeyEvent.VK_R && (modifiers & InputEvent.CTRL_DOWN_MASK) != 0) {
+            addRandomPoints();
+        }
     }
 
     @Override
@@ -77,7 +300,8 @@ public class HomologyApp extends AbstractApp {
         if (button == MouseEvent.BUTTON1 || button == MouseEvent.BUTTON3) {
             if (button == MouseEvent.BUTTON1) {
                 selected = index;
-            } else {
+            }
+            else {
                 points.remove(index);
                 update();
             }
@@ -121,60 +345,7 @@ public class HomologyApp extends AbstractApp {
         }
     }
 
-    @Override
-    public void keyPressed(int code, @NotNull View view) {
-        switch (code) {
-            case KeyEvent.VK_ESCAPE:
-                close();
-                return;
-            case KeyEvent.VK_DELETE:
-                clear();
-                return;
-            case KeyEvent.VK_V:
-                drawVertices = !drawVertices;
-                render();
-                return;
-            case KeyEvent.VK_E:
-                drawVertexEdges = !drawVertexEdges;
-                render();
-                return;
-            case KeyEvent.VK_D:
-                drawSiteEdges = !drawSiteEdges;
-                render();
-                return;
-            case KeyEvent.VK_SPACE:
-                homologyOne.executeNextAction();
-                render();
-                return;
-            case KeyEvent.VK_ENTER:
-                homologyOne.executeActions();
-                render();
-                return;
-            case KeyEvent.VK_BACK_SPACE:
-                homologyOne.compute();
-                render();
-                return;
-            case KeyEvent.VK_R:
-                randomize();
-                return;
-            case KeyEvent.VK_P:
-                plot();
-                return;
-            case KeyEvent.VK_I:
-                loadImage();
-                return;
-            case KeyEvent.VK_O:
-                load();
-                return;
-            case KeyEvent.VK_S:
-                save();
-                return;
-            case KeyEvent.VK_X:
-                export();
-        }
-    }
-
-    private void load() {
+    private void open() {
         Util.load(getView()).ifPresent(lines -> {
             clear();
             lines.stream().map(Util::load).forEach(points::add);
@@ -195,7 +366,7 @@ public class HomologyApp extends AbstractApp {
         Util.save(getView(), data);
     }
 
-    private void loadImage() {
+    private void importImage() {
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
             return;
@@ -222,7 +393,7 @@ public class HomologyApp extends AbstractApp {
         gnuPlot.plot();
     }
 
-    private void randomize() {
+    private void addRandomPoints() {
         PointD point;
         for (int i = 0; i < 10; i++) {
             do {
@@ -253,8 +424,8 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void updateTitle() {
-        StringBuilder title = new StringBuilder();
-        getSelected().ifPresent(selected -> title.append("Position: ").append(selected.x).append(", ").append(selected.y));
+        StringBuilder title = new StringBuilder("Sites: " + points.size());
+        getSelected().ifPresent(selected -> title.append(", Position: ").append(selected.x).append(", ").append(selected.y));
         getView().setTitle(title.toString());
     }
 
@@ -279,24 +450,30 @@ public class HomologyApp extends AbstractApp {
         if (voronoi.isEmpty()) {
             return;
         }
-        if (drawVertices) {
+        if (drawVoronoiVertices) {
             g.setColor(Color.BLUE);
             voronoi.forEachVertex((vertex, index) -> Util.draw(vertex, g));
         }
 
-        if (drawVertexEdges) {
+        if (drawVoronoiEdges) {
             g.setColor(Color.BLACK);
             voronoi.forEachEdge(edge -> Util.draw(edge.getVertexA(), edge.getVertexB(), g));
         }
 
-        if (drawSiteEdges) {
+        if (drawDelaunayEdges) {
             g.setColor(Color.RED);
             voronoi.forEachEdge((edge, index) -> Util.draw("" + Util.display(edge.getLength()), edge.getSiteA(), edge.getSiteB(), g));
         }
     }
 
     private void renderHomology(@NotNull Graphics g) {
-        homologyOne.render(g, getWidth());
+        homologyOne.render(g);
+        if (drawCycles) {
+            homologyOne.renderCycles(g);
+        }
+        if (drawActions) {
+            homologyOne.renderActions(g, getWidth());
+        }
     }
 
     private void update() {

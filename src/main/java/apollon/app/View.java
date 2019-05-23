@@ -2,15 +2,19 @@ package apollon.app;
 
 import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 public class View extends JFrame {
     private final CountDownLatch latch = new CountDownLatch(1);
+
+    private final JMenuBar menuBar = new JMenuBar();
 
     private final JPanel canvas;
 
@@ -22,48 +26,76 @@ public class View extends JFrame {
 
     private int height;
 
-    public View(@NotNull Image image) {
+    public View() {
+        this(new Listener() {});
+    }
+
+    public View(int width, int height) {
+        this(width, height, new Listener() {});
+    }
+
+    public View(@NotNull BufferedImage image) {
         this(image, image.getWidth(null), image.getHeight(null));
     }
 
-    public View(@NotNull Image image, int width, int height) {
+    public View(@NotNull BufferedImage image, int width, int height) {
         this(image, width, height, new Listener() {});
     }
 
-    public View(@NotNull Image image, @NotNull Listener listener) {
+    public View(@NotNull BufferedImage image, @NotNull Listener listener) {
         this(image, image.getWidth(null), image.getHeight(null), listener);
     }
 
-    public View(@NotNull Image image, int width, int height, @NotNull Listener listener) {
+    public View(@NotNull BufferedImage image, int width, int height, @NotNull Listener listener) {
+        this(width, height, listener);
+        setImage(image);
+    }
+
+    public View(@NotNull Listener listener) {
+        this(800, 600, listener);
+        setExtendedState(MAXIMIZED_BOTH);
+    }
+
+    public View(int width, int height, @NotNull Listener listener) {
         super("View");
         this.width = width;
         this.height = height;
         this.listener = listener;
-        this.image = image;
-        canvas = new JPanel() {
+        canvas = createCanvas();
+        init();
+    }
+
+    @NotNull
+    private JPanel createCanvas() {
+        return new JPanel() {
             @Override
             public void paint(Graphics g) {
-                g.drawImage(View.this.image, 0, 0, null);
+                getImage().ifPresent(image -> g.drawImage(image, 0, 0, null));
             }
         };
+    }
 
-        init();
-
-        setVisible(true);
+    @NotNull
+    private Optional<Image> getImage() {
+        return Optional.ofNullable(image);
     }
 
     private void init() {
+        initContainer();
+        initMenu();
+        pack();
+        initListeners();
+        setLocationRelativeTo(null);
+    }
+
+    private void initContainer() {
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
-        container.setPreferredSize(new Dimension(width, height));
+        canvas.setPreferredSize(new Dimension(width, height));
         container.add(canvas, BorderLayout.CENTER);
-        container.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                updateSize(e.getComponent().getWidth(), e.getComponent().getHeight());
-            }
-        });
+    }
 
+    private void initListeners() {
         canvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -86,21 +118,36 @@ public class View extends JFrame {
                 listener.mouseMove(e.getX(), e.getY(), View.this);
             }
         });
+        canvas.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                updateSize();
+            }
+        });
         addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                listener.keyPressed(e.getExtendedKeyCode(), View.this);
+                listener.keyPressed(e.getExtendedKeyCode(), e.getModifiersEx(), View.this);
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-                listener.keyReleased(e.getExtendedKeyCode(), View.this);
+                listener.keyReleased(e.getExtendedKeyCode(), e.getModifiersEx(), View.this);
             }
         });
-        pack();
     }
 
-    public void setImage(@NotNull BufferedImage image) {
+    private void initMenu() {
+        setJMenuBar(menuBar);
+        menuBar.setPreferredSize(new Dimension(width, 21));
+    }
+
+    public void addMenu(@NotNull JMenu menu) {
+        menuBar.add(menu);
+        revalidate();
+    }
+
+    public void setImage(@Nullable BufferedImage image) {
         this.image = image;
     }
 
@@ -108,9 +155,9 @@ public class View extends JFrame {
         this.listener = listener;
     }
 
-    private void updateSize(int width, int height) {
-        this.width = width;
-        this.height = height;
+    private void updateSize() {
+        this.width = canvas.getWidth();
+        this.height = canvas.getHeight();
         listener.resize(width, height, this);
     }
 
@@ -145,8 +192,8 @@ public class View extends JFrame {
 
         default void mouseDrag(int x, int y, int modifiers, @NotNull View view) {}
 
-        default void keyPressed(int code, @NotNull View view) {}
+        default void keyPressed(int code, int modifiers, @NotNull View view) {}
 
-        default void keyReleased(int code, @NotNull View view) {}
+        default void keyReleased(int code, int modifiers, @NotNull View view) {}
     }
 }
