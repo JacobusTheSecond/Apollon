@@ -56,24 +56,18 @@
 
 %Namen des Verfassers der Arbeit
 \author{Jacobus Leander Conradi\\Vincent Rheinthal}
-%Geburtsdatum des Verfassers
-\geburtsdatum{27. Februar 1998}
-%Gebortsort des Verfassers
-\geburtsort{Grevenbroich}
 %Datum der Abgabe der Arbeit
 \date{\today}
 
 %Name des Betreuers
 % z.B.: Prof. Dr. Peter Koepke
-\betreuer{Betreuer: Prof. Dr. Carl-Friedrich Bödigheimer}
+\betreuer{Betreuer: Prof. Dr. Rolf Klein}
 %Name des Instituts an dem der Betreuer der Arbeit tätig ist.
-\zweitgutachter{Zweitgutachter: Dr. Lennart Meier}
-%z.B.: Mathematisches Institut
-\institut{Mathematisches Institut}
+\zweitgutachter{Zweitgutachter: Dr. Elmar Langetepe}
 %Titel der Bachelorarbeit
-\title{4-Mannigfaltigkeiten mit vorgegebenen Fundamentalgruppen}
+\title{Bottleneckdistanz auf Persistenzdiagrammen}
 %Do not change!
-\ausarbeitungstyp{Bachelorarbeit Mathematik}
+\ausarbeitungstyp{Lab Bericht}
 
 \usepackage{afterpage}
 
@@ -109,12 +103,6 @@
 	
 	\thispagestyle{plain}
 	\pagenumbering{Roman}
-	\section*{Vorwort}\addcontentsline{toc}{chapter}{Vorwort}
-	
-	\newpage
-	\clearpage
-	\thispagestyle{empty}\mbox{}
-	\newpage
 	\addtocounter{page}{-1}
 	\tableofcontents 
 	\addcontentsline{toc}{chapter}{Inhaltsverzeichnis}
@@ -311,6 +299,150 @@
  	
  	\section{Berechnung der persistenten Homologie}
  	
+ 	Ein wichtiges Konzept zur Berechnung der persistenten Homologie ist die sogenannte ''elder rule''. Wenn zwei Erzeuger zu einem Zeitpunkt miteinander identifiziert werden, muss man eine Wahl treffen, welche der Erzeuger noch lebt und welcher nicht. Wir wollen in dieser Arbeit hier den Älteren überleben lassen. Dies bedeutet insbesondere, dass wir für $0$-Zellen eine Wahl treffen müssen, welche Knoten älter als andere Knoten sind. Da die Wahl aber für das Persistenzdiagramm der nullten Homologie kein Einfluss hat, nummerieren wir die Knoten zufällig durch. Diese Nummerierung benutzten wir beim berechnen der ersten Homologie als eine Orierntierung der Kanten. 
+ 	
+ 	Da das $1$-Skellet das selbe wie ein Graph ist, speichern wir den Komplex als Graph, und merken uns, welche Relationen durch $2$-Zellen erzeugt werden.
+ 	
+ 	Die Hauptarbeit in unserer Implementierung ist das Berechnen der ersten Homologie. Für die nullte muss man sich lediglich beim Hinzufügen einer Kante merken, ob die zwei Knoten in der selben, oder in unterschiedlichen Zusammenhangskomponenten sind. Um gleichzeitig noch die ''elder rule'' für Erzeuger aufrecht zu erhalten merken wir uns für jeden Knoten, welche der älteste ist, der in der Zusammenhangskomponente ist. Falls die hinzugefügte Kante zwischen zwei unterschiedlichen Zusammenhangskomponenten ist, updaten wir für die eine der Zusammenhangskomponenten welche der neue älteste Knoten ist und merken uns, dass ein Erzeuger der nullten Homologie gestorben ist.
+ 	
+ 	Da Erzeuger der ersten Homologie im Kern des Randoperators $H_1(C(X))\rightarrow H_0(C(X))$ leben, und diese gerade beschrieben werden durch alle Kreise, müssen wir alle möglichen Kreise im Graphen finden, und dann über Linearkombinationen dieser herausfinden, welche Kreise sterben.
+ 	Um Kreise zu finden, gucken wir beim Hinzufügen einer Kante $e=(v,w)$, ob $v$ und $w$ in der selben Zusammenhangskomponente sind. Ist dies der Fall, finden wir einen $v,w$-Pfad $P$ in $G\setminus \{e\}$. Dann merken wir uns $P\cup \{e\}$ als einen neuen Erzeuger. zum Zeitpunkt, wo dieser Erzeuger hinzugefügt wird, ist $e$ ganz neu und noch in keinem Rand einer $2$-Zelle oder einem andern Kreis enthalten ist, sodass dieser Kreis auf jeden Fall einen Schritt lang ein lebender Erzeuger ist. 
+ 	
+ 	Falls eine $2$-Zelle dazu kommt merkt man sich eine Relation, gerade der eindeutige Kreis, der den Rand der $2$-Zelle beschreibt. Jedes mal, das eine $2$-Zelle hinzugefügt wird, muss man überprüfen, ob ein Kreis dadurch stirbt. Hierfür lösen wir die Matrix:
+ 	
+ 	%$$\begin{matrix}
+ 	%a & b\\
+ 	%c & d
+ 	%\end{matrix}$$
+ 	
+ 	$$\begin{Bmatrix}
+ 	c_{11} & c_{21} & \ldots &c_{n1} & r_{11} & \ldots  & r_{k1}\\
+ 	c_{12} & c_{22} & \ldots &c_{n2} & r_{12} & \ldots  & r_{k2}\\
+ 	\ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+ 	c_{1m} & c_{2m} & \ldots &c_{nm} & r_{1m} & \ldots  & r_{km}
+ 	\end{Bmatrix}$$
+ 	
+ 	Wobei $c_{ij} = \sum_{e_j\in P_i} 1 - \sum_{e_j*\in P_i}1$ und $r_{ij} = \sum_{e_j\in R_i} 1 - \sum_{e_j^*\in R_i}1$, wobei $P_i$ die Erzeuger-Kreise und $R_i$ die Relationskreise sind, und $e_j$ eine Kante sowie $e_j^*$ die umgedrehte Kante ist.
+ 	
+ 	\begin{figure}
+ 			\begin{tikzpicture}
+ 		\filldraw (0,0) coordinate(a) circle (3pt);
+ 		\filldraw (-1,1) coordinate(b) circle (3pt);
+ 		\filldraw (0.3,0.9) coordinate(c) circle (3pt);
+ 		\filldraw (0,-1.3) coordinate(d) circle (3pt);
+ 		\filldraw (-1,-2) coordinate(e) circle (3pt);
+ 		\filldraw (-2,-1.5) coordinate(f) circle (3pt);
+ 		\filldraw (-3,-0.5) coordinate(g) circle (3pt);
+ 		\filldraw (-2,0.5) coordinate(h) circle (3pt);
+ 		
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=red] (a) -- (b) node[midway,below,sloped,color=black]{a};
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=red](a) -- (c)node[midway,below,sloped,color=black]{b};
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=red](b) -- (c)node[midway,above,sloped,color=black]{c};
+ 		
+ 		\filldraw [opacity=0.3] (a) -- (b) -- (c);
+ 		
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (a) -- (d)node[midway,below,sloped,color=black]{d};
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (d) -- (e)node[midway,below,sloped,color=black]{e};
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (e) -- (f)node[midway,below,sloped,color=black]{f};
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (f) -- (g)node[midway,below,sloped,color=black]{g};
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (g) -- (h)node[midway,below,sloped,color=black]{h};
+ 		\draw[-{Latex[length=2mm,width=2mm]}] (b) -- (h)node[midway,below,sloped,color=black]{i};
+ 		\end{tikzpicture}
+ 		\begin{tikzpicture}
+ 		\filldraw (0,0) coordinate(a) circle (3pt);
+ 		\filldraw (-1,1) coordinate(b) circle (3pt);
+ 		\filldraw (0.3,0.9) coordinate(c) circle (3pt);
+ 		\filldraw (0,-1.3) coordinate(d) circle (3pt);
+ 		\filldraw (-1,-2) coordinate(e) circle (3pt);
+ 		\filldraw (-2,-1.5) coordinate(f) circle (3pt);
+ 		\filldraw (-3,-0.5) coordinate(g) circle (3pt);
+ 		\filldraw (-2,0.5) coordinate(h) circle (3pt);
+ 		
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (b);
+ 		\draw [-{Latex[length=2mm,width=2mm]}](a) -- (c);
+ 		\draw [-{Latex[length=2mm,width=2mm]}](b) -- (c);
+ 		
+ 		\filldraw [opacity=0.3] (a) -- (b) -- (c);
+ 		
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (d);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (d) -- (e);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (e) -- (f);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (f) -- (g);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (g) -- (h);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (b) -- (h);
+ 		\end{tikzpicture}
+ 		 		\begin{tikzpicture}
+ 		\filldraw (0,0) coordinate(a) circle (3pt);
+ 		\filldraw (-1,1) coordinate(b) circle (3pt);
+ 		\filldraw (0.3,0.9) coordinate(c) circle (3pt);
+ 		\filldraw (0,-1.3) coordinate(d) circle (3pt);
+ 		\filldraw (-1,-2) coordinate(e) circle (3pt);
+ 		\filldraw (-2,-1.5) coordinate(f) circle (3pt);
+ 		\filldraw (-3,-0.5) coordinate(g) circle (3pt);
+ 		\filldraw (-2,0.5) coordinate(h) circle (3pt);
+ 		
+ 		\draw [-{Latex[length=2mm,width=2mm]}] (a) -- (b);
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=blue](a) -- (c);
+ 		\draw [-{Latex[length=2mm,width=2mm]},color=blue](b) -- (c);
+ 		
+ 		\filldraw [opacity=0.3] (a) -- (b) -- (c);
+ 		
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (d);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (d) -- (e);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (e) -- (f);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (f) -- (g);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (g) -- (h);
+ 		\draw[-{Latex[length=2mm,width=2mm]},color=blue] (b) -- (h);
+ 		\end{tikzpicture}
+ 		\caption{Beispiel der Kreisvektoren. In Rot der Kreis der Relation, in Blau zwei Kreise, die durch die rote Relation miteinander identifiziert werden}
+ 		\label{fig4}
+ 	\end{figure}
+ 
+ 	Ein Beispiel in Abb. \ref{fig4}. Wir haben zwei Kreise in Blau gegeben, und eine Relation in Rot. Nummeriert man die Kanten wie im ersten Bild und wähle alle Kreisorientierungen gegen den Uhrzeigersinn erhält man folgende Matrix:
+ 	$$A=\begin{Bmatrix}
+ 	1 & 0 & -1\\
+ 	0 & 1 & 1\\
+ 	0 & -1 & -1\\
+ 	-1 & -1 & 0\\
+ 	-1 & -1 & 0\\
+ 	-1 & -1 &  0\\
+ 	-1 & -1 & 0\\
+ 	-1 & -1 & 0\\
+ 	1 & 1 & 0
+ 	\end{Bmatrix}$$
+ 	Und erhält somit einen nichtleeren Kern, $A(1,1,-1)^T=0$ Damit wissen wir, das die beiden Erzeuger miteinander identifiziert werden und können den jüngeren aus der Erzeugerliste schmeißen.
+ 	
+ 	Wir wissen nun, wann wir Kanten und wann, sowie wie wir $2$-Zellen zu unserem Komplex hinzufügen und wie wir alle möglichen Erzeuger finden. Fügt man dies zusammen ist es möglich die erste persistente Homologie zu berechnen.
+ 	
+ 	\subsection{Optimierung}
+ 	
+ 	Da uns dieses Verfahren zu langsam war ($~5$ Sekunden für $100$ Knoten, $~20$ Sekunden für $200$ Knoten) haben wir das ganze optimiert, indem wir den Graphen zu geschickten Zeiten kontrahieren, um die Berechnungskomplexität niedrig zu halten. So erhalten wir fast lineare Laufzeit, mit $~10$ Sekunden für 1000 Knoten.
+ 	
+ 	Probably better if Vince \LaTeX this.
+ 	
+ 	\chapter{Distanzmaße}
+ 	
+ 	Als erstes wollen wir die Wassersteindistanz auf beliebig Große Mengen erweitern. Eine erste Idee war für $|X|<|Y|$ über Injektionen $\varphi:X\rightarrow Y$ zu minimieren, und einen Fehlerterm für alle nicht getroffenen $Y$ einzuführen. Dies schien vielversprechend.\\
+ 	Definiere $\gamma:\bR^2\rightarrow\bR$, mit $(x,y)\mapsto y-x$. Die Motivation hinter dieser Definition ist, dass dies genau der vertikale Abstand von einem Punkt $(x,y)$ zu der Diagonalen ist. Dann defineren wir $$W_p'(X,Y):=\min_{\varphi:X\rightarrow Y}\bigg(\sum_{x\in X}||x-\varphi(x)||^p + \sum_{y\in Y\setminus \im(\varphi)}\gamma(y)^p\bigg)^\frac{1}{p}.$$
+ 	Dieser Ansatz erschien zuerst vielversprechend, aber der Fehlerterm war zu groß. Das Problem ist, dass $||x-\varphi(x)||$ die $\ell_2$-Norm von dem Abstand von $x$ und $\varphi(x)$ ist, wohingegen $\gamma(y)$ die $\ell_1$-Norm von dem Abstand von $y$ und $\Delta$ ist. Definiert man stattdessen $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$ erhält man eine faire Verteilung. Allerdings ist auch dieser Abstand zu restriktiv. Wir wollen Punkten aus $X$ auch erlauben, nicht gemapped zu werden. Also definieren wir nun die finale Version unserer modifizierten Wassersteindistanz
+ 	$$V_p(X,Y):=\min_{Z\subset{X}}\min_{\varphi:Z\rightarrow Y}\bigg(\sum_{z\in Z}||z-\varphi(z)||^p + \sum_{y\in (Y\setminus \im(\varphi))\cup X\setminus Z}\gamma(y)^p\bigg)^\frac{1}{p}.$$
+ 	Wir nennen die Bottleneckdistanz $B(X,Y) := V_\infty(X,Y)$.
+ 	
+ 	\section{Effizientes Berechnen}
+ 	
+ 	Man bemerkt schnell, dass das ganze Problem sehr verwandt mit dem ''Optimal Mapping''-Problem ist. Wir wollen uns das wissen vom ''Optimal Mapping'' Problem zu nutzen machen und das Problem des Miniierens über exponentiell viele Abbildungen als Flow-Problem darstellen. Für $V_p(X,Y)$ definieren wir also folgenden Graphen. $V := X\cup Y\cup {s,t,h,h'}$ und $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h)  \cup (Y\cup h')\times t$.\\
+ 	Gewichte wählen wir für Kanten in ${s}\times (X\cup h)  \cup (Y\cup h')\times t \cup \{(h,h')\}$ immer 0, für Kanten der Form $(x,y)\in X\times Y$ sind die Kosten genau $||x-y||$, und für Kanten der Form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ wählen wir $\gamma(x)$ resp. $\gamma(y)$. Als Kapazitäten wählen wir für die Kante $(s,h)$ als $|Y|$, für die Kante $(h',t)$ als $|X|$, für die Kante $(h,h')$ als $\min(|X|,|Y|)$ und für alle anderen Kanten als $1$. Und als letztes die Fluss-Requirements $b(s) = b(-t) = |X|+|Y|$, und $b(v)=0$ für alle anderen. Um die Wassersteindistanz über eine min-cost-Flow Instanz zu lösen, müssen wir vorher beweisen, dass sich jeder zulässige ganzzahlige Fluss als eine solche Abbildung $\varphi$ für den Kosten gleich dem der Kostenterm für $\varphi$ und andersherum darstellen lässt. Daraus folgt dann, dass die Kosten eines min-cost-flows gleich der Wassersteindistanz ist. Man bemerke, dass diese Kosten nur für $p=1$ gilt. Für $1<p<\infty$ exponentiere die Kosten aller Kanten um $p$ und ziehe am Ende die $p$te Wurzel der Kosten.
+ 	
+ 	\begin{lemma}
+ 		Die Kosten eines min-cost-flows für den obigen Graphen $G=(V,E)$ ist gleich der Wassersteindistanz $V_p(X,Y)$.
+ 	\end{lemma}
+ 	\begin{proof}
+ 		Sei $f:E\rightarrow \bZ_{\geq0}$ also ein zulässiger Fluss. Wähle als $Z$ alle Knoten $x$ aus $X$, sodass $f((x,y))=1$ für ein $y\in Y$ und $\varphi(x) = y$ für dieses y. In Worten, $\varphi$ ist gegeben durch die gewählten Flusskanten von $f$. Da die Kosten der vom Fluss gewählten Kanten der Form $(x,h')$ oder $(h,y)$ genau $\gamma(x)$ und $\gamma(y)$ sind, gilt also, dass $V_p(X,Y)$ eine untere Schranke für den min-cost-flow Wert sind.\\
+ 		Für die andere Richtung betrachtet man für gegebenes $Z,\varphi$ den Fluss, der gegeben ist, durch $f(x,y)=1$ genau denn wenn $x\in Z$ und$ \varphi(x)=y$. Für alle $x\in \setminus Z$ wählt man $f((x,h'))=1$ und für $y\in Y\setminus \im(\varphi)$ wählt man respektive $f((h,y))=1$. Somit erhält man einen zulässigen Fluss, mit den selben Kosten.
+ 	\end{proof}
+ 
+ 	Und wie wir wissen, kann man das min-cost-flow Problem in polynomieller Zeit z.B. mit einem Algorithmus wie Cycle Canceling berechnen.\\
+ 	Um die Bottleneckdistanz zu berechnen betrachten wir den Subgraphen, der gegeben ist die Alle Kanten die kleiner als ein bestimmter Wert sind. Da die Bottleneckdistanz gegeben ist durch die billigste Kante, sodass mit allen billigerern Kanten noch ein zulässiger Fluss möglich ist, kann man mit logarithmisch vielen Aufrufen eines min-cut Algorithmuses mit einer Methode wie Binary-Search die Bottleneck-Distanz bestimmen.
  	
 
 
