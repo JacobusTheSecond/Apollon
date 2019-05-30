@@ -1,5 +1,9 @@
 package apollon.util;
 
+import com.panayotis.gnuplot.GNUPlot;
+import com.panayotis.gnuplot.plot.DataSetPlot;
+import com.panayotis.gnuplot.style.PlotStyle;
+import com.panayotis.gnuplot.style.Style;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
@@ -324,5 +328,49 @@ public class Util {
             return Optional.empty();
         }
         return Optional.of(lines);
+    }
+
+    @NotNull
+    public static double[][] swapDimension(@NotNull double[][] matrix) {
+        double[][] result = new double[matrix[0].length][matrix.length];
+        for (int i = 0; i < matrix.length; i++) {
+            double[] row = matrix[i];
+            for (int j = 0; j < row.length; j++) {
+                result[j][i] = row[j];
+            }
+        }
+        return result;
+    }
+
+    public static void plot2D(@NotNull double[][] data) {
+        GNUPlot gnuPlot = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe");
+        DataSetPlot plot = new DataSetPlot(data);
+        plot.setPlotStyle(new PlotStyle(Style.LINES));
+        gnuPlot.addPlot(plot);
+        gnuPlot.plot();
+    }
+
+    public static void plot3D(@NotNull double[][] data) {
+        GNUPlot gnuPlot = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe", true);
+        DataSetPlot plot = new DataSetPlot(data);
+        plot.setPlotStyle(new PlotStyle(Style.LINES));
+        gnuPlot.addPlot(plot);
+        gnuPlot.plot();
+    }
+
+    @NotNull
+    public static double[][] derivate(@NotNull double[][] data) {
+        double[][] derivative = new double[data.length][];
+        for (int i = 0; i < derivative.length - 1; i++) {
+            double[] current = data[i];
+            double[] next = data[i + 1];
+            double[] difference = new double[current.length];
+            for (int j = 0; j < current.length; j++) {
+                difference[j] = next[j] - current[j];
+            }
+            derivative[i] = difference;
+        }
+        derivative[data.length - 1] = new double[data[0].length];
+        return derivative;
     }
 }
