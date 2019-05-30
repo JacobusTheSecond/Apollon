@@ -1,8 +1,8 @@
-package apollon.homology.one.action;
+package apollon.homology.action;
 
-import apollon.homology.one.Graph;
-import apollon.homology.one.HomologyOne;
-import apollon.homology.one.Site;
+import apollon.homology.Graph;
+import apollon.homology.Homology;
+import apollon.homology.Site;
 import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +28,7 @@ public class EdgeAction extends Action {
     }
 
     @Override
-    public void execute(@NotNull HomologyOne homology) {
+    public void execute(@NotNull Homology homology) {
         homology.addEdgeAndCycle(source, target, edge, getRadius());
     }
 

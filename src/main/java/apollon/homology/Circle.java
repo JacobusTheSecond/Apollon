@@ -1,4 +1,4 @@
-package apollon.homology.one;
+package apollon.homology;
 
 import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;

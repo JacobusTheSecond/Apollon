@@ -1,7 +1,7 @@
-package apollon.homology.one.action;
+package apollon.homology.action;
 
-import apollon.homology.one.EdgeContainer;
-import apollon.homology.one.HomologyOne;
+import apollon.homology.EdgeContainer;
+import apollon.homology.Homology;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -26,7 +26,7 @@ public abstract class Action implements EdgeContainer, Comparable<Action> {
         return Integer.compare(getIndex(), o.getIndex());
     }
 
-    public abstract void execute(@NotNull HomologyOne homology);
+    public abstract void execute(@NotNull Homology homology);
 
     @NotNull
     public abstract Color getColor();

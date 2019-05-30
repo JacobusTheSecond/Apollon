@@ -3,8 +3,7 @@ package apollon;
 import apollon.app.AbstractApp;
 import apollon.app.View;
 import apollon.feature.Harris;
-import apollon.homology.one.HomologyOne;
-import apollon.homology.zero.HomologyZero;
+import apollon.homology.Homology;
 import apollon.util.Util;
 import apollon.voronoi.Voronoi;
 import com.panayotis.gnuplot.GNUPlot;
@@ -32,9 +31,7 @@ public class HomologyApp extends AbstractApp {
 
     private final Voronoi voronoi = new Voronoi();
 
-    private final HomologyZero homologyZero = new HomologyZero(voronoi);
-
-    private final HomologyOne homologyOne = new HomologyOne(voronoi);
+    private final Homology homology = new Homology(voronoi);
 
     private boolean drawVoronoiEdges;
 
@@ -128,7 +125,7 @@ public class HomologyApp extends AbstractApp {
         JMenuItem item = new JMenuItem("Execute next action - Space");
         item.setMnemonic('n');
         item.addActionListener(e -> {
-            homologyOne.executeNextAction();
+            homology.executeNextAction();
             render();
         });
         return item;
@@ -140,7 +137,7 @@ public class HomologyApp extends AbstractApp {
         item.setMnemonic('a');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0));
         item.addActionListener(e -> {
-            homologyOne.executeActions();
+            homology.executeActions();
             render();
         });
         return item;
@@ -152,7 +149,7 @@ public class HomologyApp extends AbstractApp {
         item.setMnemonic('R');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
         item.addActionListener(e -> {
-            homologyOne.compute();
+            homology.compute();
             render();
         });
         return item;
@@ -169,7 +166,7 @@ public class HomologyApp extends AbstractApp {
 
     @NotNull
     private JMenuItem createRandomizeMenuItem() {
-        JMenuItem item = new JMenuItem("Add random points - Ctrl+R");
+        JMenuItem item = new JMenuItem("Add random points - Ctrl+Shift+R");
         item.setMnemonic('p');
         item.addActionListener(e -> addRandomPoints());
         return item;
@@ -289,10 +286,10 @@ public class HomologyApp extends AbstractApp {
     @Override
     public void keyPressed(int code, int modifiers, @NotNull View view) {
         if (code == KeyEvent.VK_SPACE) {
-            homologyOne.executeNextAction();
+            homology.executeNextAction();
             render();
         }
-        else if (code == KeyEvent.VK_R && (modifiers & InputEvent.CTRL_DOWN_MASK) != 0) {
+        else if (code == KeyEvent.VK_R && (modifiers & InputEvent.CTRL_DOWN_MASK) != 0 && (modifiers & InputEvent.SHIFT_DOWN_MASK) != 0) {
             addRandomPoints();
         }
     }
@@ -383,7 +380,7 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void export() {
-        save(Stream.of(homologyOne.plot()).map(point -> new PointD(point[0], point[1])).map(Util::save).collect(Collectors.joining("\n")));
+        save(Stream.of(homology.plotOne()).map(point -> new PointD(point[0], point[1])).map(Util::save).collect(Collectors.joining("\n")));
     }
 
     private void save() {
@@ -408,14 +405,28 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void plot() {
-        double[][] data = homologyOne.plot();
-        if (data.length == 0) {
-            return;
-        }
         GNUPlot gnuPlot = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe");
-        DataSetPlot plot = new DataSetPlot(homologyOne.plot());
-        gnuPlot.addPlot(plot);
+        PlotStyle point = new PlotStyle(Style.POINTS);
+        point.setPointType(7);
+
+        double[][] zero = homology.plotZero();
+        if (zero.length > 0) {
+            DataSetPlot zeroPlot = new DataSetPlot(zero);
+            zeroPlot.setTitle("Homology 0");
+            zeroPlot.setPlotStyle(point);
+            gnuPlot.addPlot(zeroPlot);
+        }
+
+        double[][] one = homology.plotOne();
+        if (one.length > 0) {
+            DataSetPlot onePlot = new DataSetPlot(one);
+            onePlot.setTitle("Homology 1");
+            onePlot.setPlotStyle(point);
+            gnuPlot.addPlot(onePlot);
+        }
+
         DataSetPlot line = new DataSetPlot(IntStream.range(0, 50).map(i -> 10 * i).mapToObj(i -> new double[]{i, i}).toArray(double[][]::new));
+        line.setTitle("Diagonal");
         line.setPlotStyle(new PlotStyle(Style.LINES));
         gnuPlot.addPlot(line);
         gnuPlot.plot();
@@ -495,19 +506,18 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void renderHomology(@NotNull Graphics g) {
-        homologyOne.render(g);
+        homology.render(g);
         if (drawCycles) {
-            homologyOne.renderCycles(g);
+            homology.renderCycles(g);
         }
         if (drawActions) {
-            homologyOne.renderActions(g, getWidth());
+            homology.renderActions(g, getWidth());
         }
     }
 
     private void update() {
         voronoi.compute(points, getWidth(), getHeight());
-        homologyZero.compute();
-        homologyOne.compute();
+        homology.compute();
     }
 
     public static void main(String[] args) {

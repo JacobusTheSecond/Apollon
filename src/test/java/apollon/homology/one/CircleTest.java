@@ -1,5 +1,6 @@
 package apollon.homology.one;
 
+import apollon.homology.Circle;
 import org.junit.Assert;
 import org.junit.Test;
 

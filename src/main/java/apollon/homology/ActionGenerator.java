@@ -1,9 +1,9 @@
-package apollon.homology.one;
+package apollon.homology;
 
-import apollon.homology.one.action.Action;
-import apollon.homology.one.action.EdgeAction;
-import apollon.homology.one.action.EdgeFaceAction;
-import apollon.homology.one.action.FaceAction;
+import apollon.homology.action.Action;
+import apollon.homology.action.EdgeAction;
+import apollon.homology.action.EdgeFaceAction;
+import apollon.homology.action.FaceAction;
 import apollon.util.Util;
 import apollon.voronoi.VEdge;
 import apollon.voronoi.Voronoi;
