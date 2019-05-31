@@ -2,7 +2,6 @@ package apollon;
 
 import apollon.app.AbstractApp;
 import apollon.app.View;
-import apollon.feature.Harris;
 import apollon.homology.Homology;
 import apollon.util.Util;
 import apollon.voronoi.Voronoi;
@@ -397,9 +396,9 @@ public class HomologyApp extends AbstractApp {
             return;
         }
         File file = chooser.getSelectedFile();
-        List<PointD> points = Harris.extract(file.getAbsolutePath(), getWidth(), getHeight());
+        //        List<PointD> points = Harris.extract(file.getAbsolutePath(), getWidth(), getHeight());
         clear();
-        this.points.addAll(points);
+        //        this.points.addAll(points);
         update();
         render();
     }
