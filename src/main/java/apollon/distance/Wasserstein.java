@@ -11,45 +11,63 @@ import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 public class Wasserstein extends AbstractGraphDistance {
+    private double p = 1;
+
     private int s, t;
 
-    private int[] x, y;
-
-    private int[] sToX, sToH, xToY, hToY, yToT;
+    private int[] xY, xJ, hY;
 
     private int[] capacities;
 
     private boolean[] flow;
 
+    public void setP(double p) {
+        this.p = p;
+    }
+
+    public double getP() {
+        return p;
+    }
+
     @Override
     protected double compute() {
-        x = createVertices(getXPoints());
-        y = createVertices(getYPoints());
+        int[] x = createVertices(getXPoints());
+        int[] y = createVertices(getYPoints());
 
         s = createVertex();
         t = createVertex();
-        int h = isDifferent() ? createVertex() : -1;
+        int h = createVertex();
+        int j = createVertex();
 
-        sToX = createEdges(0, s, x);
-        sToH = isDifferent() ? createEdges(0, s, h) : new int[0];
-        xToY = createEdges(0, x, y);
-        hToY = isDifferent() ? createEdges(0, h, y) : new int[0];
-        yToT = createEdges(0, y, t);
+        createEdges(0, s, x);
+        int[] sH = createEdges(0, s, h);
+
+        xY = createEdges(0, x, y);
+        xJ = createEdges(0, x, j);
+
+        hY = createEdges(0, h, y);
+        int[] hJ = createEdges(0, h, j);
+
+        int[] jT = createEdges(0, j, t);
+        createEdges(0, y, t);
 
         capacities = new int[getEdgeCount()];
 
         Arrays.fill(capacities, 1);
-        setEdgeCapacities(y.length - x.length, sToH);
+        setEdgeCapacities(getYCount(), sH);
+        setEdgeCapacities(getXCount(), jT);
+        setEdgeCapacities(Math.min(getXCount(), getYCount()), hJ);
 
-        setEdgeWeights((a, b) -> factor(distance(a, b)), xToY);
-        setEdgeWeights((a, b) -> factor(distanceToDiagonal(b)), hToY);
+        setEdgeWeights((a, b) -> factor(distance(a, b)), xY);
+        setEdgeWeights((a, b) -> factor(distanceToDiagonal(a)), xJ);
+        setEdgeWeights((a, b) -> factor(distanceToDiagonal(b)), hY);
 
         MinimumCostFlowProblem<Integer, Integer> problem = new MinimumCostFlowProblem.MinimumCostFlowProblemImpl<>(getGraph(), node -> {
             if (node == s) {
-                return y.length;
+                return getSum();
             }
             if (node == t) {
-                return -y.length;
+                return -getSum();
             }
             return 0;
         }, edge -> capacities[edge]);
@@ -60,20 +78,25 @@ public class Wasserstein extends AbstractGraphDistance {
         return defactor(flow.getCost());
     }
 
-    protected boolean isDifferent() {
-        return x.length < y.length;
-    }
-
     private void setEdgeCapacities(int value, @NotNull int[] edges) {
         IntStream.of(edges).forEach(edge -> capacities[edge] = value);
     }
 
     public void forEachXY(@NotNull BiConsumer<PointD, PointD> operation) {
-        IntStream.of(xToY).filter(edge -> flow[edge]).forEach(edge -> operation.accept(getSource(edge), getTarget(edge)));
+        IntStream.of(xY).filter(edge -> flow[edge]).forEach(edge -> operation.accept(getSource(edge), getTarget(edge)));
+    }
+
+    public void forEachX(@NotNull BiConsumer<PointD, PointD> operation) {
+        IntStream.of(xJ).filter(edge -> flow[edge]).forEach(edge -> {
+            PointD x = getSource(edge);
+            double mid = (x.x + x.y) / 2;
+            PointD d = new PointD(mid, mid);
+            operation.accept(x, d);
+        });
     }
 
     public void forEachY(@NotNull BiConsumer<PointD, PointD> operation) {
-        IntStream.of(hToY).filter(edge -> flow[edge]).forEach(edge -> {
+        IntStream.of(hY).filter(edge -> flow[edge]).forEach(edge -> {
             PointD y = getTarget(edge);
             double mid = (y.x + y.y) / 2;
             PointD d = new PointD(mid, mid);

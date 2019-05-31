@@ -8,6 +8,7 @@ import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -61,11 +62,14 @@ public class DistanceApp extends AbstractApp {
                 drawBottleneck = !drawBottleneck;
                 render();
                 return;
-            case KeyEvent.VK_O:
+            case KeyEvent.VK_I:
                 load(true);
                 return;
-            case KeyEvent.VK_P:
+            case KeyEvent.VK_O:
                 load(false);
+                return;
+            case KeyEvent.VK_P:
+                setP();
         }
     }
 
@@ -76,6 +80,21 @@ public class DistanceApp extends AbstractApp {
             lines.stream().map(Util::load).forEach(points::add);
             render();
         });
+    }
+
+    private void setP() {
+        while (true) {
+            String value = JOptionPane.showInputDialog(getView(), "Please insert a new p:", "Insert p", JOptionPane.QUESTION_MESSAGE);
+            if (value == null) {
+                return;
+            }
+            try {
+                double p = Double.parseDouble(value);
+                wasserstein.setP(p);
+                return;
+            }
+            catch (Exception ignored) {}
+        }
     }
 
     private void clear(@NotNull List<PointD> points) {
@@ -106,6 +125,7 @@ public class DistanceApp extends AbstractApp {
     }
 
     private void render(@NotNull Graphics g) {
+        getView().setTitle("P: " + wasserstein.getP());
         renderBackground(g);
         renderDiagonal(g);
         renderPoints(g);
@@ -138,6 +158,7 @@ public class DistanceApp extends AbstractApp {
         if (drawWasserstein) {
             g.setColor(Color.GREEN);
             wasserstein.forEachXY((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
+            wasserstein.forEachX((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
             wasserstein.forEachY((x, y) -> Util.draw("" + x.subtract(y).length(), x, y, g));
         }
         g.setColor(Color.BLACK);
