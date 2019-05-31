@@ -6,7 +6,9 @@ import org.jgrapht.alg.flow.PushRelabelMFImpl;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
 import org.kynosarges.tektosyne.geometry.PointD;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
@@ -38,7 +40,7 @@ public class Bottleneck extends AbstractGraphDistance {
         xJ = createEdges(1, x, j);
 
         hY = createEdges(1, h, y);
-        createEdges(Math.max(getXCount(), getYCount()), h, j);
+        createEdges(Math.min(getXCount(), getYCount()), h, j);
 
         createEdges(1, y, t);
         createEdges(getXCount(), j, t);
@@ -73,20 +75,20 @@ public class Bottleneck extends AbstractGraphDistance {
 
     @NotNull
     private Edge[] computeSortedEdges() {
-        Edge[] edges = new Edge[xY.length + xJ.length + hY.length];
-        int size = 0;
+        List<Edge> edges = new ArrayList<>();
         for (int edge : xY) {
-            edges[size++] = new Edge(edge, getSourceIndex(edge), getTargetIndex(edge));
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge)));
         }
         for (int edge : xJ) {
-            edges[size++] = new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), false);
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), false));
         }
         for (int edge : hY) {
-            edges[size++] = new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), true);
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), true));
         }
-        Arrays.sort(edges);
-        //TODO Apply easy bounds here
-        return edges;
+        edges.sort(Comparator.naturalOrder());
+        // TODO We can ignore the smallest |X| + |Y| edges, because these are necessary to find at least one flow
+        // edges.subList(0, getSum()).clear();
+        return edges.toArray(Edge[]::new);
     }
 
     public void forEachEdge(@NotNull BiConsumer<PointD, PointD> operation) {
