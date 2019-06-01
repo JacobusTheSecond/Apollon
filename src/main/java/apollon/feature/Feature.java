@@ -1,6 +1,5 @@
 package apollon.feature;
 
-import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.opencv.core.*;
@@ -9,9 +8,7 @@ import org.opencv.imgproc.Imgproc;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 public class Feature {
     private Feature() {
@@ -37,22 +34,29 @@ public class Feature {
         Imgproc.Canny(target, target, threshold, threshold * 3, 3, false);
     }
 
-    public static void sample(@NotNull Mat matrix) {
-        int radius = 8;
+    public static void addSamples(@NotNull Mat matrix, int radius) {
+        List<PointD> samples = sample(matrix, radius);
+        for (PointD sample : samples) {
+            Imgproc.circle(matrix, new Point(sample.x, sample.y), radius, new Scalar(255));
+        }
+    }
+
+    @NotNull
+    public static List<PointD> sample(@NotNull Mat matrix, int radius) {
         int width = matrix.cols();
         int height = matrix.rows();
         long sum = 0;
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                sum += matrix.get(j, i)[0];
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                sum += matrix.get(y, x)[0];
             }
         }
         int average = (int) (sum / (width * height));
         List<PointD> points = new ArrayList<>();
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                if (matrix.get(j, i)[0] > average) {
-                    points.add(new PointD(i, j));
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (matrix.get(y, x)[0] > average) {
+                    points.add(new PointD(x, y));
                 }
             }
         }
@@ -63,9 +67,7 @@ public class Feature {
             samples.add(sample);
             points.removeIf(point -> point.subtract(sample).length() < 2 * radius);
         }
-        for (PointD sample : samples) {
-            Imgproc.circle(matrix, new Point(sample.x, sample.y), radius, new Scalar(255));
-        }
+        return samples;
     }
 
     @NotNull

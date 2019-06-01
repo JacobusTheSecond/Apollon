@@ -2,6 +2,7 @@ package apollon;
 
 import apollon.app.AbstractApp;
 import apollon.app.View;
+import apollon.feature.Feature;
 import apollon.homology.Homology;
 import apollon.util.Util;
 import apollon.voronoi.Voronoi;
@@ -11,6 +12,8 @@ import com.panayotis.gnuplot.style.PlotStyle;
 import com.panayotis.gnuplot.style.Style;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,6 +28,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+/*
+ * TODO:
+ *  - Export homology 0 and 1 data in two different lists for further processing
+ *  - Scale both homologies at largest 0 homology component (last Morse action)
+ */
 public class HomologyApp extends AbstractApp {
     private final List<PointD> points = new ArrayList<>();
 
@@ -396,9 +404,11 @@ public class HomologyApp extends AbstractApp {
             return;
         }
         File file = chooser.getSelectedFile();
-        //        List<PointD> points = Harris.extract(file.getAbsolutePath(), getWidth(), getHeight());
+        Mat matrix = Imgcodecs.imread(file.getAbsolutePath());
+        Feature.canny(matrix, matrix, 200);
+        List<PointD> samples = Feature.sample(matrix, 8);
         clear();
-        //        this.points.addAll(points);
+        points.addAll(samples);
         update();
         render();
     }

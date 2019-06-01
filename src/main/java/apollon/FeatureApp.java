@@ -62,7 +62,7 @@ public class FeatureApp extends AbstractApp {
     }
 
     private void sample() {
-        Feature.sample(target);
+        Feature.addSamples(target, 8);
         update();
     }
 
