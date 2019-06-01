@@ -48,9 +48,17 @@ public class FeatureApp extends AbstractApp {
             case KeyEvent.VK_SUBTRACT:
                 changeThreshold(-1);
                 return;
+            case KeyEvent.VK_SPACE:
+                sample();
+                return;
             case KeyEvent.VK_ESCAPE:
                 close();
         }
+    }
+
+    private void sample() {
+        Feature.sample(target);
+        render();
     }
 
     private void changeThreshold(int delta) {

@@ -9,6 +9,8 @@ import org.opencv.imgproc.Imgproc;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class Feature {
     private Feature() {}
@@ -31,6 +33,28 @@ public class Feature {
         Imgproc.GaussianBlur(source, target, new Size(3, 3), 0, 0, Core.BORDER_DEFAULT);
         Imgproc.cvtColor(target, target, Imgproc.COLOR_RGB2GRAY);
         Imgproc.Canny(target, target, threshold, threshold * 3, 3, false);
+    }
+
+    public static void sample(@NotNull Mat matrix) {
+        int count = 100;
+        int screenWidth = 1920;
+        int screenHeight = 1080;
+        int width = count;
+        int height = (int) Math.round((double) count * screenHeight / screenWidth);
+        int k = 30;
+        double r = (double) screenWidth / count;
+        double cellSize = r / Math.sqrt(2);
+        int[][] grid = new int[width][height];
+        Stream.of(grid).forEach(row -> Arrays.fill(row, -1));
+        double[][] probabilities = new double[width][height];
+
+
+        /* TODO:
+         * - Create grid with nxm cells
+         * - Compute probability of each cell by summing up all pixels
+         * - Compute sum of all cell probabilities
+         * - ???
+         */
     }
 
     @NotNull
