@@ -1,19 +1,21 @@
 package apollon.feature;
 
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
+import org.kynosarges.tektosyne.geometry.PointD;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 
 public class Feature {
-    private Feature() {}
+    private Feature() {
+    }
 
     public static void laplace(@NotNull Mat source, @NotNull Mat target) {
         Imgproc.GaussianBlur(source, target, new Size(3, 3), 0, 0, Core.BORDER_DEFAULT);
@@ -36,25 +38,34 @@ public class Feature {
     }
 
     public static void sample(@NotNull Mat matrix) {
-        int count = 100;
-        int screenWidth = 1920;
-        int screenHeight = 1080;
-        int width = count;
-        int height = (int) Math.round((double) count * screenHeight / screenWidth);
-        int k = 30;
-        double r = (double) screenWidth / count;
-        double cellSize = r / Math.sqrt(2);
-        int[][] grid = new int[width][height];
-        Stream.of(grid).forEach(row -> Arrays.fill(row, -1));
-        double[][] probabilities = new double[width][height];
-
-
-        /* TODO:
-         * - Create grid with nxm cells
-         * - Compute probability of each cell by summing up all pixels
-         * - Compute sum of all cell probabilities
-         * - ???
-         */
+        int radius = 8;
+        int width = matrix.cols();
+        int height = matrix.rows();
+        long sum = 0;
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                sum += matrix.get(j, i)[0];
+            }
+        }
+        int average = (int) (sum / (width * height));
+        List<PointD> points = new ArrayList<>();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                if (matrix.get(j, i)[0] > average) {
+                    points.add(new PointD(i, j));
+                }
+            }
+        }
+        List<PointD> samples = new ArrayList<>();
+        while (!points.isEmpty()) {
+            int index = (int) (Math.random() * points.size());
+            PointD sample = points.remove(index);
+            samples.add(sample);
+            points.removeIf(point -> point.subtract(sample).length() < 2 * radius);
+        }
+        for (PointD sample : samples) {
+            Imgproc.circle(matrix, new Point(sample.x, sample.y), radius, new Scalar(255));
+        }
     }
 
     @NotNull

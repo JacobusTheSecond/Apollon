@@ -33,6 +33,9 @@ public class FeatureApp extends AbstractApp {
             case KeyEvent.VK_O:
                 open();
                 return;
+            case KeyEvent.VK_R:
+                reset();
+                return;
             case KeyEvent.VK_L:
                 laplace();
                 return;
@@ -43,9 +46,11 @@ public class FeatureApp extends AbstractApp {
                 canny();
                 return;
             case KeyEvent.VK_ADD:
+            case KeyEvent.VK_PLUS:
                 changeThreshold(1);
                 return;
             case KeyEvent.VK_SUBTRACT:
+            case KeyEvent.VK_MINUS:
                 changeThreshold(-1);
                 return;
             case KeyEvent.VK_SPACE:
@@ -58,11 +63,11 @@ public class FeatureApp extends AbstractApp {
 
     private void sample() {
         Feature.sample(target);
-        render();
+        update();
     }
 
     private void changeThreshold(int delta) {
-        threshold = Math.max(0, Math.min(100, threshold + delta));
+        threshold = Math.max(0, Math.min(255, threshold + delta));
         render();
     }
 
@@ -76,8 +81,13 @@ public class FeatureApp extends AbstractApp {
             source = Imgcodecs.imread(file.getAbsolutePath());
             image = Feature.toImage(source);
             render();
+        } catch (Exception ignored) {
         }
-        catch (Exception ignored) {}
+    }
+
+    private void reset(){
+        image = Feature.toImage(source);
+        render();
     }
 
     private void laplace() {
