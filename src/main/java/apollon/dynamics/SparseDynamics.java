@@ -1,8 +1,9 @@
 package apollon.dynamics;
 
+import apollon.dynamics.data.Data;
 import apollon.dynamics.data.EquationGenerator;
 import apollon.dynamics.data.XiComputer;
-import apollon.dynamics.data.ThetaFactory;
+import apollon.dynamics.data.theta.ThetaConfiguration;
 import apollon.util.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -18,19 +19,15 @@ import java.util.List;
 import java.util.Optional;
 
 public class SparseDynamics {
-    private final int polyOrder;
-
-    private final int trigonometry;
+    private final ThetaConfiguration configuration;
 
     private final int iterations;
 
     private final double threshold;
 
-    private final double[][] data;
+    private final Data data;
 
     private final double[][] derivative;
-
-    private final String[] variables;
 
     private double[][] theta;
 
@@ -39,13 +36,11 @@ public class SparseDynamics {
     private String[] names;
 
     public SparseDynamics(@NotNull Builder builder) {
-        polyOrder = builder.polyOrder;
-        trigonometry = builder.trigonometry;
+        configuration = builder.configuration;
         iterations = builder.iterations;
         threshold = builder.threshold;
         data = builder.data;
         derivative = builder.derivative;
-        variables = builder.variables;
     }
 
     public void compute() {
@@ -60,17 +55,13 @@ public class SparseDynamics {
 
     @NotNull
     public String[] getEquations() {
-        return new EquationGenerator(xi, variables, names).createEquations();
+        return new EquationGenerator(xi, data.getVariables(), names).createEquations();
     }
 
     private void computeTheta() {
-        ThetaFactory factory = new ThetaFactory(data, variables);
-        factory.addPolynoms(polyOrder);
-        if (trigonometry >= 0) {
-            factory.addTrigonometry(trigonometry);
-        }
-        theta = factory.createTheta();
-        names = factory.createNames();
+        configuration.generate(data);
+        theta = configuration.createTheta();
+        names = configuration.createNames();
     }
 
     private void computeXi() {
@@ -110,29 +101,19 @@ public class SparseDynamics {
     }
 
     public static class Builder {
-        private int polyOrder = 0;
+        private ThetaConfiguration configuration = new ThetaConfiguration();
 
-        private int trigonometry = -1;
+        private Data data;
+
+        private double[][] derivative;
 
         private int iterations = 10;
 
         private double threshold = .05;
 
-        private double[][] data;
-
-        private double[][] derivative;
-
-        private String[] variables;
-
         @NotNull
-        public Builder polyOrder(int polyOrder) {
-            this.polyOrder = polyOrder;
-            return this;
-        }
-
-        @NotNull
-        public Builder trigonometry(int trigonometry) {
-            this.trigonometry = trigonometry;
+        public Builder theta(@NotNull ThetaConfiguration configuration) {
+            this.configuration = configuration;
             return this;
         }
 
@@ -155,11 +136,12 @@ public class SparseDynamics {
 
         @NotNull
         public Builder data(@NotNull double[][] data, @NotNull String[] variables) {
-            if (data[0].length != variables.length) {
-                throw new IllegalArgumentException("Number of given variables doesn't match the data");
-            }
+            return data(new Data(data, variables));
+        }
+
+        @NotNull
+        public Builder data(@NotNull Data data) {
             this.data = data;
-            this.variables = variables;
             return this;
         }
 
@@ -180,7 +162,7 @@ public class SparseDynamics {
                 throw new IllegalStateException("Cannot create dynamics without data.");
             }
             if (derivative == null) {
-                derivative = Util.derivate(data);
+                derivative = Util.derivate(data.getData());
             }
             return new SparseDynamics(this);
         }

@@ -75,6 +75,19 @@ public interface DataSource {
     }
 
     @NotNull
+    static DataSource goldBall1D(double gravity) {
+        String display = "1D-GolfBall[" + gravity + "]\ndx = vx\ndvx = -9.81";
+        return of((t, state) -> new double[]{state[1], gravity}, display, "x", "vx");
+    }
+
+    @NotNull
+    static DataSource goldBall1DAirResistance(double gravity, double radius) {
+        String display = "1D-GolfBall-AirResistance[" + gravity + "]\ndx = vx\ndvx = -9.81 + k * signum(vx) * vx^2";
+        double k = 1.2 * .3 * Math.PI * radius * radius;
+        return of((t, state) -> new double[]{state[1], gravity - k * Math.signum(state[1]) * state[1] * state[1]}, display, "x", "vx");
+    }
+
+    @NotNull
     static DataSource goldBall2D(double gravity) {
         String display = "2D-GolfBall[" + gravity + "]\ndx = vx\ndy = vy\ndvx = 0\ndvy = -9.81";
         return of((t, state) -> new double[]{state[2], state[3], 0, gravity}, display, "x", "y", "vx", "vy");

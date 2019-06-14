@@ -30,7 +30,7 @@ public class XiComputer {
         this.threshold = threshold;
         this.iterations = iterations;
         dimension = this.derivative.length;
-        columns = theta[0].length;
+        columns = theta.length;
         size = derivative.length;
     }
 
@@ -64,11 +64,11 @@ public class XiComputer {
     }
 
     @NotNull
-    private int[] computeSmallIndices(@NotNull double[] data) {
+    private int[] computeSmallIndices(@NotNull double[] xi) {
         int[] indices = new int[columns];
         int size = 0;
         for (int i = 0; i < columns; i++) {
-            if (Math.abs(data[i]) < threshold) {
+            if (Math.abs(xi[i]) < threshold) {
                 indices[size++] = i;
             }
         }
@@ -96,25 +96,23 @@ public class XiComputer {
 
     @NotNull
     private double[] solveLeastSquares(@NotNull double[] data, @NotNull int[] columns) {
-        double[][] theta = new double[size][columns.length];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < columns.length; j++) {
-                theta[i][j] = this.theta[i][columns[j]];
-            }
+        double[][] theta = new double[columns.length][size];
+        for (int i = 0; i < columns.length; i++) {
+            System.arraycopy(this.theta[columns[i]], 0, theta[i], 0, size);
         }
         return solveLeastSquares(theta, data);
     }
 
     @NotNull
     private double[] solveLeastSquares(@NotNull double[][] theta, @NotNull double[] data) {
-        SimpleMatrix matrix = new SimpleMatrix(theta);
-        SimpleMatrix vector = new SimpleMatrix(size, 1, false, data);
-        SimpleMatrix result = new SimpleMatrix(theta[0].length, 1);
-        LinearSolverDense<DMatrixRMaj> solver = LinearSolverFactory_DDRM.leastSquares(size, dimension);
-        if (!solver.setA(matrix.getDDRM())) {
+        SimpleMatrix a = new SimpleMatrix(Util.swapDimension(theta));
+        SimpleMatrix x = new SimpleMatrix(theta.length, 1);
+        SimpleMatrix b = new SimpleMatrix(size, 1, false, data);
+        LinearSolverDense<DMatrixRMaj> solver = LinearSolverFactory_DDRM.leastSquares(size, theta.length);
+        if (!solver.setA(a.getDDRM())) {
             System.out.println("AAAAH!");
         }
-        solver.solve(vector.getDDRM(), result.getDDRM());
-        return result.getDDRM().data;
+        solver.solve(b.getDDRM(), x.getDDRM());
+        return x.getDDRM().data;
     }
 }

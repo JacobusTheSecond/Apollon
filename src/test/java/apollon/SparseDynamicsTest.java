@@ -3,6 +3,8 @@ package apollon;
 import apollon.dynamics.SparseDynamics;
 import apollon.dynamics.data.DataSource;
 import apollon.dynamics.data.Noise;
+import apollon.dynamics.data.theta.ColumnGenerator;
+import apollon.dynamics.data.theta.ThetaConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 
@@ -17,7 +19,8 @@ public class SparseDynamicsTest {
         Noise.gaussian(.01).apply(data);
         double[][] derivative = dataSource.createDerivative(dt, data);
         Noise.gaussian(.01).apply(derivative);
-        SparseDynamics dynamics = SparseDynamics.builder().iterations(10).polyOrder(2).data(data, dataSource.getVariables()).derivative(derivative).threshold(.025).build();
+        ThetaConfiguration configuration = new ThetaConfiguration().add(ColumnGenerator.polynoms(2));
+        SparseDynamics dynamics = SparseDynamics.builder().iterations(10).theta(configuration).data(data, dataSource.getVariables()).derivative(derivative).threshold(.025).build();
         dynamics.compute();
         print(dataSource, dynamics);
     }
@@ -25,11 +28,12 @@ public class SparseDynamicsTest {
     @Test
     public void testGolf() {
         double dt = .001;
-        DataSource dataSource = DataSource.goldBall2D(-9.81);
-        double[][] data = dataSource.createData(dt, Double.MAX_VALUE, new double[]{0, 1, 8, 10}, state -> state[1] > 0);
-        //        Noise.gaussian(.01).apply(data);
+        DataSource dataSource = DataSource.goldBall1DAirResistance(-9.81, 1);
+        double[][] data = dataSource.createData(dt, Double.MAX_VALUE, new double[]{1, 10}, state -> state[0] > 0);
+        Noise.gaussian(.001).apply(data);
         double[][] derivative = dataSource.createDerivative(dt, data);
-        SparseDynamics dynamics = SparseDynamics.builder().iterations(20).polyOrder(1).data(data, dataSource.getVariables()).derivative(derivative).threshold(.025).build();
+        ThetaConfiguration configuration = new ThetaConfiguration().add(ColumnGenerator.polynoms(2)).add(ColumnGenerator.absolute());
+        SparseDynamics dynamics = SparseDynamics.builder().iterations(20).theta(configuration).data(data, dataSource.getVariables()).derivative(derivative).threshold(.05).build();
         dynamics.compute();
         print(dataSource, dynamics);
     }
