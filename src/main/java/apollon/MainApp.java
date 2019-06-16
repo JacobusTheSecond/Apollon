@@ -28,6 +28,7 @@ public class MainApp {
     public static void main(String[] args) {
         Util.init();
         new MainApp().execute();
+        System.exit(0);
     }
 
     private void execute() {
