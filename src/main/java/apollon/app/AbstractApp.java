@@ -1,6 +1,6 @@
 package apollon.app;
 
-import nu.pattern.OpenCV;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -11,11 +11,7 @@ import java.util.function.Consumer;
 
 public abstract class AbstractApp implements View.Listener {
     static {
-        OpenCV.loadLocally();
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        }
-        catch (Exception ignored) {}
+        Util.init();
     }
 
     private final View view;

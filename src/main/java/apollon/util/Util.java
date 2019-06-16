@@ -1,5 +1,6 @@
 package apollon.util;
 
+import nu.pattern.OpenCV;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
@@ -14,12 +15,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Util {
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean();
+
     private static int radius;
 
     private static int radiusSquared;
@@ -31,6 +35,17 @@ public class Util {
     }
 
     private Util() {}
+
+    public static void init() {
+        if (INITIALIZED.getAndSet(true)) {
+            return;
+        }
+        OpenCV.loadLocally();
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        }
+        catch (Exception ignored) {}
+    }
 
     public static void changeRadius(int delta) {
         setRadius(getRadius() + delta);
@@ -86,6 +101,11 @@ public class Util {
 
     private static double determinant(@NotNull PointD a, @NotNull PointD b) {
         return a.x * b.y - a.y * b.x;
+    }
+
+    @NotNull
+    public static List<PointD> convert(@NotNull double[][] points) {
+        return Arrays.stream(points).map(point -> new PointD(point[0], point[1])).collect(Collectors.toList());
     }
 
     @NotNull

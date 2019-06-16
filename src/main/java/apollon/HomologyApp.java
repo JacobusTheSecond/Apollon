@@ -50,6 +50,10 @@ public class HomologyApp extends AbstractApp {
 
     private boolean drawActions = true;
 
+    private int pointWidth;
+
+    private int pointHeight;
+
     private int selected = -1;
 
     public HomologyApp() {
@@ -319,6 +323,16 @@ public class HomologyApp extends AbstractApp {
         }
     }
 
+    private void add(@NotNull PointD point) {
+        points.add(point);
+        updateSize();
+    }
+
+    private void updateSize() {
+        pointWidth = points.stream().mapToDouble(p -> p.x).mapToInt(Util::round).max().orElse(0);
+        pointHeight = points.stream().mapToDouble(p -> p.y).mapToInt(Util::round).max().orElse(0);
+    }
+
     private boolean isPoint(@NotNull PointD point) {
         Point p = Util.convert(point);
         return findPoint(p.x, p.y) != -1;
@@ -343,7 +357,7 @@ public class HomologyApp extends AbstractApp {
 
     private void pressed(int x, int y, int button) {
         if (button == MouseEvent.BUTTON1) {
-            points.add(new PointD(x, y));
+            add(new PointD(x, y));
             update();
             render();
         }
@@ -372,6 +386,7 @@ public class HomologyApp extends AbstractApp {
     private void updateSelected(int x, int y) {
         if (selected >= 0) {
             points.set(selected, new PointD(x, y));
+            updateSize();
             update();
             render();
         }
@@ -381,6 +396,7 @@ public class HomologyApp extends AbstractApp {
         Util.load(getView()).ifPresent(lines -> {
             clear();
             lines.stream().map(Util::load).forEach(points::add);
+            updateSize();
             update();
             render();
         });
@@ -409,6 +425,7 @@ public class HomologyApp extends AbstractApp {
         List<PointD> samples = Feature.sample(matrix, 8);
         clear();
         points.addAll(samples);
+        updateSize();
         update();
         render();
     }
@@ -449,6 +466,7 @@ public class HomologyApp extends AbstractApp {
             } while (isPoint(point));
             points.add(point);
         }
+        updateSize();
         update();
         render();
     }
@@ -525,7 +543,7 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void update() {
-        voronoi.compute(points, getWidth(), getHeight());
+        voronoi.compute(points, -pointWidth, -pointHeight, 3 * pointWidth, 3 * pointHeight);
         homology.compute();
     }
 

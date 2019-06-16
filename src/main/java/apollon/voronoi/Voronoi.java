@@ -28,14 +28,14 @@ public class Voronoi {
 
     private int edgesCount;
 
-    public void compute(@NotNull Collection<PointD> sites, int width, int height) {
+    public void compute(@NotNull Collection<PointD> sites, int x, int y, int width, int height) {
         if (sites.size() < 2) {
             clear();
             return;
         }
         this.sites = sites.toArray(new PointD[0]);
         sitesCount = this.sites.length;
-        compute(width, height);
+        compute(x, y, width, height);
     }
 
     public int getSitesCount() {
@@ -53,8 +53,8 @@ public class Voronoi {
         sitesCount = 0;
     }
 
-    private void compute(int width, int height) {
-        VoronoiResults results = org.kynosarges.tektosyne.geometry.Voronoi.findAll(sites, new RectD(0, 0, width, height));
+    private void compute(int x, int y, int width, int height) {
+        VoronoiResults results = org.kynosarges.tektosyne.geometry.Voronoi.findAll(sites, new RectD(x, y, width, height));
         vertices = results.voronoiVertices;
         edges = Arrays.stream(results.voronoiEdges).map(edge -> new VEdge(this, edge)).sorted().toArray(VEdge[]::new);
         edgesCount = edges.length;
