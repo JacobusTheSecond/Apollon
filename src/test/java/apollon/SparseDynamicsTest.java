@@ -29,11 +29,13 @@ public class SparseDynamicsTest {
     public void testGolf() {
         double dt = .001;
         DataSource dataSource = DataSource.goldBall1DAirResistance(-9.81, 1);
-        double[][] data = dataSource.createData(dt, Double.MAX_VALUE, new double[]{1, 10}, state -> state[0] > 0);
+        double[][] data = dataSource.createData(dt, Double.MAX_VALUE, new double[]{1, 100}, state -> state[0] > 0);
         Noise.gaussian(.001).apply(data);
         double[][] derivative = dataSource.createDerivative(dt, data);
-        ThetaConfiguration configuration = new ThetaConfiguration().add(ColumnGenerator.polynoms(2)).add(ColumnGenerator.absolute());
-        SparseDynamics dynamics = SparseDynamics.builder().iterations(20).theta(configuration).data(data, dataSource.getVariables()).derivative(derivative).threshold(.05).build();
+        ColumnGenerator signumSquare = ColumnGenerator
+                .function(variable -> "signum(" + variable + ") * " + variable + "^2", variable -> Math.signum(variable) * variable * variable);
+        ThetaConfiguration configuration = new ThetaConfiguration().add(signumSquare);
+        SparseDynamics dynamics = SparseDynamics.builder().iterations(5).theta(configuration).data(data, dataSource.getVariables()).derivative(derivative).threshold(.05).build();
         dynamics.compute();
         print(dataSource, dynamics);
     }
@@ -41,7 +43,7 @@ public class SparseDynamicsTest {
     private void print(@NotNull DataSource dataSource, @NotNull SparseDynamics dynamics) {
         System.out.println(dataSource + ":\n");
         double[][] xi = dynamics.getXi();
-        System.out.println("Xi:");
+        System.out.println("Xi: " + Arrays.toString(dynamics.getNames()));
         for (int i = 0; i < xi.length; i++) {
             System.out.println("Xi " + i + ": " + Arrays.toString(xi[i]));
         }

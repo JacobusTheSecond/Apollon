@@ -54,6 +54,11 @@ public class SparseDynamics {
     }
 
     @NotNull
+    public String[] getNames() {
+        return names;
+    }
+
+    @NotNull
     public String[] getEquations() {
         return new EquationGenerator(xi, data.getVariables(), names).createEquations();
     }

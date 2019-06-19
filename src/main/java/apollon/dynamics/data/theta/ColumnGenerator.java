@@ -50,7 +50,7 @@ public class ColumnGenerator {
             }
 
             private void generate(int order) {
-                if (order > 1) {
+                if (order > 2) {
                     generate(order - 1);
                 }
                 generate(0, 0, order, new int[order]);

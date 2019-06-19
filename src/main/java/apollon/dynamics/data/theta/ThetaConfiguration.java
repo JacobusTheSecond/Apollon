@@ -4,12 +4,19 @@ import apollon.dynamics.data.Data;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ThetaConfiguration {
     private final List<ColumnGenerator> generators = new ArrayList<>();
 
     private Columns columns;
+
+    @NotNull
+    public ThetaConfiguration add(@NotNull ColumnGenerator... generators) {
+        Collections.addAll(this.generators, generators);
+        return this;
+    }
 
     @NotNull
     public ThetaConfiguration add(@NotNull ColumnGenerator generator) {

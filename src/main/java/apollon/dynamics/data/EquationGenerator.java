@@ -63,6 +63,6 @@ public class EquationGenerator {
         if (value == 0) {
             return Optional.empty();
         }
-        return Optional.of(value + "*" + name);
+        return Optional.of(value + " * " + name);
     }
 }
