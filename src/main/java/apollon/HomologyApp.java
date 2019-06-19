@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 
 /*
  * TODO:
- *  - Export homology 0 and 1 data in two different lists for further processing
  *  - Scale both homologies at largest 0 homology component (last Morse action)
  */
 public class HomologyApp extends AbstractApp {
