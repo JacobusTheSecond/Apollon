@@ -26,6 +26,11 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
         return edges.stream().mapToInt(Integer::intValue).toArray();
     }
 
+    @NotNull
+    public int[] getEdgeIndices() {
+        return edges.stream().mapToInt(Integer::intValue).map(Graph::positive).toArray();
+    }
+
     public int get(int index) {
         return edges.get(index);
     }

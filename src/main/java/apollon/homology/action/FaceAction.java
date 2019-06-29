@@ -30,6 +30,12 @@ public class FaceAction extends Action {
         return 1;
     }
 
+    @NotNull
+    @Override
+    public int[] getRemovedEdges() {
+        return circle.getEdgeIndices();
+    }
+
     @Override
     public void remove(@NotNull int... edges) {
         circle.remove(edges);

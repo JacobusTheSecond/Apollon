@@ -36,6 +36,7 @@ public class ActionGenerator {
         voronoi.forEachVertex(this::computeVertex);
         voronoi.forEachEdge(this::computeEdge);
         actions.sort(Action::compareTo);
+        validate();
         return actions;
     }
 
@@ -87,5 +88,16 @@ public class ActionGenerator {
             sites.add(edge.getSiteBIndex());
         }
         return voronoi.getSites(Util.toArray(sites));
+    }
+
+    private void validate() {
+        boolean[] edges = new boolean[voronoi.getEdgesCount()];
+        for (Action action : actions) {
+            action.getAddedEdge().ifPresent(edge -> edges[edge] = true);
+            int missingEdge = Arrays.stream(action.getRemovedEdges()).filter(edge -> !edges[edge]).findFirst().orElse(-1);
+            if (missingEdge != -1) {
+                System.out.println("MISSING EDGE");
+            }
+        }
     }
 }

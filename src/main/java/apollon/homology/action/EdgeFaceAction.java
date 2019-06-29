@@ -6,6 +6,7 @@ import apollon.homology.Site;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.OptionalInt;
 
 public class EdgeFaceAction extends Action {
     private final Circle circle;
@@ -44,6 +45,18 @@ public class EdgeFaceAction extends Action {
     @Override
     protected int getIndex() {
         return 2;
+    }
+
+    @NotNull
+    @Override
+    public OptionalInt getAddedEdge() {
+        return OptionalInt.of(edge);
+    }
+
+    @NotNull
+    @Override
+    public int[] getRemovedEdges() {
+        return circle.getEdgeIndices();
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.OptionalInt;
 
 public class EdgeAction extends Action {
     private final Site source;
@@ -41,6 +42,12 @@ public class EdgeAction extends Action {
     @Override
     protected int getIndex() {
         return 0;
+    }
+
+    @NotNull
+    @Override
+    public OptionalInt getAddedEdge() {
+        return OptionalInt.of(edge);
     }
 
     @Override

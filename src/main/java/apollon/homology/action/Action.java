@@ -5,6 +5,7 @@ import apollon.homology.Homology;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.OptionalInt;
 
 public abstract class Action implements EdgeContainer, Comparable<Action> {
     private final double radius;
@@ -27,6 +28,16 @@ public abstract class Action implements EdgeContainer, Comparable<Action> {
     }
 
     public abstract void execute(@NotNull Homology homology);
+
+    @NotNull
+    public OptionalInt getAddedEdge() {
+        return OptionalInt.empty();
+    }
+
+    @NotNull
+    public int[] getRemovedEdges() {
+        return new int[0];
+    }
 
     @NotNull
     public abstract Color getColor();
