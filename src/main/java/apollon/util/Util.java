@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
@@ -372,5 +373,37 @@ public class Util {
         }
         derivative[data.length - 1] = new double[data[0].length];
         return derivative;
+    }
+
+    public static void doTry(@NotNull Exceptionable operation) {
+        doTry(() -> {
+            operation.run();
+            return null;
+        });
+    }
+
+    @NotNull
+    public static <T> T doTry(@NotNull Callable<T> operation) {
+        try {
+            return Objects.requireNonNull(operation.call());
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to do operation:", e);
+        }
+    }
+
+    @NotNull
+    public static <T> Optional<T> tryQuietly(@NotNull Callable<T> operation) {
+        try {
+            return Optional.ofNullable(operation.call());
+        }
+        catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    @FunctionalInterface
+    public interface Exceptionable {
+        void run() throws Exception;
     }
 }

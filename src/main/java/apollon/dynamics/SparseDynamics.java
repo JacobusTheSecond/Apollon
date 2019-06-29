@@ -74,13 +74,13 @@ public class SparseDynamics {
     }
 
     @NotNull
-    private static double[][] loadData(@NotNull File file) {
+    private static double[][] loadData(@NotNull File file, @NotNull int... indices) {
         LineIterator iterator = null;
         try {
             iterator = IOUtils.lineIterator(new FileInputStream(file), StandardCharsets.UTF_8);
             List<double[]> rows = new ArrayList<>();
             while (iterator.hasNext()) {
-                parseRow(iterator.nextLine()).ifPresent(rows::add);
+                parseRow(iterator.nextLine(), indices).ifPresent(rows::add);
             }
             return rows.toArray(double[][]::new);
         }
@@ -93,11 +93,19 @@ public class SparseDynamics {
     }
 
     @NotNull
-    private static Optional<double[]> parseRow(@NotNull String line) {
+    private static Optional<double[]> parseRow(@NotNull String line, @NotNull int... indices) {
         if (StringUtils.isBlank(line)) {
             return Optional.empty();
         }
-        return Optional.of(Arrays.stream(line.split(",")).mapToDouble(Double::parseDouble).toArray());
+        return Optional.of(Arrays.stream(line.split(",")).mapToDouble(Double::parseDouble).toArray()).map(array -> filterIndices(array, indices));
+    }
+
+    @NotNull
+    private static double[] filterIndices(@NotNull double[] data, @NotNull int... indices) {
+        if (indices.length == 0) {
+            return data;
+        }
+        return Arrays.stream(indices).mapToDouble(index -> data[index]).toArray();
     }
 
     @NotNull
@@ -135,8 +143,8 @@ public class SparseDynamics {
         }
 
         @NotNull
-        public Builder data(@NotNull File file, @NotNull String[] variables) {
-            return data(loadData(file), variables);
+        public Builder data(@NotNull File file, @NotNull String[] variables, @NotNull int... indices) {
+            return data(loadData(file, indices), variables);
         }
 
         @NotNull
@@ -158,6 +166,12 @@ public class SparseDynamics {
         @NotNull
         public Builder derivative(@NotNull double[][] derivative) {
             this.derivative = derivative;
+            return this;
+        }
+
+        @NotNull
+        public Builder derivative(double dt) {
+            this.derivative = data.createDerivative(dt);
             return this;
         }
 

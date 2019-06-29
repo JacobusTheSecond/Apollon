@@ -13,7 +13,7 @@ public class DataSourceTest {
         Util.plot3D(data);
         Noise.gaussian(.01).apply(data);
         Util.plot3D(data);
-        double[][] derivative = dataSource.createDerivative(dt, data);
+        double[][] derivative = DataSource.createDerivative(dt, data);
         for (int i = 0; i < data.length - 1; i++) {
             double[] current = data[i];
             double[] next = data[i + 1];

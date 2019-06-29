@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.function.BiConsumer;
 
 public class Data {
+    private final double[][] rawData;
+
     private final double[][] data;
 
     private final String[] variables;
@@ -15,7 +17,8 @@ public class Data {
     private final int size;
 
     public Data(@NotNull double[][] data, @NotNull String[] variables) {
-        this.data = Util.swapDimension(data);
+        this.rawData = data;
+        this.data = Util.swapDimension(rawData);
         this.variables = variables;
         dimension = this.data.length;
         size = this.data[0].length;
@@ -37,6 +40,11 @@ public class Data {
 
     public int getSize() {
         return size;
+    }
+
+    @NotNull
+    public double[][] createDerivative(double dt) {
+        return DataSource.createDerivative(dt, rawData);
     }
 
     public double get(int variable, int time) {

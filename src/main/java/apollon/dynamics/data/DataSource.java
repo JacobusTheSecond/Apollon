@@ -22,7 +22,7 @@ public interface DataSource {
     }
 
     @NotNull
-    default double[] derivative(double dt, @NotNull double[] current, @NotNull double[] next) {
+    static double[] derivative(double dt, @NotNull double[] current, @NotNull double[] next) {
         double[] difference = new double[current.length];
         for (int j = 0; j < current.length; j++) {
             difference[j] = (next[j] - current[j]) / dt;
@@ -59,7 +59,7 @@ public interface DataSource {
     }
 
     @NotNull
-    default double[][] createDerivative(double dt, @NotNull double[][] data) {
+    static double[][] createDerivative(double dt, @NotNull double[][] data) {
         double[][] derivative = new double[data.length][];
         for (int i = 0; i < derivative.length - 1; i++) {
             derivative[i] = derivative(dt, data[i], data[i + 1]);
