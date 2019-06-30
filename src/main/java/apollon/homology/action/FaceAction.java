@@ -26,7 +26,7 @@ public class FaceAction extends Action {
     }
 
     @Override
-    protected int getIndex() {
+    public int getIndex() {
         return 1;
     }
 

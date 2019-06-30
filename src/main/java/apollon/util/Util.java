@@ -7,10 +7,7 @@ import org.kynosarges.tektosyne.geometry.PointD;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
@@ -19,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
+import java.util.prefs.Preferences;
 import java.util.stream.Collectors;
 
 public class Util {
@@ -315,7 +313,7 @@ public class Util {
     }
 
     public static void save(@NotNull Component component, @NotNull String data) {
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = Util.choose();
         if (chooser.showSaveDialog(component) != JFileChooser.APPROVE_OPTION) {
             return;
         }
@@ -330,7 +328,7 @@ public class Util {
 
     @NotNull
     public static Optional<List<String>> load(@NotNull Component component) {
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = choose();
         if (chooser.showOpenDialog(component) != JFileChooser.APPROVE_OPTION) {
             return Optional.empty();
         }
@@ -344,5 +342,18 @@ public class Util {
             return Optional.empty();
         }
         return Optional.of(lines);
+    }
+
+    @NotNull
+    public static JFileChooser choose() {
+        Preferences preferences = Preferences.userRoot().node("chooser");
+        JFileChooser chooser = new JFileChooser(preferences.get("directory", new File(".").getAbsolutePath()));
+        chooser.addActionListener(e -> save(chooser));
+        return chooser;
+    }
+
+    public static void save(@NotNull JFileChooser chooser) {
+        Preferences preferences = Preferences.userRoot().node("chooser");
+        preferences.put("directory", chooser.getCurrentDirectory().getAbsolutePath());
     }
 }

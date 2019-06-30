@@ -91,6 +91,16 @@ public class ActionGenerator {
     }
 
     private void repair() {
+        try {
+            tryRepair();
+        }
+        catch (Exception e) {
+            reorder();
+            tryRepair();
+        }
+    }
+
+    private void tryRepair() {
         int[] edgeIndices = new int[voronoi.getEdgesCount()];
         Arrays.fill(edgeIndices, -1);
         for (int i = 0; i < actions.size(); i++) {
@@ -117,6 +127,75 @@ public class ActionGenerator {
         edgeIndices[edge]--;
         if (faceEdge >= 0) {
             edgeIndices[faceEdge]++;
+        }
+    }
+
+    private void reorder() {
+        Map<Action, ActionWrapper> wrappers = new HashMap<>();
+        actions.forEach(action -> wrappers.put(action, new ActionWrapper(action)));
+
+        Map<Integer, ActionWrapper> providers = new HashMap<>();
+        actions.forEach(action -> action.getAddedEdge().ifPresent(edge -> providers.put(edge, wrappers.get(action))));
+
+        wrappers.values().forEach(wrapper -> wrapper.initDependencies(providers));
+        wrappers.values().forEach(ActionWrapper::initRadius);
+        actions.sort(Comparator.comparing(wrappers::get));
+    }
+
+    private class ActionWrapper implements Comparable<ActionWrapper> {
+        private final Set<ActionWrapper> dependencies = new HashSet<>();
+
+        private final Action action;
+
+        private boolean initialized = false;
+
+        private double radius = -1;
+
+        private ActionWrapper(@NotNull Action action) {
+            this.action = action;
+        }
+
+        private void initDependencies(@NotNull Map<Integer, ActionWrapper> providers) {
+            if (initialized) {
+                return;
+            }
+            Arrays.stream(action.getRemovedEdges()).mapToObj(providers::get).filter(wrapper -> wrapper != this).forEach(wrapper -> {
+                wrapper.initDependencies(providers);
+                dependencies.add(wrapper);
+                dependencies.addAll(wrapper.dependencies);
+            });
+            initialized = true;
+        }
+
+        private double initRadius() {
+            if (radius >= 0) {
+                return radius;
+            }
+            if (dependencies.isEmpty()) {
+                this.radius = action.getRadius();
+                return radius;
+            }
+            double radius = dependencies.stream().mapToDouble(ActionWrapper::initRadius).max().orElseThrow();
+            this.radius = Math.max(action.getRadius(), radius);
+            return this.radius;
+        }
+
+        @Override
+        public int compareTo(@NotNull ActionGenerator.ActionWrapper o) {
+            if (o == this) {
+                return 0;
+            }
+            int difference = Double.compare(radius, o.radius);
+            if (difference != 0) {
+                return difference;
+            }
+            if (o.dependencies.contains(this)) {
+                return -1;
+            }
+            if (dependencies.contains(o)) {
+                return 1;
+            }
+            return Integer.compare(action.getIndex(), o.action.getIndex());
         }
     }
 }

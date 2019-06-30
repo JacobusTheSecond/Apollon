@@ -3,6 +3,7 @@ package apollon;
 import apollon.app.AbstractApp;
 import apollon.app.View;
 import apollon.feature.Feature;
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -62,7 +63,7 @@ public class FeatureApp extends AbstractApp {
     }
 
     private void sample() {
-        Feature.addSamples(target, 8);
+        Feature.addSamples(target);
         update();
     }
 
@@ -72,7 +73,7 @@ public class FeatureApp extends AbstractApp {
     }
 
     public void open() {
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = Util.choose();
         if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
             return;
         }

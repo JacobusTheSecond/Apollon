@@ -43,7 +43,7 @@ public class EdgeFaceAction extends Action {
     }
 
     @Override
-    protected int getIndex() {
+    public int getIndex() {
         return 2;
     }
 

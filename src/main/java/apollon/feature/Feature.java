@@ -1,5 +1,6 @@
 package apollon.feature;
 
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 import org.opencv.core.*;
@@ -9,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Feature {
     private Feature() {
@@ -34,11 +36,21 @@ public class Feature {
         Imgproc.Canny(target, target, threshold, threshold * 3, 3, false);
     }
 
-    public static void addSamples(@NotNull Mat matrix, int radius) {
+    public static void addSamples(@NotNull Mat matrix) {
+        int radius = computeRadius(matrix);
         List<PointD> samples = sample(matrix, radius);
         for (PointD sample : samples) {
             Imgproc.circle(matrix, new Point(sample.x, sample.y), radius, new Scalar(255));
         }
+    }
+
+    private static int computeRadius(@NotNull Mat matrix) {
+        return Math.max(matrix.cols(), matrix.rows()) / 100;
+    }
+
+    @NotNull
+    public static List<PointD> sample(@NotNull Mat matrix) {
+        return sample(matrix, computeRadius(matrix));
     }
 
     @NotNull
@@ -67,7 +79,9 @@ public class Feature {
             samples.add(sample);
             points.removeIf(point -> point.subtract(sample).length() < 2 * radius);
         }
-        return samples;
+        int max = samples.stream().mapToDouble(point -> Math.max(point.x, point.y)).mapToInt(Util::round).max().orElse(-1);
+        double scale = max >= 0 ? 1000. / max : 1;
+        return samples.stream().map(point -> new PointD(scale * point.x, scale * point.y)).collect(Collectors.toList());
     }
 
     @NotNull

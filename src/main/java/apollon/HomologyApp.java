@@ -22,6 +22,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -414,14 +415,14 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void importImage() {
-        JFileChooser chooser = new JFileChooser();
+        JFileChooser chooser = Util.choose();
         if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
             return;
         }
         File file = chooser.getSelectedFile();
         Mat matrix = Imgcodecs.imread(file.getAbsolutePath());
         Feature.canny(matrix, matrix, 200);
-        List<PointD> samples = Feature.sample(matrix, 8);
+        List<PointD> samples = Feature.sample(matrix);
         clear();
         points.addAll(samples);
         updateSize();
@@ -450,7 +451,8 @@ public class HomologyApp extends AbstractApp {
             gnuPlot.addPlot(onePlot);
         }
 
-        DataSetPlot line = new DataSetPlot(IntStream.range(0, 50).map(i -> 10 * i).mapToObj(i -> new double[]{i, i}).toArray(double[][]::new));
+        double max = Arrays.stream(one).mapToDouble(p -> Math.max(p[0], p[1])).max().orElse(1) / 10;
+        DataSetPlot line = new DataSetPlot(IntStream.range(0, 10).mapToDouble(i -> max * i).mapToObj(i -> new double[]{i, i}).toArray(double[][]::new));
         line.setTitle("Diagonal");
         line.setPlotStyle(new PlotStyle(Style.LINES));
         gnuPlot.addPlot(line);

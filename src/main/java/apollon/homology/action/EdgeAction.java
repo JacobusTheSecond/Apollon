@@ -40,7 +40,7 @@ public class EdgeAction extends Action {
     }
 
     @Override
-    protected int getIndex() {
+    public int getIndex() {
         return 0;
     }
 

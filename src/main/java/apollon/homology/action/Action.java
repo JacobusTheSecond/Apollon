@@ -8,9 +8,13 @@ import java.awt.*;
 import java.util.OptionalInt;
 
 public abstract class Action implements EdgeContainer, Comparable<Action> {
-    private final double radius;
+    private double radius;
 
     protected Action(double radius) {
+        this.radius = radius;
+    }
+
+    public void setRadius(double radius) {
         this.radius = radius;
     }
 
@@ -42,5 +46,5 @@ public abstract class Action implements EdgeContainer, Comparable<Action> {
     @NotNull
     public abstract Color getColor();
 
-    protected abstract int getIndex();
+    public abstract int getIndex();
 }

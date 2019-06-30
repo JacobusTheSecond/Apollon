@@ -27,6 +27,8 @@ public class Homology {
 
     private double[] zero;
 
+    private double scale;
+
     public Homology(@NotNull Voronoi voronoi) {
         this.voronoi = voronoi;
         generator = new ActionGenerator(voronoi, graph);
@@ -35,6 +37,7 @@ public class Homology {
     public void compute() {
         init();
         actions.addAll(generator.generate());
+        scale = 1;
     }
 
     private void init() {
@@ -56,13 +59,20 @@ public class Homology {
 
     public synchronized void executeActions() {
         while (!actions.isEmpty()) {
-            actions.remove(0).execute(this);
+            executeAction();
         }
     }
 
     public synchronized void executeNextAction() {
         if (!actions.isEmpty()) {
-            actions.remove(0).execute(this);
+            executeAction();
+        }
+    }
+
+    private void executeAction() {
+        actions.remove(0).execute(this);
+        if (actions.isEmpty()) {
+            scale = Arrays.stream(zero).filter(Double::isFinite).map(radius -> 1 / radius).min().orElse(1);
         }
     }
 
@@ -200,12 +210,12 @@ public class Homology {
 
     @NotNull
     public double[][] plotOne() {
-        return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
+        return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{scale * cycle.getBorn(), scale * cycle.getDied()}).toArray(double[][]::new);
     }
 
     @NotNull
     public double[][] plotZero() {
-        return DoubleStream.of(zero).filter(Double::isFinite).mapToObj(radius -> new double[]{0, radius}).toArray(double[][]::new);
+        return DoubleStream.of(zero).filter(Double::isFinite).map(radius -> scale * radius).mapToObj(radius -> new double[]{0, radius}).toArray(double[][]::new);
     }
 
     public void render(@NotNull Graphics g) {

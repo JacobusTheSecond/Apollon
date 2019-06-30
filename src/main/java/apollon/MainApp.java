@@ -69,14 +69,14 @@ public class MainApp {
 
         @NotNull
         private List<PointD> loadImage() {
-            JFileChooser chooser = new JFileChooser();
+            JFileChooser chooser = Util.choose();
             if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION) {
                 return Collections.emptyList();
             }
             File file = chooser.getSelectedFile();
             Mat image = Imgcodecs.imread(file.getAbsolutePath());
             Feature.canny(image, image, 200);
-            return Feature.sample(image, 8);
+            return Feature.sample(image);
         }
 
         public boolean isEmpty() {
