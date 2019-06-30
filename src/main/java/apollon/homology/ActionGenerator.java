@@ -36,7 +36,7 @@ public class ActionGenerator {
         voronoi.forEachVertex(this::computeVertex);
         voronoi.forEachEdge(this::computeEdge);
         actions.sort(Action::compareTo);
-        validate();
+        repair();
         return actions;
     }
 
@@ -90,14 +90,33 @@ public class ActionGenerator {
         return voronoi.getSites(Util.toArray(sites));
     }
 
-    private void validate() {
-        boolean[] edges = new boolean[voronoi.getEdgesCount()];
-        for (Action action : actions) {
-            action.getAddedEdge().ifPresent(edge -> edges[edge] = true);
-            int missingEdge = Arrays.stream(action.getRemovedEdges()).filter(edge -> !edges[edge]).findFirst().orElse(-1);
-            if (missingEdge != -1) {
-                System.out.println("MISSING EDGE");
-            }
+    private void repair() {
+        int[] edgeIndices = new int[voronoi.getEdgesCount()];
+        Arrays.fill(edgeIndices, -1);
+        for (int i = 0; i < actions.size(); i++) {
+            int index = i;
+            actions.get(i).getAddedEdge().ifPresent(edge -> edgeIndices[edge] = index);
+        }
+        for (int i = 0; i < actions.size(); i++) {
+            int index = i;
+            Arrays.stream(actions.get(i).getRemovedEdges()).map(edge -> edgeIndices[edge]).max().ifPresent(edgeIndex -> {
+                if (index < edgeIndex) {
+                    move(index, edgeIndex, edgeIndices);
+                }
+            });
+        }
+    }
+
+    private void move(int source, int target, @NotNull int[] edgeIndices) {
+        if (target > source + 1) {
+            throw new IllegalStateException("BIG MOVE: " + source + " -> " + target);
+        }
+        int edge = actions.get(target).getAddedEdge().orElseThrow();
+        int faceEdge = actions.get(source).getAddedEdge().orElse(-1);
+        actions.add(target, actions.remove(source));
+        edgeIndices[edge]--;
+        if (faceEdge >= 0) {
+            edgeIndices[faceEdge]++;
         }
     }
 }
