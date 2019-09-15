@@ -1,5 +1,6 @@
 package apollon.dynamics.data;
 
+import apollon.dynamics.data.theta.Variables;
 import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 
@@ -10,13 +11,13 @@ public class Data {
 
     private final double[][] data;
 
-    private final String[] variables;
+    private final Variables variables;
 
     private final int dimension;
 
     private final int size;
 
-    public Data(@NotNull double[][] data, @NotNull String[] variables) {
+    public Data(@NotNull double[][] data, @NotNull Variables variables) {
         this.rawData = data;
         this.data = Util.swapDimension(rawData);
         this.variables = variables;
@@ -30,7 +31,7 @@ public class Data {
     }
 
     @NotNull
-    public String[] getVariables() {
+    public Variables getVariables() {
         return variables;
     }
 
@@ -57,8 +58,13 @@ public class Data {
     }
 
     @NotNull
+    public double[] getRow(int index) {
+        return rawData[index];
+    }
+
+    @NotNull
     public String getVariable(int index) {
-        return variables[index];
+        return variables.get(index);
     }
 
     public void forEach(@NotNull BiConsumer<String, double[]> operation) {

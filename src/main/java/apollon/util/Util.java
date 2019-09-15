@@ -23,8 +23,11 @@ import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Util {
+    private static final GNUPlot PLOT_3D = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe", true);
+
     private static int radius;
 
     private static int radiusSquared;
@@ -351,12 +354,18 @@ public class Util {
         gnuPlot.plot();
     }
 
-    public static void plot3D(@NotNull double[][] data) {
-        GNUPlot gnuPlot = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe", true);
-        DataSetPlot plot = new DataSetPlot(data);
-        plot.setPlotStyle(new PlotStyle(Style.LINES));
-        gnuPlot.addPlot(plot);
-        gnuPlot.plot();
+    public static void addPlot3D(@NotNull double[][]... dataSets) {
+        DataSetPlot[] plots = Stream.of(dataSets).map(DataSetPlot::new).toArray(DataSetPlot[]::new);
+        Arrays.stream(plots).forEach(plot -> plot.setPlotStyle(new PlotStyle(Style.LINES)));
+        Arrays.stream(plots).forEach(PLOT_3D::addPlot);
+    }
+
+    public static void clear3D() {
+        PLOT_3D.newGraph3D();
+    }
+
+    public static void plot3D() {
+        PLOT_3D.plot();
     }
 
     @NotNull

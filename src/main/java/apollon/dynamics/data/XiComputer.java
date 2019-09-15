@@ -1,15 +1,20 @@
 package apollon.dynamics.data;
 
 import apollon.util.Util;
+import org.apache.commons.lang3.ArrayUtils;
 import org.ejml.data.DMatrixRMaj;
 import org.ejml.dense.row.factory.LinearSolverFactory_DDRM;
 import org.ejml.interfaces.linsol.LinearSolverDense;
 import org.ejml.simple.SimpleMatrix;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 public class XiComputer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(XiComputer.class);
+
     private final double[][] theta;
 
     private final double[][] derivative;
@@ -38,6 +43,7 @@ public class XiComputer {
     public double[][] compute() {
         double[][] xi = new double[dimension][];
         for (int i = 0; i < dimension; i++) {
+            LOGGER.info("Dimension {}/{}", i + 1, dimension);
             xi[i] = compute(derivative[i]);
         }
         return xi;
@@ -47,6 +53,7 @@ public class XiComputer {
     private double[] compute(@NotNull double[] derivative) {
         double[] xi = solveLeastSquares(derivative);
         for (int k = 0; k < iterations; k++) {
+            LOGGER.info("- Iteration {}/{}", k + 1, iterations);
             int[] smallIndices = computeSmallIndices(xi);
             for (int index : smallIndices) {
                 xi[index] = 0;
@@ -113,6 +120,10 @@ public class XiComputer {
             System.out.println("AAAAH!");
         }
         solver.solve(b.getDDRM(), x.getDDRM());
-        return x.getDDRM().data;
+        double[] result = x.getDDRM().data;
+        if (ArrayUtils.contains(result, Double.NaN)) {
+            System.out.println("NaN!!!");
+        }
+        return result;
     }
 }

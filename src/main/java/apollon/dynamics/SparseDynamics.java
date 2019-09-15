@@ -3,7 +3,8 @@ package apollon.dynamics;
 import apollon.dynamics.data.Data;
 import apollon.dynamics.data.EquationGenerator;
 import apollon.dynamics.data.XiComputer;
-import apollon.dynamics.data.theta.ThetaConfiguration;
+import apollon.dynamics.data.theta.ThetaConfig;
+import apollon.dynamics.data.theta.Variables;
 import apollon.util.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -17,9 +18,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 public class SparseDynamics {
-    private final ThetaConfiguration configuration;
+    private final ThetaConfig config;
 
     private final int iterations;
 
@@ -36,7 +38,7 @@ public class SparseDynamics {
     private String[] names;
 
     public SparseDynamics(@NotNull Builder builder) {
-        configuration = builder.configuration;
+        config = builder.config;
         iterations = builder.iterations;
         threshold = builder.threshold;
         data = builder.data;
@@ -46,6 +48,31 @@ public class SparseDynamics {
     public void compute() {
         computeTheta();
         computeXi();
+    }
+
+    public int getDimension() {
+        return data.getDimension();
+    }
+
+    @NotNull
+    public double[][] createData(double dt, int size) {
+        double[][] data = new double[size][getDimension()];
+        data[0] = this.data.getRow(0);
+        for (int i = 1; i < size; i++) {
+            data[i] = computeStep(data[i - 1], dt);
+        }
+        return data;
+    }
+
+    @NotNull
+    private double[] computeStep(@NotNull double[] state, double dt) {
+        return IntStream.range(0, state.length).mapToDouble(i -> state[i] + dt * computeDerivative(state, i)).toArray();
+    }
+
+    private double computeDerivative(@NotNull double[] state, int index) {
+        double[] theta = config.generate(state);
+        double[] xi = getXi()[index];
+        return IntStream.range(0, theta.length).mapToDouble(i -> theta[i] * xi[i]).sum();
     }
 
     @NotNull
@@ -64,9 +91,8 @@ public class SparseDynamics {
     }
 
     private void computeTheta() {
-        configuration.generate(data);
-        theta = configuration.createTheta();
-        names = configuration.createNames();
+        theta = config.generate(data.getData());
+        names = config.getNames();
     }
 
     private void computeXi() {
@@ -74,7 +100,7 @@ public class SparseDynamics {
     }
 
     @NotNull
-    private static double[][] loadData(@NotNull File file, @NotNull int... indices) {
+    public static double[][] loadData(@NotNull File file, @NotNull int... indices) {
         LineIterator iterator = null;
         try {
             iterator = IOUtils.lineIterator(new FileInputStream(file), StandardCharsets.UTF_8);
@@ -97,7 +123,7 @@ public class SparseDynamics {
         if (StringUtils.isBlank(line)) {
             return Optional.empty();
         }
-        return Optional.of(Arrays.stream(line.split(",")).mapToDouble(Double::parseDouble).toArray()).map(array -> filterIndices(array, indices));
+        return Optional.of(Arrays.stream(line.split(",")).map(String::trim).mapToDouble(Double::parseDouble).toArray()).map(array -> filterIndices(array, indices));
     }
 
     @NotNull
@@ -114,7 +140,7 @@ public class SparseDynamics {
     }
 
     public static class Builder {
-        private ThetaConfiguration configuration = new ThetaConfiguration();
+        private ThetaConfig config;
 
         private Data data;
 
@@ -125,8 +151,8 @@ public class SparseDynamics {
         private double threshold = .05;
 
         @NotNull
-        public Builder theta(@NotNull ThetaConfiguration configuration) {
-            this.configuration = configuration;
+        public Builder theta(@NotNull ThetaConfig config) {
+            this.config = config;
             return this;
         }
 
@@ -143,12 +169,12 @@ public class SparseDynamics {
         }
 
         @NotNull
-        public Builder data(@NotNull File file, @NotNull String[] variables, @NotNull int... indices) {
+        public Builder data(@NotNull File file, @NotNull Variables variables, @NotNull int... indices) {
             return data(loadData(file, indices), variables);
         }
 
         @NotNull
-        public Builder data(@NotNull double[][] data, @NotNull String[] variables) {
+        public Builder data(@NotNull double[][] data, @NotNull Variables variables) {
             return data(new Data(data, variables));
         }
 

@@ -1,5 +1,6 @@
 package apollon.dynamics.data;
 
+import apollon.dynamics.data.theta.Variables;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +11,7 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public interface DataSource {
-    @NotNull String[] getVariables();
+    @NotNull Variables getVariables();
 
     @NotNull double[] derivative(double t, @NotNull double[] state);
 
@@ -95,7 +96,7 @@ public interface DataSource {
 
     @NotNull
     static DataSource goldBall3D(double gravity) {
-        String display = "3D-GolfBall[" + gravity + "]\ndx = vx\ndy = vy\ndz=vz\ndvx = 0\ndvy = 0\ndvz = -9.81";
+        String display = "3D-GolfBall[" + gravity + "]\ndx = vx\ndy = vy\ndz = vz\ndvx = 0\ndvy = 0\ndvz = -9.81";
         return of((t, state) -> new double[]{state[3], state[4], state[5], 0, 0, gravity}, display, "x", "y", "z", "vx", "vy", "vz");
     }
 
@@ -104,8 +105,8 @@ public interface DataSource {
         return new DataSource() {
             @NotNull
             @Override
-            public String[] getVariables() {
-                return variables;
+            public Variables getVariables() {
+                return new Variables(variables);
             }
 
             @NotNull
