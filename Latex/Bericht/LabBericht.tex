@@ -63,13 +63,13 @@
 
 %Name des Betreuers
 % z.B.: Prof. Dr. Peter Koepke
-\betreuer{Betreuer: Prof. Dr. Rolf Klein}
+\betreuer{supervisor: Prof. Dr. Rolf Klein}
 %Name des Instituts an dem der Betreuer der Arbeit tätig ist.
-\zweitgutachter{Zweitgutachter: Dr. Elmar Langetepe}
+\zweitgutachter{secondary supervisor: Dr. Elmar Langetepe}
 %Titel der Bachelorarbeit
-\title{Bottleneckdistanz auf Persistenzdiagrammen}
+\title{Wasserstein distance for persistence diagrams}
 %Do not change!
-\ausarbeitungstyp{Lab Bericht}
+\ausarbeitungstyp{Lab Report}
 
 \usepackage{afterpage}
 
@@ -114,13 +114,13 @@
 	\clearpage
 	\pagenumbering{arabic}
 	
-	\chapter{Problemstellung und Definition}
-	\section{Einführung}
+	\chapter{The problem}
+	\section{Introduction}
 	In this report we want to take a look at the comparison of different types of image data. For this we consider the concept of persistent homology. Persistent homology can best be described as the ''recognition of structure while squinting''. In essence, we want to return a complex-looking data set to basic geometric forms. In particular, this approach is very intuitive and close to the subconscious recognition of structures that are characteristic of a human.\\
 	We first want to calculate a so called persistence diagram for a given set of points $X$ and then find a suitable distance measure for such diagrams.
 	
 	
-	\section{Persistente Homologie}
+	\section{Persistent Homology}
 	
 	In order to calculate homologies, we first need a manifold, or in the case of a computer a necessarily discrete representation, a cell complex. Now let $X\subset \bR^d$ be an arbitrary set of points. We begin by defining Čech-complexes.
 	
@@ -189,7 +189,7 @@
 Since in this report we limit ourselves to $2$-dimensional point sets $X$, it is sufficient to limit the cell complex $C(X)$ to its $2$-complex, since all higher homologies vanish.
 
 One can geometrically define the calculation of these homologies for $2$-dimensional data as follows. Let balls grow evenly around each point of $X$. Unite these and calculate the homology of the resulting manifold. This creates ''holes'' at different times, i.e. generators of the first homology, which disappear again at large $\varepsilon$.\\ We want to calculate this persistent homology for given sets of points efficiently, and will take a look at different approaches to calculate these.
-	\subsection{Persistenz Diagramme}
+	\subsection{Persistence Diagrams}
 	
 	In order to work with persistent homology more intuitively we want to visualize these. A particular type of visualizatoin we want to work with are called persistence diagrams. Here we want to mark the point $(t_1,t_2)$ in $\bR^2$ for every creator who is born at a certain time $t_1$ and dies at a certain time $t_2$. In more general terms, for every $\sigma\in\mathcal{L}_i^j(X)_k$ mark $(\varepsilon_i,\varepsilon_j)$ in $\bR^2$.\\
 	\begin{figure}
@@ -224,7 +224,7 @@ One can geometrically define the calculation of these homologies for $2$-dimensi
 	\end{figure}
 
  Note that the points marked in this way are always above the diagonal $\Delta=\{(x,x)\in\bR^2|x\in\bR\}$, where points directly on the diagonal represent generators that die quickly after birth, and points far from the diagonal represent generators that live very long. Fig. \ref{fig2} is an example for a persistence diagram which shows ''holes'' at three different times, i.e. generators of the first homology. Furthermore, one can see that the generators of the zeroth homology - i.e. one per connected component at every point in time - are all born at time 0.\\
-	\section{Wasserstein Distanz}
+	\section{Wasserstein Distance}
 	
 	Now let two such persistence diagrams be given. To define a distance measure, we consider the Wasserstein distance often used in probability theory. This is the ''minimum effort to move one probability distribution to another''. In our concrete application we define this as follows.
 	
@@ -239,11 +239,11 @@ Notice the restraint $|X| = |Y|$. We want to adapt this such that differently si
 	\section{Feature Proposals}
 	
 	As a final step, we will examine methods to find a representative set of points $X$ for a given image to use as input for calculating persistent homology. Again, we want to compare different methods and compare them in the context of persistent homology.
-	\chapter{Persistente Homologie}
+	\chapter{Persistent Homology}
 	
 	In this chapter we want to focus on the implementation for the calculation of the Čech complex, as well as the calculation of persistent homology.
 	
-	\section{Čech-Komplex}
+	\section{Čech-Complex}
 	
 	To calculate the Čech complex we first look at the Voronoi diagram for a given point set $X$ in $2$-dimensional space. Here $\bR^2$ is divided into regions, so that in each region there is exactly one point $x$ of $X$, and for every other point $y$ of this region $x$ is the nearest point of $X$ to $y$.\\
 From the Voronoi diagram we can extract the Čech complex. We add an edge between $x$ and $y$ from $X$ to the cell complex when the Voronoi regions of $x$ and $y$ meet. The distance of $x$ and $y$ also gives us the filtration value $f(\{x,y\}) = \frac{||x-y||}{2}$ of the edge. If you add all these edges, you get the planar dual-graph, the DeLauney triangulation of the points from $X$.\\
@@ -295,9 +295,9 @@ It gets more complicated with faces, i.e. $2$ cells. Here we have to make an imp
  	In the other case, there is no point in time where the circuit given by the points $x_1,\ldots,x_k$ in the geometric representation is ''around a hole'' - i.e. never is a generator -, so the face must be inserted as soon as the last edge closes the circle in $x_1,\ldots,x_k$. In other words, the filtration value is $max_{\{x_i,x_y\}\in C(X)}||x_i-x_j||$. We want to call these $2$ cells \textit{degenerated}.\\
 For the implementation in Java we decided to use a library which calculates the Voronoi diagram. We calculate the planar dualgraph based on the library, as shown in Fig. \ref{fig3} Furthermore, we see that in the case of degenerated $2$-faces we use a \texttt{EdgeFaceAction} to insert the longest edge of the circle and the $2$-cell in the same time step.
  	
- 	\section{Berechnung der persistenten Homologie}
+ 	\section{Calculation of persistent Homology}
  	
-Since the $1$ skelleton is the same as a graph, we save the complex as a graph, and remember which relations are generated by $2$ cells. And because the second homology is always zero, due to our choice of $2$-dimensional data, this suffices.
+Since the $1$ skeleton is the same as a graph, we save the complex as a graph, and remember which relations are generated by $2$ cells. And because the second homology is always zero, due to our choice of $2$-dimensional data, this suffices.
 
 To respect the ''elder rule'', we need to make a choice for $0$ cells which vertices are older than other vertices. Since the choice has no influence on the zero homology persistence diagram, we number the vertices randomly. We use this numbering when calculating the first homology as an orientation of the edges.
 
@@ -396,7 +396,7 @@ If a $2$ cell is added, a relation is noted, namely the unique circle that descr
  		\label{fig4}
  	\end{figure}
  
- 	An example in Fig. \ref{fig4}. We are given two circles in blue, and a relation in red. If we number the edges as in the first picture and select all circle orientations counterclockwise we get the following matrix:
+ 	An example in Fig. \ref{fig4}. We are given two circles in blue, and a relation in red. If we number the edges as in the first picture and select all circle orientations counter clockwise we get the following matrix:
 $$A=\begin{Bmatrix}
 1 & 0 & -1\\
 0 & 1 & 1\\
@@ -412,13 +412,13 @@ And thus gets a non-empty kernel, $A(1,1,-1)^T=0$ So we know that the two genera
 
 We now know when to add edges and faces and how to find all possible generators and how to find ''dead'' generators. Putting this together we are now able to calculate the first persistent homology.
  	
- 	\subsection{Optimierung}
+ 	\subsection{Optimizations}
  	
  	Da uns dieses Verfahren zu langsam war ($~5$ Sekunden für $100$ Knoten, $~20$ Sekunden für $200$ Knoten) haben wir das ganze optimiert, indem wir den Graphen zu geschickten Zeiten kontrahieren, um die Berechnungskomplexität niedrig zu halten. So erhalten wir fast lineare Laufzeit, mit $~10$ Sekunden für 1000 Knoten.
  	
- 	Probably better if Vince \LaTeX this.
+ 	%TODO: Vince Contractions
  	
- 	\chapter{Distanzmaße}
+ 	\chapter{Distance Measures}
  	
  	First of all we want to extend the Wasserstein distance to differently sized sets. A first idea was to minimize $\varphi:X\rightarrow Y$ for $|X|<|Y|$ via injections $\varphi:X\rightarrow Y$, and to introduce an error term for every point in $Y$ that is not hit. This seemed promising.\\
 Define $\gamma:\bR^2\rightarrow\bR$, with $(x,y)\mapsto y-x$. The motivation behind this definition is that this is exactly the vertical distance from a point $(x,y)$ to the diagonal. Then we define $$W_p'(X,Y):=\min_{\varphi:X\rightarrow Y}\bigg(\sum_{x\in X}|||x-\varphi(x)||^p + \sum_{y\in Y\setminus \in(\varphi)}\gamma(y)^p\bigg)^\frac{1}{p}.$$
@@ -427,7 +427,7 @@ $$V_p(X,Y):=\min_{Z\subset{X}}\min_{\varphi:Z\rightarrow Y}\bigg(\sum_{z\in Z}||
 
 We call the bottleneck distance $B(X,Y) := V_\infty(X,Y)$. Since we now have three different Wasserstein distances, we want to make clear, the $V_p(\_,\_)$ will be the distance in question from now on. 
  	
- 	\section{Effizientes Berechnen}
+ 	\section{Efficient Calculation}
  	
 We quickly noticed that the whole problem is closely related to the Optimal Mapping problem. We want to make use of the knowledge we have of the ''Optimal Mapping'' problem and present the problem of minimizing over exponentially many mappings as a flow problem. So for $V_p(X,Y)$ we define the following graph. $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.\\\
  	 	\begin{figure}
@@ -521,6 +521,16 @@ For the other direction we consider for given $Z,\varphi$ the flow given by $f(x
  	And as we know, the min-cost-flow problem can be calculated in polynomial time with an algorithm like Edmonds-Karp.\\
 To calculate the Bottleneck distance, we consider the subgraph given by all edges with weights smaller than a given value. Since the Bottleneck distance is given by the cheapest edge, so that with all cheaper edges a feasible flow is still possible, one can determine the Bottleneck distance with logarithmically many calls of a min-cut algorithm with a procedure like binary search. This reduction follows from the fact, that the error term that is to be minimized in the Wasserstein distance is the same as the $p$-norm. The Bottleneck distance hence is the same as the $\infty$-norm, and is described by the maximum. Hence the Bottleneck distance reduces to finding the value $min_{\varphi:Z\subset X \rightarrow Y} max_{x\in Z}||x - \varphi(x)||$.\\
 	This leaves us with the following approximations for runtime. Let $X$ and $Y$ again be arbitrary. Then the graph consists of $n=2+|X|+|Y|$ vertices and $m=3+2|X|+2|Y|+|X||Y|$ edges. Assuming a runtime of $O(nm^2)$ for Edmonds-Karp, we have a runtime of $O(|X|^2|Y|^3 + |X|^3|Y|^2)$ for the Wasserstein distance. For the Bottleneck distance we get a runtime of $O((\log(|X||Y|))(|X|^2|Y|^3 + |X|^3|Y|^2))$.
+	
+\chapter{Feature Proposals}
+%TODO Vince: whatever
+\section{Feature Detection}
+%TODO Vince: Was wir alles in Erwägung gezogen haben. Edge-Detection, Corner-Detection, Blob-Detection und warum wir was genommen haben
+\section{Feature Selection}
+%TODO Vince: Poisson Disc Sampling(?)
 
+\section*{Conclusion}\addcontentsline{toc}{chapter}{Conclusion}
+%TODO Whoever
+%TODO Symbol table? Proper chapter elevation? Conclusion own page? Kapitel -> Chapter? ...
 
 \end{document}
