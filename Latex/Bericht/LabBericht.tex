@@ -618,12 +618,24 @@ tabsize=3
     \chapter{Feature Proposals}\label{ch:feature-proposals}
     \section{Feature Detection}\label{sec:feature-detection}
     Now to actually use the persistent homology and the distance measures on images, we need to extract features, which will be afterwards converted to 2D points.
-    To do this we first considered an image, converted it to grayscale and then tried out existing detection algorithms.
-    the ones tested are edge detection
-    %TODO Vince: Was wir alles in Erwägung gezogen haben. Edge-Detection, Corner-Detection, Blob-Detection und warum wir was genommen haben
+    To do this we first considered an image, converted it to grayscale and then tried out existing feature detection algorithms.
+    We tested the Laplace operator, the Harris operator and Canny edge detection.\\
+    The Laplace operator computes the 2nd spatial derivative and therefore may output many different gray values for one image, which is less usable for our approach.
+    That is because we are trying to represent image structures with points, which is not possible to do in an accurate manner, if the feature detection outputs only a ''probability'' for an edge or corner.\\
+    Next up is the harris operator, which highlights corners inside an image.
+    One could think, that this is exactly what we need, but in fact we need to describe lines as series of points and not only start and end point.
+    That rules out the Harris operator for our case as well.\\
+    Finally we tested the Canny operator, which only outputs either 0 or 1 for each pixel, given a threshold.
+    Its used for edge detection and given the previous explanation exactly what we need.
+    There might be some dynamic threshold computation left to do, so that the user doesn't have to choose that parameter on its own.
     \section{Feature Selection}\label{sec:feature-selection}
-    %TODO Vince: Poisson Disc Sampling(?)
-
+    Now we have a feature detection, that outputs a bitmap with ones for all edges in the image.
+    The next thing to do is to convert that bitmap into 2D points, that will be used to compute the persistent homology.
+    The idea beneath the used algorithm is inspired by Poisson-Disc sampling and works as follows:
+    We sample the area above threshold by adding random white points, that are at least twice a given radius away from all other samples.
+    That way we have control over the granularity of the sampling using only a radius parameter.
+    The given space between each sample also ensures, that the numerical accuracy of the Voronoi algorithm does not have to be that exact.
+    \input{snippet4.tex}
     \section*{Conclusion}\addcontentsline{toc}{chapter}{Conclusion}
     %TODO Whoever
     %TODO Symbol table? Proper chapter elevation? Conclusion own page? Kapitel -> Chapter? ...
