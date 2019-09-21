@@ -616,8 +616,10 @@ tabsize=3
     For the Bottleneck distance we get a runtime of $O((\log(|X||Y|))(|X|^2|Y|^3 + |X|^3|Y|^2))$.
 
     \chapter{Feature Proposals}\label{ch:feature-proposals}
-    %TODO Vince: whatever
     \section{Feature Detection}\label{sec:feature-detection}
+    Now to actually use the persistent homology and the distance measures on images, we need to extract features, which will be afterwards converted to 2D points.
+    To do this we first considered an image, converted it to grayscale and then tried out existing detection algorithms.
+    the ones tested are edge detection
     %TODO Vince: Was wir alles in Erwägung gezogen haben. Edge-Detection, Corner-Detection, Blob-Detection und warum wir was genommen haben
     \section{Feature Selection}\label{sec:feature-selection}
     %TODO Vince: Poisson Disc Sampling(?)
