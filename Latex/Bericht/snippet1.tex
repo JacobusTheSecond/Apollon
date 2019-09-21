@@ -1,0 +1,43 @@
+\lstset{language=Java}
+\begin{figure}
+    \begin{lstlisting}[frame=single]
+        public class Voronoi {
+            // Stores voronoi vertices, where more than 2 regions touch
+            private PointD[] vertices = null;
+            private VEdge[] edges = null;
+            ...
+            private void compute(int width, int height) {
+                 VoronoiResults results = org.kynosarges.tektosyne.geometry.Voronoi.findAll(
+                 sites, new RectD(0, 0, width, height));
+                 vertices = results.voronoiVertices;
+                 // Transform output of library to our own data types
+            ...
+            }
+            ...
+        }
+        public class ActionGenerator {
+            public List<Action> generate() {
+                // Generate the list of elements added to the cell complex sorted by their filtration values
+                ...
+                voronoi.forEachVertex(this::computeVertex);
+                voronoi.forEachEdge(this::computeEdge);
+                actions.sort(Action::compareTo);
+                return actions;
+            }
+            private void computeVertex(@NotNull PointD vertex, int index) {
+                // Create list of actions given the Voronoi Diagram
+                ...
+                VEdge[] edges = voronoi.getEdges(edgeIndices);
+                PointD[] sites = getSites(edges);
+                if (Util.isInside(vertex, sites)) {
+                    actions.add(new FaceAction(...));
+                    return;
+                }
+                ...
+                actions.add(new EdgeFaceAction(...));
+            }
+        }
+    \end{lstlisting}
+    \caption{\textit{Codesnippet of the generation of $C(X)$}}
+    \label{fig3}
+\end{figure}

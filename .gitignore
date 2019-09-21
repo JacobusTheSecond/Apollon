@@ -138,7 +138,7 @@ hs_err_pid*
 *.cb
 *.cb2
 .*.lb
-/out
+out/
 
 ## Intermediate documents:
 *.dvi
