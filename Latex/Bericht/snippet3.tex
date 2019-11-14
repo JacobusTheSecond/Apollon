@@ -1,0 +1,30 @@
+\lstset{language=Java}
+\begin{figure}
+    \begin{lstlisting}[frame=single]
+        public void addRelation(Circle circle, double radius) {
+            if (circle.isEmpty()) { // Case 1
+                // Empty relations have no effect
+                return;
+            }
+            if (circle.size() == 1 || graph.hasNoLoops(circle)) { // Case 2.1, 2.2
+                // If the circle has size 1, the single edge is a loop and can simply be removed
+                // If the relation has no loops, every edge can be contracted and all involved nodes be replaced using the elderly rule
+                remove(circle.getEdges());
+            }
+            else if (graph.hasOnlyLoops(circle)) { // Case 3
+                // Find a single loop and replace it with the other loops
+                replaceLoop(circle);
+            }
+            else { // Case 4: Both loops and non-loops
+                // Find a non-loop, replace it with the other edges and contract all non-loops
+                replaceNonLoop(circle);
+            }
+            // Kill cycles, that are now empty
+            killEmptyCycles(radius);
+            // Kill cycles, that are now linear combinations of others using the elderly rule
+            killObsoleteCycles(radius);
+        }
+    \end{lstlisting}
+    \caption{\textit{Codesnippet of relation evaluation}}
+    \label{fig6}
+\end{figure}
