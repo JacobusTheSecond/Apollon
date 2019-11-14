@@ -19,14 +19,8 @@ public abstract class AbstractDistance implements Distance {
     @Override
     public void compute(@NotNull Collection<PointD> x, @NotNull Collection<PointD> y) {
         clear();
-        if (x.size() <= y.size()) {
-            xPoints.addAll(x);
-            yPoints.addAll(y);
-        }
-        else {
-            xPoints.addAll(y);
-            yPoints.addAll(x);
-        }
+        xPoints.addAll(x);
+        yPoints.addAll(y);
         distance = compute();
         computed = true;
     }
@@ -67,6 +61,10 @@ public abstract class AbstractDistance implements Distance {
 
     protected int getYCount() {
         return yPoints.size();
+    }
+
+    protected int getSum() {
+        return getXCount() + getYCount();
     }
 
     public void clear() {

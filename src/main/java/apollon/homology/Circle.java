@@ -1,4 +1,4 @@
-package apollon.homology.one;
+package apollon.homology;
 
 import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +24,11 @@ public class Circle implements EdgeContainer, Iterable<Integer> {
     @NotNull
     public int[] getEdges() {
         return edges.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    @NotNull
+    public int[] getEdgeIndices() {
+        return edges.stream().mapToInt(Integer::intValue).map(Graph::positive).toArray();
     }
 
     public int get(int index) {

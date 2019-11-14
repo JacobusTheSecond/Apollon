@@ -1,15 +1,20 @@
-package apollon.homology.one.action;
+package apollon.homology.action;
 
-import apollon.homology.one.EdgeContainer;
-import apollon.homology.one.HomologyOne;
+import apollon.homology.EdgeContainer;
+import apollon.homology.Homology;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
+import java.util.OptionalInt;
 
 public abstract class Action implements EdgeContainer, Comparable<Action> {
-    private final double radius;
+    private double radius;
 
     protected Action(double radius) {
+        this.radius = radius;
+    }
+
+    public void setRadius(double radius) {
         this.radius = radius;
     }
 
@@ -26,10 +31,20 @@ public abstract class Action implements EdgeContainer, Comparable<Action> {
         return Integer.compare(getIndex(), o.getIndex());
     }
 
-    public abstract void execute(@NotNull HomologyOne homology);
+    public abstract void execute(@NotNull Homology homology);
+
+    @NotNull
+    public OptionalInt getAddedEdge() {
+        return OptionalInt.empty();
+    }
+
+    @NotNull
+    public int[] getRemovedEdges() {
+        return new int[0];
+    }
 
     @NotNull
     public abstract Color getColor();
 
-    protected abstract int getIndex();
+    public abstract int getIndex();
 }

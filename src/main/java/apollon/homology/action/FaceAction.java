@@ -1,7 +1,7 @@
-package apollon.homology.one.action;
+package apollon.homology.action;
 
-import apollon.homology.one.Circle;
-import apollon.homology.one.HomologyOne;
+import apollon.homology.Circle;
+import apollon.homology.Homology;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -15,7 +15,7 @@ public class FaceAction extends Action {
     }
 
     @Override
-    public void execute(@NotNull HomologyOne homology) {
+    public void execute(@NotNull Homology homology) {
         homology.addRelation(circle, getRadius());
     }
 
@@ -26,8 +26,14 @@ public class FaceAction extends Action {
     }
 
     @Override
-    protected int getIndex() {
+    public int getIndex() {
         return 1;
+    }
+
+    @NotNull
+    @Override
+    public int[] getRemovedEdges() {
+        return circle.getEdgeIndices();
     }
 
     @Override

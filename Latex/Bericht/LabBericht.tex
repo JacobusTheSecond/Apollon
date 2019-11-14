@@ -1,0 +1,644 @@
+\documentclass[11pt, a4paper,draft]{report}
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{tabularx}
+\usepackage{mathtools}
+\usepackage{color}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% load packages
+\usepackage{amsmath}   % for more basic mathematical symbols
+\usepackage{amssymb}   % for more mathematical symbols
+\usepackage{amsthm}
+\usepackage{tikz-cd}
+\usepackage{tikz}
+\usetikzlibrary{3d,calc,intersections}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{patterns}
+\usetikzlibrary{quotes,angles,positioning}
+\usepackage{dsfont}
+\usepackage{ stmaryrd }
+\usepackage{caption}
+\usepackage[final]{listings}
+
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem*{remark}{Anmerkung}
+\newtheorem{definition}{Definition}
+\newcommand{\bK}{\mathbb{K}}
+\newcommand{\bN}{\mathbb{N}}
+\newcommand{\bZ}{\mathbb{Z}}
+\newcommand{\bR}{\mathbb{R}}
+\newcommand{\bC}{\mathbb{C}}
+\newcommand{\bS}{\mathbb{S}}
+\newcommand{\bA}{\mathbb{A}}
+\newcommand{\bB}{\mathbb{B}}
+\newcommand{\bD}{\mathbb{D}}
+\newcommand{\bE}{\mathbb{E}}
+\newcommand{\bT}{\mathbb{T}}
+\newcommand{\bQ}{\mathbb{Q}}
+
+\newcommand{\im}{\textrm{im}}
+\newcommand{\coker}{\textrm{coker}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\renewcommand{\figurename}{Abb.}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+%Linksbündig mit vorgegebener Breite
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+%Zentriert mit vorgegebener Breite
+\newcolumntype{R}[1]{>{\raggedleft\arraybackslash}p{#1}}
+%Rechtsbündig mit vorgegebener Breite
+
+\usepackage{BA_Titelseite}
+
+%Namen des Verfassers der Arbeit
+\author{Jacobus Leander Conradi\\Vincent Reinthal}
+%Datum der Abgabe der Arbeit
+\date{\today}
+
+%Name des Betreuers
+% z.B.: Prof. Dr. Peter Koepke
+\betreuer{supervisor: Prof.\ Dr. Rolf Klein}
+%Name des Instituts an dem der Betreuer der Arbeit tätig ist.
+\zweitgutachter{secondary supervisor: Dr. Elmar Langetepe}
+%Titel der Bachelorarbeit
+\title{Wasserstein distance for persistence diagrams}
+%Do not change!
+\ausarbeitungstyp{Lab Report}
+
+\usepackage{afterpage}
+
+\newcommand\blankpage{%
+\null
+\thispagestyle{empty}%
+\addtocounter{page}{-1}%
+\newpage}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{language=Java,
+aboveskip=2mm,
+belowskip=2mm,
+showstringspaces=false,
+columns=flexible,
+basicstyle={\small\ttfamily},
+numbers=none,
+numberstyle=\tiny\color{gray},
+keywordstyle=\color{blue},
+commentstyle=\color{dkgreen},
+stringstyle=\color{mauve},
+breaklines=true,
+breakatwhitespace=true,
+tabsize=3
+}
+
+
+\begin{document}
+    \maketitle
+
+    \thispagestyle{plain}
+    \pagenumbering{Roman}
+    \addtocounter{page}{-1}
+    \tableofcontents
+    \addcontentsline{toc}{chapter}{Inhaltsverzeichnis}
+    \vfil\null
+    \clearpage
+    \thispagestyle{empty}\mbox{}
+    \clearpage
+    \pagenumbering{arabic}
+
+    \chapter{The problem}\label{ch:the-problem}
+    \section{Introduction}\label{sec:introduction}
+    In this report we want to take a look at the comparison of different types of image data.
+    For this we consider the concept of persistent homology.
+    Persistent homology can best be described as the ''recognition of structure while squinting''.
+    In essence, we want to return a complex-looking data set to basic geometric forms.
+    In particular, this approach is very intuitive and close to the subconscious recognition of structures that are characteristic of a human.\\
+    We first want to calculate a so called persistence diagram for a given set of points $X$ and then find a suitable distance measure for such diagrams.
+
+
+    \section{Persistent Homology}\label{sec:persistent-homology}
+
+    In order to calculate homologies, we first need a manifold, or in the case of a computer a necessarily discrete representation, a cell complex.
+    Now let $X\subset \bR^d$ be an arbitrary set of points.
+    We begin by defining Čech-complexes.
+
+    \begin{definition}[Čech-Komplex]
+        Let $X\subset \bR^d$ be a finite set, and $\varepsilon>0$ arbitrary but fixed.
+        We construct the Čech-complex $\check C_\varepsilon(X)$ as follows.
+        The $0$-skeleton is simply $X$ itself.
+        And any subset $\sigma\subset X$ is in the $(|\sigma|-1)$-skeleton iff the intersection $\bigcap_{x\in\sigma}B_\varepsilon(x)$ of balls with radius $\varepsilon$ around every point of $\sigma$ is non-empty.
+    \end{definition}
+
+    Note, that for any finite $X$ there is  $\mathcal{E}>0$, such that for any $\varepsilon\geq\mathcal{E}$ we have  $\check C_\varepsilon(X) = \check C_\mathcal{E}(X)$.
+    Call this stabilizing cell-complex $C(X):=\check C_\mathcal{E}(X)$.
+    Define a filtration $f$ on $C(X)$ via $f:C(X)\rightarrow\bR$,$\sigma\mapsto\min\{\varepsilon|\sigma\in \check C_\varepsilon(X)\}$.
+    Since $X$ is finite, and hence $C(X)$, then $\im(f)$ must also be finite.
+    Let $\im(f)=\{\varepsilon_i|0\leq i\leq N\}$.
+    We now get a sequence of cell-complexes \[\check C_{\varepsilon_1}(X)\hookrightarrow \check C_{\varepsilon_2}(X)\hookrightarrow \ldots \hookrightarrow \check C_{\varepsilon_{N-1}}(X)\hookrightarrow \check C_{\varepsilon_N}(X).\]
+    With this sequence we will now define persistent Homology.
+
+    \begin{definition}[persistente Homologie]
+        Let \[X_1\xhookrightarrow{\iota_1} X_2\xhookrightarrow{\iota_2} \ldots\xhookrightarrow{\iota_{n-2}} X_{n-1}\xhookrightarrow{\iota_{n-1}} X_n\] be a sequence of cell-complex embeddings.
+        For every $k\geq 0$ this implies a sequence of homology groups
+        \[H_k(X_1)\xrightarrow{\iota_{1}^*} H_k(X_2)\xrightarrow{\iota_{2}^*}\ldots \xrightarrow{\iota_{n-2}^*} H_k(X_{n-1})\xrightarrow{\iota_{n-1}^*} H_k(X_n).\]
+        For every $0\leq i<j\leq n$ we begin with $\mathcal{L}_i^j(X)_k$ the set of generators $\sigma\in\coker(\iota_{i-1}^*)$, such that $\iota_{j-2}^*\circ\ldots\circ\iota_{i}^*(\sigma)\neq0$ but $\iota_{j-1}^*\circ\ldots\circ\iota_{i}^*(\sigma)=0$.
+        Now to get the persistent homology from this, we need to apply the so called ''elder rule''.
+        It may happen, that $\sigma_1\in\mathcal{L}_i^l(X)_k$ and $\sigma_2\in\mathcal{L}_j^l(X)_k$ exist (w.l.o.g. $i\leq j$), such that $\sigma_1$ equals $\sigma_2$ at some point $t$.
+        In this case, we kill the ''younger'' one of the two, i.e.\ moving $\sigma_2$ to $\mathcal{L}_j^t(X)_k$, or removing completely, if $j=t$.
+        We will call this reduced family $\{\mathcal{L}_i^j(X)_k|0\leq i<j\leq n,k\geq0\}$ the persistent homology of $\{X_i\}$.
+    \end{definition}
+
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}
+            \filldraw (0,0) coordinate(a) circle (3pt);
+            \filldraw (-1,1) coordinate(b) circle (3pt);
+            \filldraw (0.3,0.9) coordinate(c) circle (3pt);
+            \filldraw (0,-1.3) coordinate(d) circle (3pt);
+            \filldraw (-1,-2) coordinate(e) circle (3pt);
+            \filldraw (-2,-1.5) coordinate(f) circle (3pt);
+            \filldraw (-3,-0.5) coordinate(g) circle (3pt);
+            \filldraw (-2,0.5) coordinate(h) circle (3pt);
+
+            \filldraw[opacity=0.3] (a) circle (0.8);
+            \filldraw[opacity=0.3] (b) circle (0.8);
+            \filldraw[opacity=0.3] (c) circle (0.8);
+            \filldraw[opacity=0.3] (d) circle (0.8);
+            \filldraw[opacity=0.3] (e) circle (0.8);
+            \filldraw[opacity=0.3] (f) circle (0.8);
+            \filldraw[opacity=0.3] (g) circle (0.8);
+            \filldraw[opacity=0.3] (h) circle (0.8);
+        \end{tikzpicture}
+        \begin{tikzpicture}
+            \filldraw (0,0) coordinate(a) circle (3pt);
+            \filldraw (-1,1) coordinate(b) circle (3pt);
+            \filldraw (0.3,0.9) coordinate(c) circle (3pt);
+            \filldraw (0,-1.3) coordinate(d) circle (3pt);
+            \filldraw (-1,-2) coordinate(e) circle (3pt);
+            \filldraw (-2,-1.5) coordinate(f) circle (3pt);
+            \filldraw (-3,-0.5) coordinate(g) circle (3pt);
+            \filldraw (-2,0.5) coordinate(h) circle (3pt);
+
+            \draw (a) -- (b);
+            \draw (a) -- (c);
+            \draw (c) -- (b);
+
+            \filldraw [opacity=0.3] (a) -- (b) -- (c);
+
+            \draw (a) -- (d);
+            \draw (d) -- (e);
+            \draw (e) -- (f);
+            \draw (f) -- (g);
+            \draw (g) -- (h);
+            \draw (h) -- (b);
+        \end{tikzpicture}
+        \caption{\textit{A Čech-Complex is a given $\varepsilon$ with the generating dataset.}}
+    \end{figure}
+
+    In essence persistent homology stores the lives and deaths of various generators, while increasing the maximum filtration value of elements in the cell complex.\\
+    Since in this report we limit ourselves to $2$-dimensional point sets $X$, it is sufficient to limit the cell complex $C(X)$ to its $2$-complex, since all higher homologies vanish.
+
+    One can geometrically define the calculation of these homologies for $2$-dimensional data as follows.
+    Let balls grow evenly around each point of $X$.
+    Unite these and calculate the homology of the resulting manifold.
+    This creates ''holes'' at different times, i.e.\ generators of the first homology, which disappear again at large $\varepsilon$.\\ We want to calculate this persistent homology for given sets of points efficiently, and will take a look at different approaches to calculate these.
+    \subsection{Persistence Diagrams}\label{subsec:persistence-diagrams}
+
+    In order to work with persistent homology more intuitively we want to visualize these.
+    A particular type of visualization we want to work with are called persistence diagrams.
+    Here we want to mark the point $(t_1,t_2)$ in $\bR^2$ for every creator who is born at a certain time $t_1$ and dies at a certain time $t_2$.
+    In more general terms, for every $\sigma\in\mathcal{L}_i^j(X)_k$ mark $(\varepsilon_i,\varepsilon_j)$ in $\bR^2$.\\
+    \begin{figure}
+        \centering
+        \fbox{
+        \begin{tikzpicture}
+            % Achsen zeichnen
+            \draw[->,thick] (0,0) -- (5,0) node[right] {$x$};
+            \draw[color=blue] (0,0) -- (5,5);
+            \draw[->,thick] (0,0) -- (0,5) node[above] {$y$};
+            %Punkte einzeichnen:
+
+            \filldraw[color=red] (0,0.3) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,1) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,1.3) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,3) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,4) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,3.3) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,2) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,2.2) coordinate(a) circle (3pt);
+            \filldraw[color=red] (0,2.6) coordinate(a) circle (3pt);
+
+
+            \filldraw[color=green] (2,3) coordinate(a) circle (3pt);
+            \filldraw[color=green] (1,1.1) coordinate(a) circle (3pt);
+            \filldraw[color=green] (3,4) coordinate(a) circle (3pt);
+
+        \end{tikzpicture}
+        }
+        \caption{\textit{A persistence-diagram.
+        Red dots represent the $0$th, green dots the $1$st homology}}
+        \label{fig2}
+    \end{figure}
+
+    Note that the points marked in this way are always above the diagonal $\Delta=\{(x,x)\in\bR^2|x\in\bR\}$, where points directly on the diagonal represent generators that die quickly after birth, and points far from the diagonal represent generators that live very long.
+    Fig.~\ref{fig2} is an example for a persistence diagram which shows ''holes'' at three different times, i.e.\ generators of the first homology.
+    Furthermore, one can see that the generators of the zeroth homology - i.e.\ one per connected component at every point in time - are all born at time 0.\\
+    \section{Wasserstein Distance}\label{sec:wasserstein-distance}
+
+    Now let two such persistence diagrams be given.
+    To define a distance measure, we consider the Wasserstein distance often used in probability theory.
+    This is the ''minimum effort to move one probability distribution to another''.
+    In our concrete application we define this as follows.
+
+    \begin{definition}[Wassersteindistanz]
+        Let two finite pointsets $X$ and $Y$ be given, with $|X|=|Y|$.
+        Then the Wasserstein distance is given by\[W_p(X,Y) = \min_{\varphi:X\rightarrow Y}\left(\sum_{x\in X}||x-\varphi(x)||^p\right)^{\frac{1}{p}},\]
+        where the minimum is taken over all bijections $\varphi:X\rightarrow Y$, with $||\cdot||$ being the $\ell_2$-norm in $\bR^2$.
+    \end{definition}
+
+    A special case $W_\infty(\cdot,\cdot)$ we will call the Bottleneck distance.\\
+    Notice the restraint $|X| = |Y|$.
+    We want to adapt this such that differently sized sets can be compared with each other as well.
+    For this we want to compare different approaches qualitatively.
+
+    \section{Feature Proposals}\label{sec:feature-proposals}
+
+    As a final step, we will examine methods to find a representative set of points $X$ for a given image to use as input for calculating persistent homology.
+    Again, we want to compare different methods and compare them in the context of persistent homology.
+    \chapter{Persistent Homology}\label{ch:persistent-homology}
+
+    In this chapter we want to focus on the implementation for the calculation of the Čech complex, as well as the calculation of persistent homology.
+
+    \section{Čech-Complex}\label{sec:čech-complex}
+
+    To calculate the Čech complex we first look at the Voronoi diagram for a given point set $X$ in $2$-dimensional space.
+    Here $\bR^2$ is divided into regions, so that in each region there is exactly one point $x$ of $X$, and for every other point $y$ of this region $x$ is the nearest point of $X$ to $y$.\\
+    From the Voronoi diagram we can extract the Čech complex.
+    We add an edge between $x$ and $y$ from $X$ to the cell complex when the Voronoi regions of $x$ and $y$ meet.
+    The distance of $x$ and $y$ also gives us the filtration value $f(\{x,y\}) = \frac{||x-y||}{2}$ of the edge.
+    If you add all these edges, you get the planar dual-graph, the DeLauney triangulation of the points from $X$.\\
+    It gets more complicated with faces, i.e. $2$ cells.
+    Here we have to make an important case distinction.
+    If more than $2$ Voronoi regions touch in a point, this corresponds to a circuit in the DeLauney trinagulation and a $2$ cell in the Čech complex.
+    But what exactly is the filtration value?
+    This is where the following case distinction comes into play.
+    Looking at the convex hull of the points $x_1,\ldots,x_k\in X$, whose Voronoi regions touch each other, it can happen that the point $v$ where the Voronoi regions touch each other is inside or outside the polytope.
+    If the point $v$ is inside the polytope, the filtration value must be chosen as the distance of $v$ to all $x_i$, which is the same for all $x_i$.
+    Because as soon as this value is exceeded, the hole in the geometric presentation vanishes, hence the face must be inserted into the complex.\\
+    \input{snippet1.tex}
+    In the other case, there is no point in time where the circuit given by the points $x_1,\ldots,x_k$ in the geometric representation is ''around a hole'' - i.e.\ never is a generator -, so the face must be inserted as soon as the last edge closes the circle in $x_1,\ldots,x_k$.
+    In other words, the filtration value is $max_{\{x_i,x_y\}\in C(X)}||x_i-x_j||$.
+    We want to call these $2$ cells \textit{degenerated}.\\
+    For the implementation in Java we decided to use a library which calculates the Voronoi diagram.
+    We calculate the planar dualgraph based on the library, as shown in Fig.~\ref{fig3} Furthermore, we see that in the case of degenerated $2$-faces we use a \texttt{EdgeFaceAction} to insert the longest edge of the circle and the $2$-cell in the same time step.
+
+    \section{Calculation of persistent Homology}\label{sec:calculation-of-persistent-homology}
+
+    Since the $1$ skeleton is the same as a graph, we save the complex as a graph, and remember which relations are generated by $2$ cells.
+    And because the second homology is always zero, due to our choice of $2$-dimensional data, this suffices.
+
+    To respect the ''elder rule'', we need to make a choice for $0$ cells which vertices are older than other vertices.
+    Since the choice has no influence on the zero homology persistence diagram, we number the vertices randomly.
+    We use this numbering when calculating the first homology as an orientation of the edges.
+
+    The main task in our implementation is the calculation of the first homology.
+    For the zeroth we only have to remember whenever we add an edge whether the two vertices are in the same or different connected components.
+    To maintain the elder rule for generators, we remember for each node which is the oldest one in each connected component.
+    If the added edge is between two different connected components, we update for one of the connected components which the new oldest vertex is, and remember that a generator of the zeroth homology has died.
+
+    Since generators of the first homology live in the kernel of the boundary operator $H_1(C(X))\rightarrow H_0(C(X))$, and these are just described by all circuits, we must find all possible circles in the graph, and then find out which circuits die via linear combinations of these.
+    To find circuits, we check whenever we add an edge $e=(v,w)$ whether $v$ and $w$ are in the same context component.
+    If this is the case, we find a $v,w$ path $P$ in $G\setminus \{e\}$.
+    Then we remember $P\cup \{e\}$ as a new generator.
+    At the time this generator is added, $e$ is completely new and is not yet contained in any edge of a $2$ cell or other circle, so this circle is definitely a living generator for a little time at least.
+
+    If a $2$ cell is added, a relation is noted, namely the unique circle that describes the border of the $2$ cell.
+    Every time a $2$ cell is added, we have to check if a circle dies.
+    For this we check the kernel of the matrix:
+
+    %$$\begin{matrix}
+    %a & b\\
+    %c & d
+    %\end{matrix}$$
+
+    \[\begin{Bmatrix}
+          c_{11} & c_{21} & \ldots &c_{n1} & r_{11} & \ldots  & r_{k1}\\
+          c_{12} & c_{22} & \ldots &c_{n2} & r_{12} & \ldots  & r_{k2}\\
+          \ldots & \ldots & \ldots & \ldots & \ldots & \ldots & \ldots \\
+          c_{1m} & c_{2m} & \ldots &c_{nm} & r_{1m} & \ldots  & r_{km}
+    \end{Bmatrix}\]
+
+    Where $c_{ij} = \sum_{e_j\in P_i} 1 - \sum_{e_j*\in P_i}1$ and $r_{ij} = \sum_{e_j\in R_i} 1 - \sum_{e_j^*\in R_i}1$, where $P_i$ is the generator circuits and $R_i$ is the relation circuits, and $e_j$ is an edge and $e_j^*$ is the inverted edge.
+
+    \begin{figure}
+        \begin{tikzpicture}
+            \filldraw (0,0) coordinate(a) circle (3pt);
+            \filldraw (-1,1) coordinate(b) circle (3pt);
+            \filldraw (0.3,0.9) coordinate(c) circle (3pt);
+            \filldraw (0,-1.3) coordinate(d) circle (3pt);
+            \filldraw (-1,-2) coordinate(e) circle (3pt);
+            \filldraw (-2,-1.5) coordinate(f) circle (3pt);
+            \filldraw (-3,-0.5) coordinate(g) circle (3pt);
+            \filldraw (-2,0.5) coordinate(h) circle (3pt);
+
+            \draw [-{Latex[length=2mm,width=2mm]},color=red] (a) -- (b) node[midway,below,sloped,color=black]{a};
+            \draw [-{Latex[length=2mm,width=2mm]},color=red](a) -- (c)node[midway,below,sloped,color=black]{b};
+            \draw [-{Latex[length=2mm,width=2mm]},color=red](b) -- (c)node[midway,above,sloped,color=black]{c};
+
+            \filldraw [opacity=0.3] (a) -- (b) -- (c);
+
+            \draw[-{Latex[length=2mm,width=2mm]}] (a) -- (d)node[midway,below,sloped,color=black]{d};
+            \draw[-{Latex[length=2mm,width=2mm]}] (d) -- (e)node[midway,below,sloped,color=black]{e};
+            \draw[-{Latex[length=2mm,width=2mm]}] (e) -- (f)node[midway,below,sloped,color=black]{f};
+            \draw[-{Latex[length=2mm,width=2mm]}] (f) -- (g)node[midway,below,sloped,color=black]{g};
+            \draw[-{Latex[length=2mm,width=2mm]}] (g) -- (h)node[midway,below,sloped,color=black]{h};
+            \draw[-{Latex[length=2mm,width=2mm]}] (b) -- (h)node[midway,below,sloped,color=black]{i};
+        \end{tikzpicture}
+        \begin{tikzpicture}
+            \filldraw (0,0) coordinate(a) circle (3pt);
+            \filldraw (-1,1) coordinate(b) circle (3pt);
+            \filldraw (0.3,0.9) coordinate(c) circle (3pt);
+            \filldraw (0,-1.3) coordinate(d) circle (3pt);
+            \filldraw (-1,-2) coordinate(e) circle (3pt);
+            \filldraw (-2,-1.5) coordinate(f) circle (3pt);
+            \filldraw (-3,-0.5) coordinate(g) circle (3pt);
+            \filldraw (-2,0.5) coordinate(h) circle (3pt);
+
+            \draw [-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (b);
+            \draw [-{Latex[length=2mm,width=2mm]}](a) -- (c);
+            \draw [-{Latex[length=2mm,width=2mm]}](b) -- (c);
+
+            \filldraw [opacity=0.3] (a) -- (b) -- (c);
+
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (d);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (d) -- (e);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (e) -- (f);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (f) -- (g);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (g) -- (h);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (b) -- (h);
+        \end{tikzpicture}
+        \begin{tikzpicture}
+            \filldraw (0,0) coordinate(a) circle (3pt);
+            \filldraw (-1,1) coordinate(b) circle (3pt);
+            \filldraw (0.3,0.9) coordinate(c) circle (3pt);
+            \filldraw (0,-1.3) coordinate(d) circle (3pt);
+            \filldraw (-1,-2) coordinate(e) circle (3pt);
+            \filldraw (-2,-1.5) coordinate(f) circle (3pt);
+            \filldraw (-3,-0.5) coordinate(g) circle (3pt);
+            \filldraw (-2,0.5) coordinate(h) circle (3pt);
+
+            \draw [-{Latex[length=2mm,width=2mm]}] (a) -- (b);
+            \draw [-{Latex[length=2mm,width=2mm]},color=blue](a) -- (c);
+            \draw [-{Latex[length=2mm,width=2mm]},color=blue](b) -- (c);
+
+            \filldraw [opacity=0.3] (a) -- (b) -- (c);
+
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (a) -- (d);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (d) -- (e);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (e) -- (f);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (f) -- (g);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (g) -- (h);
+            \draw[-{Latex[length=2mm,width=2mm]},color=blue] (b) -- (h);
+        \end{tikzpicture}
+        \caption{Beispiel der Kreisvektoren.
+        In Rot der Kreis der Relation, in Blau zwei Kreise, die durch die rote Relation miteinander identifiziert werden}
+        \label{fig4}
+    \end{figure}
+
+    An example in Fig.~\ref{fig4}.
+    We are given two circles in blue, and a relation in red.
+    If we number the edges as in the first picture and select all circle orientations counter clockwise we get the following matrix:
+    \[A=\begin{Bmatrix}
+            1 & 0 & -1\\
+            0 & 1 & 1\\
+            0 & -1 & -1\\
+            -1 & -1 & 0\\
+            -1 & -1 & 0\\
+            -1 & -1 & 0\\
+            -1 & -1 & 0\\
+            -1 & -1 & 0\\
+            1 & 1 & 0
+    \end{Bmatrix}\]
+    And thus gets a non-empty kernel, $A(1,1,-1)^T=0$ So we know that the two generators are identified with each other and can remove the younger one out of the generator list.
+
+    We now know when to add edges and faces and how to find all possible generators and how to find ''dead'' generators.
+    Putting this together we are now able to calculate the first persistent homology.
+
+    \subsection{Optimizations}\label{subsec:optimizations}
+
+    Since this algorithm is not that efficient ($\sim5$ seconds for $100$ nodes, $\sim20$ seconds for $200$ nodes) we optimised it using contractions on the graph and get almost linear runtime ($\sim10$ seconds for $1000$ nodes).
+    The main idea here is to not maintain a list of relations rather than handling the effect of relations as operation on the underlying graph.
+    That removes the necessity of computing kernels of a growing matrix in each face step, but is not trivial to implement due to special cases in face contractions.\\
+    Let us recap first.
+    We have generated a list of actions, that are of exactly 3 different types:
+    \begin{itemize}
+        \item Edge actions: These add exactly one edge between two nodes.
+        \item Face actions: These add a relation, that is going along a face, representing the face being contracted.
+        \item Edge-face actions: These exist for degenerate faces and first add an edge of a face and then contract it.
+    \end{itemize}
+    Since we are going to add and remove edges, we first have to make sure, that we are sorting the actions in a way, that edges are only removed, after being added.
+    Logically this should be an implication by the action generation using the Voronoi diagram, but in reality there are sometimes numerical problems, that destroy this order.
+    To do this, we compute a dependency tree, where a face or edge-face action is depending on each edge or edge-face action, that adds an edge of the relation of the face action.
+    Afterwards we sort using this tree order.\\
+    Note that since we are now going to contract and remove edges and nodes, we have to allow multi-edges and loops inside the graph.
+    Now we can start to process each action one by one.\\
+    Edge actions are the same as before: We add the edge to the graph, independent from whether it is going to be a loop or normal edge.
+    We also have to search for new circles in the graph and eventually add a new cycle.
+    Due to the way, we are searching for new circles, we don't even have to change the algorithm when allowing newly added loops.\\
+    Edge-face actions at first also add an edge the same way edge actions do, but we omit searching for circles, since the newly created cycle would die the same time it is born.
+    Then we add the face relation just like face actions do.\\
+    This leaves us with the computation of face actions.
+    We are now starting to replace and remove edges and nodes inside the graph, which means, that all future actions and all existing cycles have to be updated in the same way as well.
+    The first thing we have to discuss in beforehand is how we are going to implement the replacement of nodes.
+    That is done by having graph nodes be an optional pointer to a target node.
+    If for example we want to replace node $1$ with node $0$, we have to point node $2$ to node $1$.\\
+    The second and more important thing is the replacement and removal of edges.
+    Now to simplify things, we represent cycles and face actions simply as circles, so that we can concentrate on replacing edges inside a circle.\\
+    \input{snippet2.tex}\newpage
+    Now we have all the tools we need to actually evaluate face actions (see fig.\ \ref{fig6}).\\
+    \input{snippet3.tex}
+    Case 1 actually never occurs, since that would mean that there is a relation, that can be expressed as linear combination of other relations.\\
+    Case 2.1 removes exactly one loop and case 2.2 occurs at the very start of the algorithm, where nothing has yet been contracted.\\
+    Case 3 first searches for a loop, that only occurs once (which is always possible, since otherwise all edges would have been gone through twice, which is impossible in a planar graph).
+    Then it solves the relation for that loop, so that it can be replaced by the resulting sequence of other loops.
+    E.g.\ having a relation $[a, b, -c, -d]$ we can find $b$ to be a single edge and replace it with $[-a, d, c]$.
+    That way we get rid of every occurrence of $b$ using the relation and delete it afterwards.\\
+    Case 4 is the last case, where loops as well as non-loops occur in the relation.
+    Here search for a single non-loop and replace it using the relation, just like as in case 3.
+    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circle anymore.\\
+    This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.
+    Afterwards we kill empty cycles and linear combinations of cycles.
+
+    \chapter{Distance Measures}\label{ch:distance-measures}
+
+    First of all we want to extend the Wasserstein distance to differently sized sets.
+    A first idea was to minimize $\varphi:X\rightarrow Y$ for $|X|<|Y|$ via injections $\varphi:X\rightarrow Y$, and to introduce an error term for every point in $Y$ that is not hit.
+    This seemed promising.\\
+    Define $\gamma:\bR^2\rightarrow\bR$, with $(x,y)\mapsto y-x$.
+    The motivation behind this definition is that this is exactly the vertical distance from a point $(x,y)$ to the diagonal.
+    Then we define \[W_p'(X,Y):=\min_{\varphi:X\rightarrow Y}\left(\sum_{x\in X}|||x-\varphi(x)||^p + \sum_{y\in Y\setminus \in(\varphi)}\gamma(y)^p\right)^\frac{1}{p}.\]
+    This approach seemed promising at first, but the error term was too big.
+    The problem is that $||x-\varphi(x)||$ is the $\ell_2$ norm from the distance of $x$ and $\varphi(x)$, whereas $\gamma(y)$ is the $\ell_1$ norm from the distance of $y$ and $\Delta$.
+    If you define $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$ instead, you get a fair distribution.
+    However we noticed that this distance is too restrictive.
+    We also want to allow points from $X$ not to be mapped.
+    So now we define the final version of our modified Wasserstein distance, where we apply the error term to any point from $X$ that is not mapped, as well as any point from $Y$ that is not hit.
+    \[V_p(X,Y):=\min_{Z\subset{X}}\min_{\varphi:Z\rightarrow Y}\left(\sum_{z\in Z}||z-\varphi(z)||^p + \sum_{y\in (Y\setminus \im(\varphi))\cup X\setminus Z}\gamma(y)^p\right)^\frac{1}{p}.\]
+
+    We call the bottleneck distance $B(X,Y) := V_\infty(X,Y)$.
+    Since we now have three different Wasserstein distances, we want to make clear, the $V_p(\_,\_)$ will be the distance in question from now on.
+
+    \section{Efficient Calculation}\label{sec:efficient-calculation}
+
+    We quickly noticed that the whole problem is closely related to the Optimal Mapping problem.
+    We want to make use of the knowledge we have of the ''Optimal Mapping'' problem and present the problem of minimizing over exponentially many mappings as a flow problem.
+    So for $V_p(X,Y)$ we define the following graph. $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.\\
+    \begin{figure}
+        \centering
+        \begin{tikzpicture}[scale = .95]
+            \definecolor{mycolor}{rgb}{0, 0.500, 0.06};
+            \definecolor{red}{rgb}{1,0,0};
+            \definecolor{blue}{rgb}{0,0,1};
+            \filldraw (0,0) coordinate(s) circle (3pt);
+            \node at (s) [above = 1mm of s] {$s$};
+            \node at (s) [left,blue] {$|X|+|Y|$};
+
+            \filldraw (3,3) coordinate(x1) circle (3pt);
+            \node at (x1) [above = 1mm of x1] {$x_1$};
+            \filldraw (3,1) coordinate(x2) circle (3pt);
+            \node at (x2) [above = 1mm of x2] {$x_2$};
+            \filldraw (3,-1) coordinate(x3) circle (3pt);
+            \node at (x3) [above = 1mm of x3] {$x_n$};
+            \filldraw (3,-3) coordinate(h) circle (3pt);
+            \node at (h) [above = 1mm of h] {$h$};
+
+
+
+            \filldraw (6,4) coordinate(y1) circle (3pt);
+            \node at (y1) [above = 1mm of y1] {$y_1$};
+            \filldraw (6,2) coordinate(y2) circle (3pt);
+            \node at (y2) [above = 1mm of y2] {$y_2$};
+            \filldraw (6,0) coordinate(y3) circle (3pt);
+            \node at (y3) [above = 1mm of y3] {$y_3$};
+            \filldraw (6,-2) coordinate(y4) circle (3pt);
+            \node at (y4) [above = 1mm of y4] {$y_m$};
+            \filldraw (6,-4) coordinate(hs) circle (3pt);
+            \node at (hs) [above = 1mm of hs] {$h'$};
+
+            \filldraw (9,0) coordinate(t) circle (3pt);
+            \node at (t) [above = 1mm of t] {$t$};
+            \node at (t) [right,blue] {$-|X|-|Y|$};
+
+            \draw [-{Latex[length=2mm,width=2mm]}] (s) -- (x1) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (s) -- (x2) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (s) -- (x3) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (s) -- (h) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{|Y|}$};
+
+
+            \draw [-{Latex[length=2mm,width=2mm]}] (x1) -- (y1) node [midway,above, sloped] {$\textcolor{mycolor}{||x_1-y_1||},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (x2) -- (y1) node [midway,near start,sloped,above] {$\ldots$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (x1) -- (y2) node [midway,above, sloped,fill=white,fill opacity = 0.8,color=white] {$x_1-y_2$}node [midway,above, sloped] {$\textcolor{mycolor}{||x_1-y_2||},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (x2) -- (y2)node [midway,sloped,above] {$\ldots$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (x2) -- (y3)node [midway,above, sloped] {$\textcolor{mycolor}{||x_2-y_3||},\textcolor{red}{1}$};
+
+            \node at (4.5,0) {$\vdots$};
+
+            \draw [-{Latex[length=2mm,width=2mm]}] (x3) -- (y4) node [midway,above, sloped] {$\textcolor{mycolor}{||x_n-y_m||},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (x3) -- (hs) node [midway,near start,below, sloped] {$\textcolor{mycolor}{\gamma(x_n)},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (h) -- (hs) node [midway,below, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{\min(|X|,|Y|)}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (h) -- (y4)node [midway,below, sloped,fill=white,fill opacity = 0.8, color=white] {$\gamma(y_m),1$}  node [midway,below, sloped] {$\textcolor{mycolor}{\gamma(y_m)},\textcolor{red}{1}$};
+
+
+
+            \draw [-{Latex[length=2mm,width=2mm]}] (y1) -- (t) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (y2) -- (t) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (y3) -- (t) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (y4) -- (t) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{1}$};
+            \draw [-{Latex[length=2mm,width=2mm]}] (hs) -- (t) node [midway,above, sloped] {$\textcolor{mycolor}{0},\textcolor{red}{|X|}$};
+
+            %\draw [-{Latex[length=2mm,width=2mm]},color=red] (a) -- (b) node[midway,below,sloped,color=black]{a};
+            %\draw [-{Latex[length=2mm,width=2mm]},color=red](a) -- (c)node[midway,below,sloped,color=black]{b};
+            %\draw [-{Latex[length=2mm,width=2mm]},color=red](b) -- (c)node[midway,above,sloped,color=black]{c};
+
+            %\draw[-{Latex[length=2mm,width=2mm]}] (a) -- (d)node[midway,below,sloped,color=black]{d};
+            %\draw[-{Latex[length=2mm,width=2mm]}] (d) -- (e)node[midway,below,sloped,color=black]{e};
+            %\draw[-{Latex[length=2mm,width=2mm]}] (e) -- (f)node[midway,below,sloped,color=black]{f};
+            %\draw[-{Latex[length=2mm,width=2mm]}] (f) -- (g)node[midway,below,sloped,color=black]{g};
+            %\draw[-{Latex[length=2mm,width=2mm]}] (g) -- (h)node[midway,below,sloped,color=black]{h};
+            %\draw[-{Latex[length=2mm,width=2mm]}] (b) -- (h)node[midway,below,sloped,color=black]{i};
+        \end{tikzpicture}
+        \caption{An example of a constructed graph.
+        Flow requirements are blue, capacities red and costs green.}
+        \label{fig7}
+    \end{figure}
+
+    Weights are selected as follows.
+    For edges in ${s}\times (X\cup h) \cup (Y\cup h')\times t \cup \{(h,h')\}$ they are always 0.
+    For edges of the form $(x,y)\in X\times Y$ the costs are exactly $||x-y||$, and for edges of the form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ we select $\gamma(x)$ or $\gamma(y)$.
+    As capacities we choose $|Y|,|Y|$ and $\min(|X|,|Y|)$ for $(s,h),(h',t)$ and $(h,h')$ respectively and $1$ for all other edges.
+    And finally the flow requirements $b(s) = -b(t) = |X|+|Y|$, and $b(v)=0$ for all others.
+    In order to solve the Wasserstein distance via a min-cost flow instance, we must first prove that for every feasible integer flow there is a $Z\subset X$ and map $\varphi:Z\rightarrow Y$, where the cost of the flow is equal to the error term of $\varphi$ and vice versa.
+    From this it follows that the cost of a min-cost-flow is equal to the Wasserstein distance.
+    Note that this cost only applies to $p=1$.
+    For $1<p<\infty$ exponentiate the cost of all edges by $p$ and return the $p$th root of the cost at the end.
+
+    \begin{lemma}
+        The cost of a min-cost-flow for the above graph $G=(V,E)$ is equal to the Wasserstein distance $V_p(X,Y)$.
+    \end{lemma}
+    \begin{proof}
+        Let $f:E\rightarrow \bZ_{\geq0}$ be a feasible flow.
+        For $Z$ choose all vertices $x$ from $X$, such that $f((x,y))=1$ for a $y\in Y$ and set $\varphi(x) = y$ for this y.
+        In less mathy terms, $\varphi$ is given by the selected flow edges of $f$, between $X$ and $Y$.
+        Since the cost of the edges of the form $(x,h')$ or $(h,y)$ selected by the flow is exactly $\gamma(x)$ and $\gamma(y)$, $V_p(X,Y)$ is a lower bound for the min-cost-flow value.\\
+        For the other direction we consider for given $Z,\varphi$ the flow given by $f(x,y)=1$ iff $x\in Z$ and$ \varphi(x)=y$.
+        For all $x\in X\setminus Z$ we set $f((x,h'))=1$ and for $y\in Y\setminus \im(\varphi)$ we set $f((h,y))=1$.
+        Thus one receives a feasible flow, with the same costs.
+    \end{proof}
+
+    And as we know, the min-cost-flow problem can be calculated in polynomial time with an algorithm like Edmonds-Karp.\\
+    To calculate the Bottleneck distance, we consider the subgraph given by all edges with weights smaller than a given value.
+    Since the Bottleneck distance is given by the cheapest edge, so that with all cheaper edges a feasible flow is still possible, one can determine the Bottleneck distance with logarithmically many calls of a min-cut algorithm with a procedure like binary search.
+    This reduction follows from the fact, that the error term that is to be minimized in the Wasserstein distance is the same as the $p$-norm.
+    The Bottleneck distance hence is the same as the $\infty$-norm, and is described by the maximum.
+    Hence the Bottleneck distance reduces to finding the value $min_{\varphi:Z\subset X \rightarrow Y} max_{x\in Z}||x - \varphi(x)||$.\\
+    This leaves us with the following approximations for runtime.
+    Let $X$ and $Y$ again be arbitrary.
+    Then the graph consists of $n=2+|X|+|Y|$ vertices and $m=3+2|X|+2|Y|+|X||Y|$ edges.
+    Assuming a runtime of $O(nm^2)$ for Edmonds-Karp, we have a runtime of $O(|X|^2|Y|^3 + |X|^3|Y|^2)$ for the Wasserstein distance.
+    For the Bottleneck distance we get a runtime of $O((\log(|X||Y|))(|X|^2|Y|^3 + |X|^3|Y|^2))$.
+
+    \chapter{Feature Proposals}\label{ch:feature-proposals}
+    \section{Feature Detection}\label{sec:feature-detection}
+    Now to actually use the persistent homology and the distance measures on images, we need to extract features, which will be afterwards converted to 2D points.
+    To do this we first considered an image, converted it to grayscale and then tried out existing feature detection algorithms.
+    We tested the Laplace operator, the Harris operator and Canny edge detection.\\
+    The Laplace operator computes the 2nd spatial derivative and therefore may output many different gray values for one image, which is less usable for our approach.
+    That is because we are trying to represent image structures with points, which is not possible to do in an accurate manner, if the feature detection outputs only a ''probability'' for an edge or corner.\\
+    Next up is the harris operator, which highlights corners inside an image.
+    One could think, that this is exactly what we need, but in fact we need to describe lines as series of points and not only start and end point.
+    That rules out the Harris operator for our case as well.\\
+    Finally we tested the Canny operator, which only outputs either 0 or 1 for each pixel, given a threshold.
+    Its used for edge detection and given the previous explanation exactly what we need.
+    There might be some dynamic threshold computation left to do, so that the user doesn't have to choose that parameter on its own.
+    \section{Feature Selection}\label{sec:feature-selection}
+    Now we have a feature detection, that outputs a bitmap with ones for all edges in the image.
+    The next thing to do is to convert that bitmap into 2D points, that will be used to compute the persistent homology.
+    The idea beneath the used algorithm is inspired by Poisson-Disc sampling and works as follows:
+    We sample the area above threshold by adding random white points, that are at least twice a given radius away from all other samples.
+    That way we have control over the granularity of the sampling using only a radius parameter.
+    The given space between each sample also ensures, that the numerical accuracy of the Voronoi algorithm does not have to be that exact.
+    \input{snippet4.tex}
+    \section*{Conclusion}\addcontentsline{toc}{chapter}{Conclusion}
+    %TODO Whoever
+    %TODO Symbol table? Proper chapter elevation? Conclusion own page? Kapitel -> Chapter? ...
+    %TODO Konsistenz (Rechtschreibung)
+
+\end{document}

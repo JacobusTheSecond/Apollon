@@ -1,0 +1,22 @@
+\lstset{language=Java}
+\begin{figure}
+    \begin{lstlisting}[frame=single]
+        public static List<PointD> sample(Mat matrix, int radius) {
+            List<PointD> points = new ArrayList<>();
+            // Create a "white" 2D point for each pixel above a given threshold
+            ...
+            List<PointD> samples = new ArrayList<>();
+            while (!points.isEmpty()) {
+                // Add a random white point to the samples and remove all white points within twice a given radius of the new sample
+                int index = (int) (Math.random() * points.size());
+                PointD sample = points.remove(index);
+                samples.add(sample);
+                points.removeIf(point -> point.subtract(sample).length() < 2 * radius);
+            }
+            ...
+            return samples;
+        }
+    \end{lstlisting}
+    \caption{\textit{Codesnippet of the sampling algorithm}}
+    \label{fig8}
+\end{figure}

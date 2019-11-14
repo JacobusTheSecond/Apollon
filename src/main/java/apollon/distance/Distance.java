@@ -1,5 +1,6 @@
 package apollon.distance;
 
+import apollon.util.Util;
 import org.jetbrains.annotations.NotNull;
 import org.kynosarges.tektosyne.geometry.PointD;
 
@@ -11,4 +12,8 @@ public interface Distance {
     boolean isComputed();
 
     double getDistance();
+
+    default void compute(@NotNull double[][] x, @NotNull double[][] y) {
+        compute(Util.convert(x), Util.convert(y));
+    }
 }

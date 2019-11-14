@@ -1,0 +1,52 @@
+\lstset{language=Java}
+\begin{figure}
+    \begin{lstlisting}[frame=single]
+        public void replace(int edge, int edges) {
+            if (edges.length == 0) {
+                remove(edges);
+                return;
+            }
+            boolean modified = false;
+            // Replace positive and negative orientations of the edge
+            int inverse = Graph.inverse(edge);
+            List<Integer> positive = Util.toList(edges);
+            List<Integer> negative = Util.toList(Graph.inverse(edges));
+            for (int i = 0; i < size(); i++) {
+                int replace = get(i);
+                // Replace all occurrences with either positive or negative replacement
+                if (replace == edge || replace == inverse) {
+                    this.edges.remove(i);
+                    this.edges.addAll(i, replace == edge ? positive : negative);
+                    modified = true;
+                    i += edges.length - 1;
+                }
+            }
+            if (modified) {
+                revalidate();
+            }
+        }
+
+        public void remove(int... edges) {
+            // Collect all edges in positive and negative orientation
+            Set<Integer> set = Util.toSet(edges);
+            IntStream.of(edges).map(Graph::inverse).forEach(set::add);
+            if (this.edges.removeAll(set)) {
+                revalidate();
+            }
+        }
+
+        public void revalidate() {
+            // Iterate through the circle and reduce inverse oriented consecutive edges
+            for (int i = 0; i < size(); i++) {
+                int j = (i + 1) % size();
+                if (get(i) == Graph.inverse(get(j))) {
+                    edges.remove(Math.max(i, j));
+                    edges.remove(Math.min(i, j));
+                    i = Math.max(0, i - (j < i ? 3 : 2));
+                }
+            }
+        }
+    \end{lstlisting}
+    \caption{\textit{Codesnippet of replacement and removal of edges}}
+    \label{fig5}
+\end{figure}

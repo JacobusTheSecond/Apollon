@@ -1,0 +1,88 @@
+\documentclass[11pt, a4paper,draft]{report}
+\usepackage[ngerman]{babel} 
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{tabularx}
+\usepackage{mathtools}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% load packages
+\usepackage{amsmath}   % for more basic mathematical symbols
+\usepackage{amssymb}   % for more mathematical symbols
+\usepackage{amsthm}
+\usepackage{tikz-cd}
+\usepackage{tikz}
+\usetikzlibrary{3d,calc,intersections}
+\usetikzlibrary{arrows.meta} 
+\usetikzlibrary{decorations.markings}
+\usetikzlibrary{patterns}
+\usepackage{dsfont}
+\usepackage{ stmaryrd }
+\usepackage{caption}
+
+
+\newtheorem{theorem}{Satz}
+\newtheorem{lemma}{Lemma}
+\newtheorem*{remark}{Anmerkung}
+\newtheorem{definition}{Definition}
+\newcommand{\bK}{\mathbb{K}}
+\newcommand{\bN}{\mathbb{N}}
+\newcommand{\bZ}{\mathbb{Z}}
+\newcommand{\bR}{\mathbb{R}}
+\newcommand{\bC}{\mathbb{C}}
+\newcommand{\bS}{\mathbb{S}}
+\newcommand{\bA}{\mathbb{A}}
+\newcommand{\bB}{\mathbb{B}}
+\newcommand{\bD}{\mathbb{D}}
+\newcommand{\bE}{\mathbb{E}}
+\newcommand{\bT}{\mathbb{T}}
+\newcommand{\bQ}{\mathbb{Q}}
+
+\begin{document}
+	%%TODO Titelpage%%
+	
+	\section*{The Problem}
+	
+	In dieser Arbeit wollen wir ein Feature zum Clustern von Bildern implementieren, und qualitativ bewerten.\\
+	Das Feature heißt persistent Homology. 
+	
+	\subsection*{Persistent Homology}
+	
+	Für eine gegebene Punktwolke $X \subset \bR^n$ betrachten wir die Mannigfaltikeit $M_r$ mit Rand, die aus der Vereinigung aller Bälle $B_r(x_i) = \{x\in\bR^n : d(x,x_i)\leq r\}$ besteht. Wir erhalten also eine Filtration $M_0 \subset ... \subset M_r \subset M_{r'} \subset M_{r''} \subset ...$ von CW-Komplexen, für $0\leq ... \leq r \leq r' \leq r'' \leq ...$. Durch diese Filtration erhält man nun eine Reihe von Homomorphismen für jedes $i\geq 0$:
+	$$H_i(M_0)\rightarrow ... \rightarrow H_i(M_r) \rightarrow H_i(M_{r'}) \rightarrow H_i(M_{r''}) \rightarrow ...$$
+	Für diese Kette von Abbildungen betrachten wir nun das "Leben und Sterben" von Erzeugern. Mathematischer, sei $\alpha$ ein Erzeuger von $H_i(M_{r'})$, welcher im Cokern der Abbildung $H_i(M_r) \rightarrow H_i(M_{r'})$ liegt, und sei $H_i(M_r'')$ das erste Element in der Sequenz, sodass das Bild von $\alpha$ im Kern der Abbildung $H_i(M_{r'}) \rightarrow H_i(M_{r''})/H_i(M_r)$ ist. Dann sagen wir dass $\alpha$ von $r'$ bis $r''$ "lebt". Betrachten wir alle solche $\alpha$ für alle $i$, können wir diese Information in einem sogenannten Persistenz Diagramm eintragen, und erhalten so ein Feature Vektor zu einer gegebenen Punktwolke. Dieses Diagramm entsteht für jedes $i\geq 0$, indem man für jedes $\alpha$, das von $r'$ bis $r''$ lebt, einen Punkt an $(r',r'')\in\bR^2$  einträgt.
+	
+	Für unsere Anwendung auf Bildern benötigen wir lediglich $H_0$ und $H_1$, denn $H_{\geq2}$ für Mannigfaltigkeiten, die sich in $\bR^2$ einbetten lassen, ist immer 0.
+	
+	\subsection*{Clustering with Diagram Distances}
+	
+	Um ein Ähnlichkeitsmaß für zwei gegebene Bilder anhand ihrer Persistenz Diagramme zu erhalten, Betrachten wir zwei mägliche Abstandsmaße. Die Wasserstein Distanz und ein SPezialfall dieser, der Bottleneck Distanz.
+	
+	\subsubsection*{Wasserstein Distanz}
+	
+	Bei der üblichen Wasserstein Distanz aus z.B. der Wahrscheinlichkeitstheorie betrachtet man zwei Punktwolken gleicher Kardinalität $X,Y\subset\bR^n$. Dann nennt man die Wasserstein Distanz $$W_p(X,Y)=\bigg(\inf_{\varphi:X\rightarrow Y}\int_{X}d(x,\varphi(x))dx\bigg)^{\frac{1}{p}}$$, wobei $\varphi$ eine Bijektion ist. Für unsere Anwendung haben wir aber nicht die starke Einschränkung, dass $|X| = |Y|$ für die Punktemengen $X$ und $Y$ in den Persistenz Diagrammen $D_A$ und $D_B$ für die Punktwolken $A$ und $B$. Daher wollen wir uns ein neues, durch die Wasserstein Distanz motiviertes Abstandsmaß für zwei Punktmengen unterschiedlicher Kardinalität erarbeiten. 
+	
+	Ein Spezialfall der Wasserstein Distanz ist die Bottleneck Distanz, definiert als:
+	
+	$$B(X,Y) = W_\infty(X,Y) = \inf_{\varphi:X\rightarrow Y}\sup_{x\in X}d(x,\varphi(x))$$
+	
+	\subsection*{Punktwolken erzeugen}
+	
+	Ein weiterer Schritt ist es, zu einem gegebenen Bild eine Punktwolke zu finden, um zu dieser dann das Persistenz Diagramm zu berechnen. Hierzu wollen wir auch ein paar Methoden qualitativ vergleichen. Hierzu wollen wir uns der Computervision behelfen, um Features aus dem Bild zu extrahieren. 
+	
+	\subsection*{Alles zusammen}
+	
+	Wir wollen also für zwei gegebene Bilder $I$ und $J$ erst zwei Feature-Punkt Listen $A$ resp. $B$ extrahieren. Für diese Feature-Punkte wollen wir dann die Persistenz Diagramme $D_I$ resp. $D_J$ erstellen, und dann ein geeignetes Abstandsmaß für diese Diagramme finden.
+	
+	
+	
+	\section*{The Solution}
+	
+	Im Folgenden wollen wir unsere Implementierung der genannten Problemstellung erläutern und vorstellen.
+	
+	\subsection*{Persistent Homology}
+	
+	\subsection*{Wasserstein Distance}
+	
+	
+\end{document}

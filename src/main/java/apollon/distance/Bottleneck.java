@@ -6,16 +6,16 @@ import org.jgrapht.alg.flow.PushRelabelMFImpl;
 import org.jgrapht.alg.interfaces.MaximumFlowAlgorithm;
 import org.kynosarges.tektosyne.geometry.PointD;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
 public class Bottleneck extends AbstractGraphDistance {
     private int s, t;
 
-    private int[] x, y;
-
-    private int[] sToX, sToH, xToY, hToY, yToT;
+    private int[] xY, xJ, hY;
 
     private Edge[] edges;
 
@@ -25,22 +25,28 @@ public class Bottleneck extends AbstractGraphDistance {
 
     @Override
     protected double compute() {
-        x = createVertices(getXPoints());
-        y = createVertices(getYPoints());
+        int[] x = createVertices(getXPoints());
+        int[] y = createVertices(getYPoints());
 
         s = createVertex();
         t = createVertex();
-        int h = isDifferent() ? createVertex() : -1;
+        int h = createVertex();
+        int j = createVertex();
 
-        sToX = createEdges(1, s, x);
-        sToH = isDifferent() ? createEdges(y.length - x.length, s, h) : new int[0];
-        xToY = createEdges(1, x, y);
-        hToY = isDifferent() ? createEdges(1, h, y) : new int[0];
-        yToT = createEdges(1, y, t);
+        createEdges(1, s, x);
+        createEdges(getYCount(), s, h);
+
+        xY = createEdges(1, x, y);
+        xJ = createEdges(1, x, j);
+
+        hY = createEdges(1, h, y);
+        createEdges(Math.min(getXCount(), getYCount()), h, j);
+
+        createEdges(1, y, t);
+        createEdges(getXCount(), j, t);
 
         edges = computeSortedEdges();
 
-        //TODO Apply easy bounds
         max = Util.findMin(edges.length, this::hasFlow);
         addRemoveEdges(max);
         MaximumFlowAlgorithm.MaximumFlow<Integer> flow = new PushRelabelMFImpl<>(getGraph()).getMaximumFlow(s, t);
@@ -51,13 +57,9 @@ public class Bottleneck extends AbstractGraphDistance {
         return edges[max].getCost();
     }
 
-    protected boolean isDifferent() {
-        return x.length < y.length;
-    }
-
     private boolean hasFlow(int index) {
         addRemoveEdges(index);
-        return new PushRelabelMFImpl<>(getGraph()).calculateMinCut(s, t) == y.length;
+        return new PushRelabelMFImpl<>(getGraph()).calculateMinCut(s, t) == getSum();
     }
 
     private void addRemoveEdges(int index) {
@@ -73,17 +75,20 @@ public class Bottleneck extends AbstractGraphDistance {
 
     @NotNull
     private Edge[] computeSortedEdges() {
-        Edge[] edges = new Edge[xToY.length + hToY.length];
-        for (int i = 0; i < xToY.length; i++) {
-            int edge = xToY[i];
-            edges[i] = new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), false);
+        List<Edge> edges = new ArrayList<>();
+        for (int edge : xY) {
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge)));
         }
-        for (int i = 0; i < hToY.length; i++) {
-            int edge = hToY[i];
-            edges[i + xToY.length] = new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), true);
+        for (int edge : xJ) {
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), false));
         }
-        Arrays.sort(edges);
-        return edges;
+        for (int edge : hY) {
+            edges.add(new Edge(edge, getSourceIndex(edge), getTargetIndex(edge), true));
+        }
+        edges.sort(Comparator.naturalOrder());
+        // TODO We can ignore the smallest |X| + |Y| edges, because these are necessary to find at least one flow
+        // edges.subList(0, getSum()).clear();
+        return edges.toArray(Edge[]::new);
     }
 
     public void forEachEdge(@NotNull BiConsumer<PointD, PointD> operation) {
@@ -103,16 +108,28 @@ public class Bottleneck extends AbstractGraphDistance {
 
         private final int edge;
 
+        private final boolean hOrJ;
+
         private final boolean h;
 
         private boolean active = true;
+
+        public Edge(int edge, int source, int target) {
+            this.edge = edge;
+            this.source = source;
+            this.target = target;
+            hOrJ = false;
+            h = false;
+            cost = distance(source, target);
+        }
 
         public Edge(int edge, int source, int target, boolean h) {
             this.edge = edge;
             this.source = source;
             this.target = target;
             this.h = h;
-            cost = h ? distanceToDiagonal(target) : distance(source, target);
+            hOrJ = true;
+            cost = distanceToDiagonal(h ? target : source);
         }
 
         public int getEdge() {
@@ -138,15 +155,14 @@ public class Bottleneck extends AbstractGraphDistance {
         }
 
         public void run(@NotNull BiConsumer<PointD, PointD> operation) {
-            if (h) {
-                PointD y = get(target);
-                double mid = (y.x + y.y) / 2;
-                PointD d = new PointD(mid, mid);
-                operation.accept(y, d);
-            }
-            else {
+            if (!hOrJ) {
                 operation.accept(get(source), get(target));
+                return;
             }
+            PointD y = get(h ? target : source);
+            double mid = (y.x + y.y) / 2;
+            PointD d = new PointD(mid, mid);
+            operation.accept(y, d);
         }
 
         @Override

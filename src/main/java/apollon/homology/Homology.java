@@ -1,6 +1,6 @@
-package apollon.homology.one;
+package apollon.homology;
 
-import apollon.homology.one.action.Action;
+import apollon.homology.action.Action;
 import apollon.voronoi.Voronoi;
 import org.apache.commons.lang3.ArrayUtils;
 import org.ejml.simple.SimpleMatrix;
@@ -10,10 +10,11 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class HomologyOne {
+public class Homology {
     private final List<Cycle> cycles = new ArrayList<>();
 
     private final List<Action> actions = new ArrayList<>();
@@ -24,7 +25,11 @@ public class HomologyOne {
 
     private final Voronoi voronoi;
 
-    public HomologyOne(@NotNull Voronoi voronoi) {
+    private double[] zero;
+
+    private double scale;
+
+    public Homology(@NotNull Voronoi voronoi) {
         this.voronoi = voronoi;
         generator = new ActionGenerator(voronoi, graph);
     }
@@ -32,34 +37,66 @@ public class HomologyOne {
     public void compute() {
         init();
         actions.addAll(generator.generate());
+        scale = 1;
     }
 
     private void init() {
+        initZero();
+        initOne();
+    }
+
+    private void initOne() {
         cycles.clear();
         actions.clear();
         graph.init(voronoi.getSitesCount());
     }
 
+    private void initZero() {
+        int components = voronoi.getSitesCount();
+        zero = new double[components];
+        Arrays.fill(zero, Double.POSITIVE_INFINITY);
+    }
+
     public synchronized void executeActions() {
         while (!actions.isEmpty()) {
-            actions.remove(0).execute(this);
+            executeAction();
         }
     }
 
     public synchronized void executeNextAction() {
         if (!actions.isEmpty()) {
-            actions.remove(0).execute(this);
+            executeAction();
+        }
+    }
+
+    private void executeAction() {
+        actions.remove(0).execute(this);
+        if (actions.isEmpty()) {
+            scale = Arrays.stream(zero).filter(Double::isFinite).map(radius -> 1 / radius).min().orElse(1);
         }
     }
 
     public void addEdgeAndCycle(@NotNull Site source, @NotNull Site target, int edge, double radius) {
         Optional<Circle> optionalCircle = graph.find(source, target);
-        addEdge(source, target, edge);
+        addEdge(source, target, edge, radius);
         optionalCircle.ifPresent(circle -> addCycle(circle.append(Graph.inverse(edge)), radius));
     }
 
-    public void addEdge(@NotNull Site source, @NotNull Site target, int edge) {
+    public void addEdge(@NotNull Site source, @NotNull Site target, int edge, double radius) {
+        addZero(source, target, radius);
         graph.addEdge(source, target, edge);
+    }
+
+    private void addZero(@NotNull Site source, @NotNull Site target, double radius) {
+        Site a = source.getComponent();
+        Site b = target.getComponent();
+        if (a.index() == b.index()) {
+            return;
+        }
+        Site min = a.index() > b.index() ? b : a;
+        Site max = a.index() > b.index() ? a : b;
+        zero[max.index()] = radius;
+        max.setComponent(min);
     }
 
     private void addCycle(@NotNull Circle circle, double radius) {
@@ -172,33 +209,53 @@ public class HomologyOne {
     }
 
     @NotNull
-    public double[][] plot() {
-        return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{cycle.getBorn(), cycle.getDied()}).toArray(double[][]::new);
+    public double[][] plotOne() {
+        return cycles.stream().filter(Cycle::wasLiving).map(cycle -> new double[]{scale * cycle.getBorn(), scale * cycle.getDied()}).toArray(double[][]::new);
+    }
+
+    @NotNull
+    public double[][] plotZero() {
+        return DoubleStream.of(zero).filter(Double::isFinite).map(radius -> scale * radius).mapToObj(radius -> new double[]{0, radius}).toArray(double[][]::new);
     }
 
     public void render(@NotNull Graphics g) {
         graph.render(voronoi::getSite, cycles, g);
-        renderHomology(g);
     }
 
-    private void renderHomology(@NotNull Graphics g) {
-        int y = 30;
+    public void renderCycles(@NotNull Graphics g) {
+        int y = 10;
         g.setColor(Color.BLACK);
-        g.drawString("Homology 1:", 5, y);
+        g.drawString("Cycles:", 5, y);
         y += 20;
-        for (Cycle cycle : cycles) {
+        for (Cycle cycle : all().sorted(this::compareCycles).toArray(Cycle[]::new)) {
             g.setColor(cycle.isAlive() ? Color.GREEN : Color.RED);
             g.drawString(cycle.toString(), 10, y);
             y += 20;
         }
+    }
+
+    public void renderActions(@NotNull Graphics g, int width) {
+        int y = 10;
         g.setColor(Color.BLACK);
-        g.drawString("Actions:", 5, y);
+        renderString("Actions:", y, g, width);
         y += 20;
         for (Action action : actions) {
             g.setColor(action.getColor());
-            g.drawString(action.toString(), 10, y);
+            renderString(action.toString(), y, g, width);
             y += 20;
         }
+    }
+
+    private int compareCycles(@NotNull Cycle a, @NotNull Cycle b) {
+        int difference = -Boolean.compare(a.isAlive(), b.isAlive());
+        if (difference != 0) {
+            return difference;
+        }
+        return a.compareTo(b);
+    }
+
+    private void renderString(@NotNull String value, int y, @NotNull Graphics g, int width) {
+        g.drawString(value, width - g.getFontMetrics().stringWidth(value) - 5, y);
     }
 
     @Override
