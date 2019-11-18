@@ -40,6 +40,8 @@ public class HomologyApp extends AbstractApp {
 
     private final Homology homology = new Homology(voronoi);
 
+    private File gnu;
+
     private boolean drawVoronoiEdges;
 
     private boolean drawVoronoiVertices;
@@ -431,7 +433,15 @@ public class HomologyApp extends AbstractApp {
     }
 
     private void plot() {
-        GNUPlot gnuPlot = new GNUPlot("C:\\Program Files\\gnuplot\\bin\\gnuplot.exe");
+        while (gnu == null || !gnu.isFile()) {
+            JFileChooser chooser = Util.choose();
+            chooser.setDialogTitle("Open gnuplot.exe...");
+            if (chooser.showOpenDialog(getView()) != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+            gnu = chooser.getSelectedFile();
+        }
+        GNUPlot gnuPlot = new GNUPlot(gnu.getAbsolutePath());
         PlotStyle point = new PlotStyle(Style.POINTS);
         point.setPointType(7);
 
