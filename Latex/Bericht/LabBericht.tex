@@ -128,7 +128,7 @@ tabsize=3
     And this is precisely what we are interested in.
     In order to calculate homologies, we first need a manifold, or in the case of a computer a necessarily discrete representation, a cell complex.
     We begin by defining the cell complex, we will be working with, namely the Čech-complex for a given point set.
-    The Čech-complex is interesting for us, since it models the ''squinting'' part. 
+    The Čech-complex is interesting for us, since it models the ''squinting'' part.
     It can be thought of, as letting balls grow around each point from some point set, and looking at the resulting shape.
 
     \begin{definition}[Čech complex]
@@ -270,7 +270,7 @@ tabsize=3
     \section{Persistent homology}\label{sec:persistent-homology2}
 
     In this chapter we want to focus on the implementation for the computation of the Čech complex, as well as the calculation of persistent homology and persistence diagrams. Since we limit ourselves to $2$-dimensional point sets $X$, it is sufficient to limit the cell complex $C(X)$ to its $2$-skeleton, since all higher homologies vanish.
-    
+
 
     \subsection{Computation of the Čech complex}\label{subsec:čech-complex}
 
@@ -452,27 +452,38 @@ tabsize=3
     Due to the way, we are searching for new circuits, we don't even have to change the algorithm when allowing newly added loops.\\
     Edge-face actions at first also add an edge the same way edge actions do, but we omit searching for circuits, since the newly created cycle would die the same time it is born.
     Then we add the face relation just like face actions do.\\
-    This leaves us with the computation of face actions.
-    We are now starting to replace and remove edges and nodes inside the graph, which means that all future actions and all existing cycles have to be updated in the same way as well.
-    The first thing we have to discuss in beforehand is how we are going to implement the replacement of nodes.
-    That is done by having graph nodes be an optional pointer to a target node.
-    If for example we want to replace node $1$ with node $0$, we have to point node $2$ to node $1$.\\
-    The second and more important thing is the replacement and removal of edges.
-    Now to simplify things, we represent cycles and face actions simply as circuits, so that we can concentrate on replacing edges inside a circuit.\\
+    This leaves us with the evaluation of face actions.
+    We are now starting to modify edges and nodes inside the graph, which means that all future actions and all existing cycles have to be updated in the same way as well.
+    Otherwise the modified graph would not be consistent with existing cycles and upcoming actions.
+    To simplify this, we introduce circuits on the graph, which are defined by a list of oriented edges.
+    Cycles and faces can both be represented by circuits, so that we can apply the following operations simply to the graph and circuits.
+    Homology is commutative but since we are representing cycles and faces as oriented paths, we cannot use the commutativity and have to be more careful about modifying these.
+    The lack of commutativity will later be handled by eliminating linear combinations of cycles.\\
+    Let us now discuss how we replace nodes and replace and remove edges.
+    Replacing nodes can for example be done by maintaining a node mapping table, but we decided to do that by having each graph node be an optional pointer to a target node.
+    If for example we want to replace node $1$ with node $0$ using the elder rule, we have to set node $1$ to point to node $0$.\\
+    Now we have a look at the more complicated replacement and removal of edges.
+    Since we are replacing edges no matter the orientation, we have to replace all occurrences of that edge with the desired orientation and possibly inverse order (see fig.\ \ref{fig5} $replace()$).
+    Analogously we remove all occurrences of a single edge no matter the orientation when removing an edge from a circuit (see fig.\ \ref{fig5} $remove()$).
+    After both of those operations we try to reduce the circuit as far as possible by successively removing pairs of edges and their inverses (see fig.\ \ref{fig5} $revalidate()$).\\
     \input{snippet2.tex}\newpage
     Now we have all the tools we need to actually evaluate face actions (see fig.\ \ref{fig6}).\\
     \input{snippet3.tex}
-    Case 1 actually never occurs, since that would mean that there is a relation, that can be expressed as linear combination of other relations.\\
-    Case 2.1 removes exactly one loop and case 2.2 occurs at the very start of the algorithm, where nothing has yet been contracted.\\
+    Case 1 actually never occurs, since that would mean that the relation is a linear combination of other relations.\\
+    Case 2.1 removes exactly one loop and case 2.2 occurs at the very start of the algorithm, where nothing has yet been contracted (see fig.\ \ref{contractions} top left, bottom left).\\
     Case 3 first searches for a loop, that only occurs once (which is always possible, since otherwise all edges would have been gone through twice, which is impossible in a planar graph).
     Then it solves the relation for that loop, so that it can be replaced by the resulting sequence of other loops.
-    E.g.\ having a relation $[a, b, -c, -d]$ we can find $b$ to be a single edge and replace it with $[-a, d, c]$.
-    That way we get rid of every occurrence of $b$ using the relation and delete it afterwards.\\
+    For example in fig.\ \ref{contractions} top right having the relation $[a, b, b, -c]$ we can find $a$ to be a single edge and replace it with $[c, -b, -b]$.
+    That way we get rid of every occurrence of $a$ using the relation and delete it afterwards.\\
     Case 4 is the last case, where loops as well as non-loops occur in the relation.
-    Here search for a single non-loop and replace it using the relation, just like as in case 3.
-    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circuit anymore.\\
-    This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.
+    Here we search for a single non-loop and replace it using the relation, just like as in case 3.
+    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circuit anymore.
+    In the example in fig.\ \ref{contractions} bottom right we find edge $b$ to be occurring only once and can replace it with $[-c, -a]$ using the relation.
+    Then we can merge the two nodes and therefore get $c$ to be a loop now.
+    This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.\\
     Afterwards we kill empty cycles and linear combinations of cycles.
+    The elimination of linear combinations is still done by computing the null space of the edge matrix of all living cycles.
+    This last step is also the part, that brings the commutativity of homology back in.
     \input{contractions.tex}
 
     \section{Distance Measures}\label{sec:distance-measures}
@@ -495,36 +506,36 @@ tabsize=3
     Since we now have three different Wasserstein distances, we want to make clear, the $V_p(\_,\_)$ will be the distance in question from now on.\\
     In Figure~\ref{distances} is an example of all the different distances, a single point from the set $X$ has to consider.
     We want to find a mapping the reduces the sum of the selected lengths, or the maximum such length respectively.
-     \begin{figure}
-    	\centering
-    	\fbox{
-    		\begin{tikzpicture}
-    		% Achsen zeichnen
-    		\draw[->,thick] (0,0) -- (5,0) node[right] {$x$};
-    		\draw[color=blue] (0,0) -- (5,5);
-    		\draw[->,thick] (0,0) -- (0,5) node[above] {$y$};
-    		%Punkte einzeichnen:
-    		\filldraw[color=green] (2,3) coordinate(a) circle (3pt);
-    		\filldraw[color=green] (1,1.1) coordinate(b) circle (3pt);
-    		\filldraw[color=green] (3.1,4) coordinate(c) circle (3pt);
-    		
-    		\filldraw[color=blue] (1,1.5) coordinate(d) circle (3pt);
-    		\filldraw[color=blue] (2,2.5) coordinate(e) circle (3pt);
-    		\filldraw[color=blue] (2.8,3.1) coordinate(f) circle (3pt);
-    		\filldraw[color=blue] (3.2,4.3) coordinate(g) circle (3pt);
-    		
-    		\draw[red] (2.5,2.5) -- (a);
-    		
-    		\draw[red] (d) -- (a);
-    		\draw[red] (e) -- (a);
-    		\draw[red] (f) -- (a);
-    		\draw[red] (g) -- (a);
-    		
-    		\end{tikzpicture}
-    	}
-    	\caption{\textit{The first homology of two different persistence Diagrams in green and blue.
-    	Red are all the different distances, a single point of the green diagram has to consider in the mapping problem.}}
-    	\label{distances}
+    \begin{figure}
+        \centering
+        \fbox{
+        \begin{tikzpicture}
+            % Achsen zeichnen
+            \draw[->,thick] (0,0) -- (5,0) node[right] {$x$};
+            \draw[color=blue] (0,0) -- (5,5);
+            \draw[->,thick] (0,0) -- (0,5) node[above] {$y$};
+            %Punkte einzeichnen:
+            \filldraw[color=green] (2,3) coordinate(a) circle (3pt);
+            \filldraw[color=green] (1,1.1) coordinate(b) circle (3pt);
+            \filldraw[color=green] (3.1,4) coordinate(c) circle (3pt);
+
+            \filldraw[color=blue] (1,1.5) coordinate(d) circle (3pt);
+            \filldraw[color=blue] (2,2.5) coordinate(e) circle (3pt);
+            \filldraw[color=blue] (2.8,3.1) coordinate(f) circle (3pt);
+            \filldraw[color=blue] (3.2,4.3) coordinate(g) circle (3pt);
+
+            \draw[red] (2.5,2.5) -- (a);
+
+            \draw[red] (d) -- (a);
+            \draw[red] (e) -- (a);
+            \draw[red] (f) -- (a);
+            \draw[red] (g) -- (a);
+
+        \end{tikzpicture}
+        }
+        \caption{\textit{The first homology of two different persistence Diagrams in green and blue.
+        Red are all the different distances, a single point of the green diagram has to consider in the mapping problem.}}
+        \label{distances}
     \end{figure}
 
     \subsection{Efficient Calculation}\label{subsec:efficient-calculation}
@@ -611,7 +622,7 @@ tabsize=3
         \label{graph}
     \end{figure}
 
-	Weights are selected as follows.
+    Weights are selected as follows.
     For edges in ${s}\times (X\cup h) \cup (Y\cup h')\times t \cup \{(h,h')\}$ they are always 0.
     For edges of the form $(x,y)\in X\times Y$ the costs are exactly $||x-y||$, and for edges of the form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ we select $\gamma(x)$ or $\gamma(y)$.
     As capacities we choose $|Y|,|Y|$ and $\min(|X|,|Y|)$ for $(s,h),(h',t)$ and $(h,h')$ respectively and $1$ for all other edges.
@@ -690,7 +701,7 @@ tabsize=3
     %TODO Konsistenz (Rechtschreibung)
     %TODO \ before math functions (min, max, im,...)
     %TODO \ldots -> \cdots?
-    
+
     \newpage
     \addcontentsline{toc}{section}{Literatur}
     \bibliography{literatur}
