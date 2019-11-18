@@ -521,7 +521,7 @@ tabsize=3
     		
     		\end{tikzpicture}
     	}
-    	\caption{\textit{The second homology of two different persistence Diagrams in green and blue. Red are all the different distances, a single point of the green diagram has to consider in the mapping problem.}}
+    	\caption{\textit{The first homology of two different persistence Diagrams in green and blue. Red are all the different distances, a single point of the green diagram has to consider in the mapping problem.}}
     	\label{distances}
     \end{figure}
 
@@ -529,7 +529,7 @@ tabsize=3
 
     We quickly noticed that the whole problem is closely related to the Optimal Mapping problem.
     We want to make use of the knowledge we have of the ''Optimal Mapping'' problem and present the problem of minimizing over exponentially many mappings as a flow problem.
-    So for $V_p(X,Y)$ we define the following graph. $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.\\
+    So for $V_p(X,Y)$ we define the following graph. $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.
     \begin{figure}
         \centering
         \begin{tikzpicture}[scale = .95]
@@ -609,7 +609,7 @@ tabsize=3
         \label{graph}
     \end{figure}
 
-    Weights are selected as follows.
+	Weights are selected as follows.
     For edges in ${s}\times (X\cup h) \cup (Y\cup h')\times t \cup \{(h,h')\}$ they are always 0.
     For edges of the form $(x,y)\in X\times Y$ the costs are exactly $||x-y||$, and for edges of the form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ we select $\gamma(x)$ or $\gamma(y)$.
     As capacities we choose $|Y|,|Y|$ and $\min(|X|,|Y|)$ for $(s,h),(h',t)$ and $(h,h')$ respectively and $1$ for all other edges.
