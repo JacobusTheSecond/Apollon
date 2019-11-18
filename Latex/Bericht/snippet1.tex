@@ -24,7 +24,7 @@
                 actions.sort(Action::compareTo);
                 return actions;
             }
-            private void computeVertex(@NotNull PointD vertex, int index) {
+            private void computeVertex(PointD vertex, int index) {
                 // Create list of actions given the Voronoi Diagram
                 ...
                 VEdge[] edges = voronoi.getEdges(edgeIndices);

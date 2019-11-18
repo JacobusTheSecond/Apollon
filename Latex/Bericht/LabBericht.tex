@@ -285,7 +285,7 @@ tabsize=3
     If you add all these edges, you get the planar dual-graph, the DeLauney triangulation of the points from $X$.\\
     It gets more complicated with faces, i.e. $2$-cells.
     Here we have to make an important case distinction.
-    If more than $2$ Voronoi regions touch in a point, this corresponds to a circuit in the DeLauney trinagulation and a $2$-cell in the Čech complex.
+    If more than $2$ Voronoi regions touch in a point, this corresponds to a circuit in the DeLauney triangulation and a $2$-cell in the Čech complex.
     But what exactly is the filtration value?
     This is where the following case distinction comes into play.
     Looking at the convex hull of the points $x_1,\ldots,x_k\in X$, whose Voronoi regions touch each other, it can happen that the point $v$ where the Voronoi regions touch each other is inside or outside the convex hull.
@@ -294,9 +294,9 @@ tabsize=3
     \input{snippet1.tex}
     In the other case, there is no point in time where the circuit given by the points $x_1,\ldots,x_k$ in the geometric representation is ''around a hole'' - i.e.\ never is a generator -, so the face must be inserted as soon as the last edge closes the circle in $x_1,\ldots,x_k$.
     In other words, the filtration value is $\max f(\{x_i,x_{i+1}\})$.
-    We want to call these $2$-cells \textit{degenerated}.
+    We want to call these $2$-cells \textit{degenerate}.
     For the implementation in Java we decided to use a library which calculates the Voronoi diagram.
-    We calculate the planar dualgraph based on the library, as shown in Fig.~\ref{fig3} Furthermore, we see that in the case of degenerated $2$-faces we use a \texttt{EdgeFaceAction} to insert the longest edge of the circle and the $2$-cell in the same time step.
+    We calculate the planar dualgraph based on the library, as shown in Fig.~\ref{fig3} Furthermore, we see that in the case of degenerate $2$-faces we use a \texttt{EdgeFaceAction} to insert the longest edge of the circle and the $2$-cell in the same time step.
 
     \subsection{Calculation of persistent Homology}\label{subsec:calculation-of-persistent-homology}
 
@@ -434,33 +434,33 @@ tabsize=3
     \subsubsection{Optimizations}\label{subsec:optimizations}
 
     Since this algorithm is not that efficient ($\sim5$ seconds for $100$ nodes, $\sim20$ seconds for $200$ nodes) we optimised it using contractions on the graph and get almost linear runtime ($\sim10$ seconds for $1000$ nodes).
-    The main idea here is to not maintain a list of relations rather than handling the effect of relations as operation on the underlying graph.
+    The main idea here is to handle the effect of each relation as operation on the underlying graph instead of maintaining a list of relations.
     That removes the necessity of computing kernels of a growing matrix in each face step, but is not trivial to implement due to special cases in face contractions.\\
     Let us recap first.
-    We have generated a list of actions, that are of exactly 3 different types:
+    We have generated a list of actions, that are of exactly three different types:
     \begin{itemize}
         \item Edge actions: These add exactly one edge between two nodes.
-        \item Face actions: These add a relation, that is going along a face, representing the face being contracted.
-        \item Edge-face actions: These exist for degenerate faces and first add an edge of a face and then contract it.
+        \item Face actions: These add a relation going along the boundary of a face, representing the face being contracted.
+        \item Edge-face actions: These exist for degenerate faces and first add an edge of a face before executing the face action.
     \end{itemize}
-    Since we are going to add and remove edges, we first have to make sure, that we are sorting the actions in a way, that edges are only removed, after being added.
+    Since we are going to add and remove edges, we first have to make sure, that we are sorting the actions in a way, that edges are first added and then removed.
     Logically this should be an implication by the action generation using the Voronoi diagram, but in reality there are sometimes numerical problems, that destroy this order.
     To do this, we compute a dependency tree, where a face or edge-face action is depending on each edge or edge-face action, that adds an edge of the relation of the face action.
-    Afterwards we sort using this tree order.\\
+    Afterwards we sort the actions using this tree order.\\
     Note that since we are now going to contract and remove edges and nodes, we have to allow multi-edges and loops inside the graph.
     Now we can start to process each action one by one.\\
     Edge actions are the same as before: We add the edge to the graph, independent from whether it is going to be a loop or normal edge.
-    We also have to search for new circles in the graph and eventually add a new cycle.
-    Due to the way, we are searching for new circles, we don't even have to change the algorithm when allowing newly added loops.\\
-    Edge-face actions at first also add an edge the same way edge actions do, but we omit searching for circles, since the newly created cycle would die the same time it is born.
+    We also have to search for new circuit in the graph and eventually add a new cycle.
+    Due to the way, we are searching for new circuits, we don't even have to change the algorithm when allowing newly added loops.\\
+    Edge-face actions at first also add an edge the same way edge actions do, but we omit searching for circuits, since the newly created cycle would die the same time it is born.
     Then we add the face relation just like face actions do.\\
     This leaves us with the computation of face actions.
-    We are now starting to replace and remove edges and nodes inside the graph, which means, that all future actions and all existing cycles have to be updated in the same way as well.
+    We are now starting to replace and remove edges and nodes inside the graph, which means that all future actions and all existing cycles have to be updated in the same way as well.
     The first thing we have to discuss in beforehand is how we are going to implement the replacement of nodes.
     That is done by having graph nodes be an optional pointer to a target node.
     If for example we want to replace node $1$ with node $0$, we have to point node $2$ to node $1$.\\
     The second and more important thing is the replacement and removal of edges.
-    Now to simplify things, we represent cycles and face actions simply as circles, so that we can concentrate on replacing edges inside a circle.\\
+    Now to simplify things, we represent cycles and face actions simply as circuits, so that we can concentrate on replacing edges inside a circuit.\\
     \input{snippet2.tex}\newpage
     Now we have all the tools we need to actually evaluate face actions (see fig.\ \ref{fig6}).\\
     \input{snippet3.tex}
@@ -472,7 +472,7 @@ tabsize=3
     That way we get rid of every occurrence of $b$ using the relation and delete it afterwards.\\
     Case 4 is the last case, where loops as well as non-loops occur in the relation.
     Here search for a single non-loop and replace it using the relation, just like as in case 3.
-    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circle anymore.\\
+    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circuit anymore.\\
     This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.
     Afterwards we kill empty cycles and linear combinations of cycles.
     \input{contractions.tex}
@@ -675,7 +675,7 @@ tabsize=3
     \input{snippet4.tex}
     \section*{Conclusion}\addcontentsline{toc}{section}{Conclusion}
     In this work we have presented two different ways to compute the persistent Homology of a given $2$-dimensional point set.
-    We began with a very na\̈ive way, where we simply built up a big matrix, and continuously solved it for its kernel, and then used information from the kernel to reduce the size of the matrix.
+    We began with a very na\"{\i}ve way, where we simply built up a big matrix, and continuously solved it for its kernel, and then used information from the kernel to reduce the size of the matrix.
     The second approach was much more involved, and made changes to the underlying graph, to keep the complexity of the problem small from the very beginning.\\
     We then used the calculated persistent Homology, to compute their difference.
     For this we changed the Wasserstein- and Bottleneck-distances to also accept differently sized point sets, and made this changes in a way, that it respects the significance of the underlying data - namely the persistent homology.\\
@@ -690,5 +690,6 @@ tabsize=3
     The Java program requires \ldots
     %TODO Symbol table? Conclusion own page?
     %TODO Konsistenz (Rechtschreibung)
-
+    %TODO \ before math functions (min, max, im,...)
+    %TODO \ldots -> \cdots?
 \end{document}
