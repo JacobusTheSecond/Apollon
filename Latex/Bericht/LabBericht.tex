@@ -483,25 +483,24 @@ tabsize=3
     This last step is also the part, that brings the commutativity of homology back in.
     \input{contractions.tex}
 
-    \section{Distance Measures}\label{sec:distance-measures}
+    \section{Modified Wasserstein distance}\label{sec:distance-measures}
 
     First of all we want to extend the Wasserstein distance to differently sized sets.
-    A first idea was to minimize $\varphi:X\rightarrow Y$ for $|X|<|Y|$ via injections $\varphi:X\rightarrow Y$, and to introduce an error term for every point in $Y$ that is not hit.
-    This seemed promising.\\
+    A first idea was to minimize $\varphi:X\rightarrow Y$ for $|X|<|Y|$ via injections $\varphi:X\rightarrow Y$, and to introduce an error term for every point in $Y$ that is not hit.\\
     Define $\gamma:\bR^2\rightarrow\bR$, with $(x,y)\mapsto y-x$.
     The motivation behind this definition is that this is exactly the vertical distance from a point $(x,y)$ to the diagonal.
     Then we define \[W_p'(X,Y):=\min_{\varphi:X\rightarrow Y}\left(\sum_{x\in X}|||x-\varphi(x)||^p + \sum_{y\in Y\setminus \in(\varphi)}\gamma(y)^p\right)^\frac{1}{p}.\]
     This approach seemed promising at first, but the error term was too big.
-    The problem is that $||x-\varphi(x)||$ is the $\ell_2$ norm from the distance of $x$ and $\varphi(x)$, whereas $\gamma(y)$ is the $\ell_1$ norm from the distance of $y$ and $\Delta$.
-    If you define $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$ instead, you get a fair distribution.
+    The problem is that $||x-\varphi(x)||$ is the $\ell_2$ distance of $x$ and $\varphi(x)$, whereas $\gamma(y)$ is the $\ell_1$ distance of $y$ and $\Delta$.
+    Hence we define $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$ instead, to get the $\ell_2$ distance of $y$ and $\Delta$ instead.
     However we noticed that this distance is too restrictive.
     We also want to allow points from $X$ not to be mapped.
     So now we define the final version of our modified Wasserstein distance, where we apply the error term to any point from $X$ that is not mapped, as well as any point from $Y$ that is not hit.
     \[V_p(X,Y):=\min_{Z\subset{X}}\min_{\varphi:Z\rightarrow Y}\left(\sum_{z\in Z}||z-\varphi(z)||^p + \sum_{y\in (Y\setminus \im(\varphi))\cup X\setminus Z}\gamma(y)^p\right)^\frac{1}{p}.\]
 
     We call the bottleneck distance $B(X,Y) := V_\infty(X,Y)$.
-    Since we now have three different Wasserstein distances, we want to make clear, the $V_p(\_,\_)$ will be the distance in question from now on.\\
-    In Figure\ \ref{distances} is an example of all the different distances, a single point from the set $X$ has to consider.
+    Since we now have three different Wasserstein distances, we want to make clear, that the function $V_p(\_,\_)$ will be the distance in question from now on.\\
+    In Figure\ \ref{distances} an example of all the different distances, a single point from the set $X$ has to consider is shown.
     We want to find a mapping the reduces the sum of the selected lengths, or the maximum such length respectively.
     \begin{figure}
         \centering
@@ -537,9 +536,10 @@ tabsize=3
 
     \subsection{Efficient Calculation}\label{subsec:efficient-calculation}
 
-    We quickly noticed that the whole problem is closely related to the Optimal Mapping problem.
-    We want to make use of the knowledge we have of the ''Optimal Mapping'' problem and present the problem of minimizing over exponentially many mappings as a flow problem.
-    So for $V_p(X,Y)$ we define the following graph. $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.
+    We quickly noticed that the whole problem can be modelled quiet easily via a min-cost-flow problem.
+    This reduces the computations required from basically checking exponentially many mappings to finding a min-cost-flow, which can be done in polynomial time.\\
+    So for $V_p(X,Y)$ we define the following graph.
+    $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.
     \begin{figure}
         \centering
         \begin{tikzpicture}[scale = .95]
@@ -624,9 +624,9 @@ tabsize=3
     For edges of the form $(x,y)\in X\times Y$ the costs are exactly $||x-y||$, and for edges of the form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ we select $\gamma(x)$ or $\gamma(y)$.
     As capacities we choose $|Y|,|Y|$ and $\min(|X|,|Y|)$ for $(s,h),(h',t)$ and $(h,h')$ respectively and $1$ for all other edges.
     And finally the flow requirements $b(s) = -b(t) = |X|+|Y|$, and $b(v)=0$ for all others.
-
     In Figure\ \ref{graph} one can see the structure of the constructed graph.\\
     In order to solve the Wasserstein distance via a min-cost flow instance, we must first prove that for every feasible integer flow there is a $Z\subset X$ and map $\varphi:Z\rightarrow Y$, where the cost of the flow is equal to the error term of $\varphi$ and vice versa.
+    Since the graph only has integral values, the min-cost-flow is integral as well, which is why these are sufficient to consider.
     From this it follows that the cost of a min-cost-flow is equal to the Wasserstein distance.
     Note that this cost only applies to $p=1$.
     For $1<p<\infty$ exponentiate the cost of all edges by $p$ and return the $p$th root of the cost at the end.
@@ -636,7 +636,7 @@ tabsize=3
     \end{lemma}
     \begin{proof}
         Let $f:E\rightarrow \bZ_{\geq0}$ be a feasible flow.
-        For $Z$ choose all vertices $x$ from $X$, such that $f((x,y))=1$ for a $y\in Y$ and set $\varphi(x) = y$ for this y.
+        For $Z$ choose all vertices $x$ from $X$, such that $f((x,y))=1$ for a $y\in Y$ and set $\varphi(x) = y$ for this $y$.
         In less mathy terms, $\varphi$ is given by the selected flow edges of $f$, between $X$ and $Y$.
         Since the cost of the edges of the form $(x,h')$ or $(h,y)$ selected by the flow is exactly $\gamma(x)$ and $\gamma(y)$, $V_p(X,Y)$ is a lower bound for the min-cost-flow value.\\
         For the other direction we consider for given $Z,\varphi$ the flow given by $f(x,y)=1$ iff $x\in Z$ and$ \varphi(x)=y$.
@@ -644,22 +644,22 @@ tabsize=3
         Thus one receives a feasible flow, with the same costs.
     \end{proof}
 
-    And as we know, the min-cost-flow problem can be calculated in polynomial time with an algorithm like Edmonds-Karp.\\
+    And as we know, the min-cost-flow problem can be calculated in polynomial time with an algorithm like Edmonds-Karp or Dinic's.\\
     To calculate the Bottleneck distance, we consider the subgraph given by all edges with weights smaller than a given value.
-    Since the Bottleneck distance is given by the cheapest edge, so that with all cheaper edges a feasible flow is still possible, one can determine the Bottleneck distance with logarithmically many calls of a min-cut algorithm with a procedure like binary search.
+    Since the Bottleneck distance is given by the cheapest edge, so that with all cheaper edges a feasible flow is still possible, one can determine the Bottleneck distance with logarithmically many calls of a min-cost-flow algorithm with a procedure like binary search.
     This reduction follows from the fact, that the error term that is to be minimized in the Wasserstein distance is the same as the $p$-norm.
     The Bottleneck distance hence is the same as the $\infty$-norm, and is described by the maximum.
     Hence the Bottleneck distance reduces to finding the value \[\min_{\varphi:Z\subset X \rightarrow Y} \max\bigg(\max_{x\in Z}||x - \varphi(x)||,\max_{y\in Y\setminus\im\varphi\cup X\setminus Z}\gamma(y)\bigg).\]\\
-    This leaves us with the following approximations for runtime.
+    This leaves us with the following run time for both distances.\\
     Let $X$ and $Y$ again be arbitrary.
     Then the graph consists of $n=2+|X|+|Y|$ vertices and $m=3+2|X|+2|Y|+|X||Y|$ edges.
     Assuming a runtime of $O(n^2 m)$ for Dinic's algorithm, we have a runtime of $O(|X||Y|^3 + |X|^3|Y|)$ for the Wasserstein distance.
-    For the Bottleneck distance we get a runtime of $O((\log(|X||Y|))(|X||Y|^3 + |X|^3|Y|))$.
+    For the Bottleneck distance we get a runtime of $O(\log(|X||Y|)(|X||Y|^3 + |X|^3|Y|))$.
     Note that Dinic's Algorithm is not necessarily the fastest for this type of problem, since the very easy structure of the graph opens the door to more specialized algorithms.
 
     \section{Feature Proposals}\label{sec:feature-proposals2}
     To combine all of this to actually calculate a distance of two images, we need to reduce an image to a point set.
-    For this we looked at different typed of feature detection algorithms and compared these.
+    For this we looked at different types of feature detection algorithms and compared these.
     \subsection{Feature Detection}\label{subsec:feature-detection}
     To do this we first considered an image, converted it to grayscale and then tried out existing feature detection algorithms.
     We tested the Laplace operator, the Harris operator and Canny edge detection.\\
@@ -674,23 +674,27 @@ tabsize=3
     \subsection{Feature Selection}\label{subsec:feature-selection}
     Now we have a feature detection, that outputs a bitmap with ones for all edges in the image.
     The next thing to do is to convert that bitmap into 2D points, that will be used to compute the persistent homology.
-    The idea beneath the used algorithm is inspired by Poisson-Disc sampling and works as follows:
-    We sample the area above threshold by adding random white points, that are at least twice a given radius away from all other samples.
+    The idea behind the used algorithm is inspired by Poisson-Disc sampling and works as follows:
+    We sample the area above the threshold by only sampling points, that are at least twice a given radius $r$ away from all other samples.
+    The result is a set of points, that resemble the original area, and we could put discs of radius $r$ around each sampled point, without any discs intersecting.
     That way we have control over the granularity of the sampling using only a radius parameter.
     The given space between each sample also ensures, that the numerical accuracy of the Voronoi algorithm does not have to be that exact.
     \input{snippet4.tex}
     \section*{Conclusion}\addcontentsline{toc}{section}{Conclusion}
-    In this work we have presented two different ways to compute the persistent Homology of a given $2$-dimensional point set.
-    We began with a very na\"{\i}ve way, where we simply built up a big matrix, and continuously solved it for its kernel, and then used information from the kernel to reduce the size of the matrix.
-    The second approach was much more involved, and made changes to the underlying graph, to keep the complexity of the problem small from the very beginning.\\
-    We then used the calculated persistent Homology, to compute their difference.
-    For this we changed the Wasserstein- and Bottleneck-distances to also accept differently sized point sets, and made this changes in a way, that it respects the significance of the underlying data - namely the persistent homology.\\
+    In this work we have presented two different ways to compute the persistent homology of a given $2$-dimensional point set.
+    We began with a very na\"{\i}ve way, where we simply built up a big matrix, and continuously solved it for its kernel.
+    We then used information from the kernel to reduce the size of the matrix and gather information about the persisten homology.\\
+    The second approach was much more involved, and made changes to the underlying graph, to keep the complexity of the problem small from the very beginning. For this we had to be careful, to respect the homology.\\
+    We then used the calculated persistent homology, to compute their difference.
+    For this we changed the Wasserstein- and Bottleneck-distances to also accept differently sized point sets and made this change in a way, that it respects the significance of the underlying data - namely the persistent homology.\\
     To compute this, we reduced the problem to a flow-instance, and showed, that the distances can be computed in polynomial time.
     Namely for $|X|=n$ and $|Y|=m$ we achieved a run time of $O(nm^3+n^3 m)$ and $O(\log(nm)(nm^3+n^3 m))$ respectively.\\
     To put all of this to use, we presented some already well-known methods, to reduce an input image to a set of points, that represent the shape of the object in the image well.
-    We also presented a method, of how to reduce the size of these point sets to increase the speed of our method without loosing much of the accuracy.\\
+    We also presented a method, of how to reduce the number of these point sets to increase the speed of our method without loosing much of the accuracy.\\
     An important limitation however is, that this handcrafted approach really only works well with $2$-dimensional data.
-    It would be interesting to see, if there is a similar approach to the contractions on the graph for higher dimensional input data/a Čech-Complex with higher non-trivial homologies.
+    It would be interesting to see, if there is a similar approach to the contractions on the graph for higher dimensional input data/a Čech-Complex with higher non-trivial homologies.\\
+    Another limitation is, that this distance is quite reliant on scale, since a scaled image produce scaled persistence diagrams. 
+    And since our Wasserstein distance version does not consider different scales, this produces big distances between scaled images.
     \newpage
     \section*{Notes on the Java Program}\addcontentsline{toc}{section}{Notes on the Java Program}
     The Java program requires \ldots
