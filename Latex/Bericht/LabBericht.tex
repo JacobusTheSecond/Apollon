@@ -695,7 +695,7 @@ tabsize=3
     And since our Wasserstein distance version does not consider different scales, this produces big distances between scaled images.
     \newpage
     \section*{Notes on the Java Program}\addcontentsline{toc}{section}{Notes on the Java Program}
-    The Java program is a maven project and therefore doesn't need any prerequisites but a java SDK of version 11+ and optionally GNU plot.
+    The Java program is a maven project and therefore does not need any prerequisites but a java SDK of version 11+ and optionally a GNU plot installation.
     There are four different applications:
     \begin{itemize}
         \item DistanceApp: Allows the user to define two point sets and compute and visually display the Wasserstein and Bottleneck distances.
@@ -704,9 +704,61 @@ tabsize=3
         \item MainApp: Allows the user to open two images and compute the Wasserstein and Bottleneck distance between them.
     \end{itemize}
     All applications can be executed from the source code.
-    It is also possible to execute the package maven goal with any of the profiles 'distance', 'feature', 'homology' or 'main' active.
-    Doing that generates a jar file inside the target folder, that can be executed using simply 'java -jar [file]' with a java runtime.
-    Each executable generated jar file ends with 'jar-with-dependencies.jar'.
+    It is also possible to execute the package maven goal with any of the profiles \texttt{distance}, \texttt{feature}, \texttt{homology} or \texttt{main} active.
+    Doing that generates a jar file inside the target folder, that can be executed using simply \texttt{java -jar [file]} with a java runtime.
+    Each executable generated jar file ends with \texttt{jar-with-dependencies.jar}.
+    You can find the executable jar files attached as well.\\\\
+    Here is a quick usage for each of those applications:\\
+    DistanceApp:\\
+    You can add points by left- or right-clicking with the mouse.\\
+    Keyboard shortcuts:
+    \begin{itemize}
+        \item Space: Compute distances
+        \item Delete: Delete all points
+        \item W: Toggle rendering of Wasserstein distance
+        \item B: Toggle rendering of Bottleneck distance
+        \item I: Load red points from file
+        \item O: Load blue points from file
+        \item P: Set specific $p$ for the Wasserstein distance
+    \end{itemize}\\\\
+    FeatureApp:\\
+    Keyboard shortcuts:
+    \begin{itemize}
+        \item O: Open image from file
+        \item L: Compute Laplace operator
+        \item H: Compute Harris operator
+        \item C: Compute Canny operator with the current threshold
+        \item +: Increase threshold
+        \item -: Decrease threshold
+        \item Space: Sample the filtered image using disc sampling
+        \item R: Reset to opened image
+        \item Escape: Close the application
+    \end{itemize}\\\\
+    HomologyApp:\\
+    You can add points using left- and remove them using right-clicks.
+    Existing points can be dragged using the left mouse button.\\
+    Keyboard shortcuts:
+    \begin{itemize}
+        \item Ctrl+O: Open a saved point file
+        \item Ctrl+S: Save current point set to a file
+        \item Ctrl+Shift+O: Import sampling from an image file
+        \item Ctrl+Shift.S: Export persistence diagram to a file
+        \item Escape: Close the application
+        \item Space: Execute the next action
+        \item Enter: Execute all (remaining) actions
+        \item Ctrl+R: Reset cycles and actions
+        \item Delete: Remove all points
+        \item Ctrl+Shift+R: Add $10$ random points
+        \item Ctrl+C: Toggle display of cycles (top left)
+        \item Ctrl+A: Toggle display of actions (top right)
+        \item Ctrl+D: Toggle display of Delaunay edges
+        \item Ctrl+E: Toggle display of Voronoi edges
+        \item Ctrl+V: Toggle display of Voronoi vertices
+        \item Ctrl+Scroll-wheel: Increase/decrease vertex size (visualisation of persistence diagram)
+        \item Ctrl+P: Plot persistence diagram using GNU plot (you will be asked to locate the gnuplot.exe)
+    \end{itemize}\\\\
+    MainApp:\\
+    You will be asked to open two image files and then the application computes and outputs the Wasserstein distance for $p=1$ and the Bottleneck distance.
 
     %TODO Symbol table? Conclusion own page?
     %TODO Konsistenz (Rechtschreibung)
