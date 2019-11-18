@@ -8,7 +8,7 @@
             }
             if (circle.size() == 1 || graph.hasNoLoops(circle)) { // Case 2.1, 2.2
                 // If the circle has size 1, the single edge is a loop and can simply be removed
-                // If the relation has no loops, every edge can be contracted and all involved nodes be replaced using the elderly rule
+                // If the relation has no loops, every edge can be contracted and all involved nodes be replaced using the elder rule
                 remove(circle.getEdges());
             }
             else if (graph.hasOnlyLoops(circle)) { // Case 3
@@ -21,7 +21,7 @@
             }
             // Kill cycles, that are now empty
             killEmptyCycles(radius);
-            // Kill cycles, that are now linear combinations of others using the elderly rule
+            // Kill cycles, that are now linear combinations of others using the elder rule
             killObsoleteCycles(radius);
         }
     \end{lstlisting}
