@@ -296,13 +296,17 @@ tabsize=3
     We want to call these $2$-cells \textit{degenerate}.
     For the implementation in Java we decided to use a library which calculates the Voronoi diagram.
     We calculate the planar dual graph based on the library, as shown in Fig.~\ref{fig3}.
-    Furthermore, we see that in the case of degenerate $2$-faces we use a \texttt{EdgeFaceAction} to insert the $1$-cell with highest filtration value of the circuit and the $2$-cell in the same time step corresponding to equal filtration values.\\
+    Furthermore, we see that in the case of degenerate $2$-faces we use a \texttt{EdgeFaceAction} to insert the $1$-cell with highest filtration value of the circuit and the $2$-cell in the same time step corresponding to equal filtration values.
+    What exactly insertion means will be covered in Section~\ref{subsec:calculation-of-persistent-homology}.\\
     Note that calling $0$-cells vertices, $1$-cells edges and $2$-cells faces makes sense geometrically.
 
     \subsection{Calculation of persistent homology}\label{subsec:calculation-of-persistent-homology}
 
-    Since the $1$-skeleton is the same as a graph, we save the complex as a graph and keep an additional list of lists of edges given by the boundary of $2$-cells.
+    Since the $1$-skeleton is the same as a digraph, we save the complex as a graph and keep an additional list of lists of edges given by the boundary of $2$-cells.
     And since the second (and higher) homology is always zero, due to our choice of $2$-dimensional data, this suffices.\\
+    We now insert all  the $0$-, $1$- and $2$-cells one by one, according to their filtration values. 
+    This corresponds to growing the balls around each point and looking at the resulting union. 
+    However only the filtration values are interesting, in the sense, that something in the structure of the union changes.\\
     To respect the ''elder rule'', we need to make a choice for $0$-cells which vertices are older than other vertices.
     Since the choice has no influence on the homology persistence diagram, we number the vertices randomly.
     We use this numbering when calculating the first homology as an orientation of the edges.\\
@@ -310,30 +314,23 @@ tabsize=3
     For the zeroth homology we only have to remember whenever we add an edge whether the two vertices are in the same or different connected components.
     To maintain the elder rule for these, we keep a reference to the oldest vertex in each connected component.
     If the added edge is between two different connected components, we update for one of the connected components which the new oldest vertex is, and remember that a generator of the zeroth homology has died.\\
-    Since generators of the first homology live in the kernel of the boundary operator $H_1(C(X))\rightarrow H_0(C(X))$, and these are just described by all circuits, we must find all possible circles in the graph, and then find out which circuits die via linear combinations of these.
-    To find circuits, we check whenever we add an edge $e=(v,w)$ whether $v$ and $w$ are in the same connected component.
+    Generators of the first homology of $C_\varepsilon(X)$ live in the kernel of the boundary operator $\delta_1:C_1(C_\varepsilon(X))\rightarrow C_0(C_\varepsilon(X))$, where $C_1(\cdot)$ and $C_0(\cdot)$ are the $1$- and $0$-cycles of the input complex.
+    The kernel of $\delta_1$ are just all circuits on the graph.
+    Hence we must find all possible circuits in the graph, and then find out which circuits die via linear combinations of these, to compute the first homology.
+    To find circuits, we check whenever we add an edge $e=(v,w)$ (corresponding to the $1$-cell $[v,w]$) whether $v$ and $w$ are in the same connected component.
     If this is the case, we find a $v,w$-path $P$ in $G\setminus \{e\}$.
-    Then we remember $P\cup \{e\}$ as a new generator.
-    At the time this generator is added, $e$ is completely new and is not yet contained in any edge of a $2$ cell or other circle, so this circle is definitely a living generator for a little time at least.
-
-    If a $2$-cell is added, a relation is noted, namely the unique circle that describes the border of the $2$ cell.
+    Then we add the circuit $P\cup \{e\}$ to the set of generators of the first homology.
+    At the time this generator is added, $e$ is completely new to the graph and is not yet contained in any edge of a $2$-cell or other circuit, so the circuit $P\cup\{e\}$ is definitely a living generator for a little time at least.\\
+    If a $2$-cell is added, the circuit describing the boundary of the $2$-cell is added to the list of $2$-cells.
     Every time a $2$-cell is added, we have to check if a circle dies.
     For this we check the kernel of the matrix:
-
-    %$$\begin{matrix}
-    %a & b\\
-    %c & d
-    %\end{matrix}$$
-
     \[\begin{Bmatrix}
           c_{11} & c_{21} & \ldots &c_{n1} & r_{11} & \ldots  & r_{k1}\\
           c_{12} & c_{22} & \ldots &c_{n2} & r_{12} & \ldots  & r_{k2}\\
           \vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
           c_{1m} & c_{2m} & \ldots &c_{nm} & r_{1m} & \ldots  & r_{km}
     \end{Bmatrix}\]
-
     Where $c_{ij} = \sum_{e_j\in P_i} 1 - \sum_{e_j*\in P_i}1$ and $r_{ij} = \sum_{e_j\in R_i} 1 - \sum_{e_j^*\in R_i}1$, where $P_i$ is the generator circuits and $R_i$ is the relation circuits, and $e_j$ is an edge and $e_j^*$ is the inverted edge.
-
     \begin{figure}
         \begin{tikzpicture}
             \filldraw (0,0) coordinate(a) circle (3pt);
@@ -407,11 +404,10 @@ tabsize=3
         \caption{An example for generators, that die, due to a relation.
         In red is the boundary of a $2$-cell, in blue are two generators that are identified with each other via the $2$-cell.}
         \label{fig4}
-    \end{figure}
-
-    An example in Fig.~\ref{fig4}.
-    We are given two circles in blue, and a relation in red.
-    If we number the edges as in the first picture and select all circle orientations counter clockwise we get the following matrix:
+    \end{figure}\\
+    An example is given in Fig.~\ref{fig4}.
+    We are given two circuits in blue, and a relation in red.
+    If we number the edges as in the first picture and select all circuit orientations counter clockwise we get the following matrix:
     \[A=\begin{Bmatrix}
             1 & 0 & -1\\
             0 & 1 & 1\\
@@ -423,10 +419,11 @@ tabsize=3
             -1 & -1 & 0\\
             1 & 1 & 0
     \end{Bmatrix}\]
-    And thus get a non-empty kernel, $A(1,1,-1)^T=0$.
-    So we know that the two generators are identified with each other and can remove the younger one out of the generator list.
-
-    We now know when to add edges and faces and how to find all possible generators and how to find ''dead'' generators.
+    And thus get a non-empty kernel, $A(1,-1,-1)^T=0$. 
+    This corresponds to the two $1$-boundaries $P_1=[a,-c,-d,\ldots,i]$ and $P_2=[b,-c,-d,\ldots,i]$ being identified via the $2$-cell $R_1=[-a,b,-c]$. 
+    And this again corresponds to $P_1-P_2=-R_1\in C_2(C_\varepsilon(X))$, meaning $P_1 = P_2$ in $H_1(C_\varepsilon(X))$.
+    So we know that the two generators are identified with each other and we may remove the younger one out of the generator list.\\
+    We now know when to add edges, faces, how to find all possible generators and how to find ''dead'' generators.
     Putting this together we are now able to calculate the first persistent homology.
 
     \subsubsection{Optimizations}\label{subsec:optimizations}
