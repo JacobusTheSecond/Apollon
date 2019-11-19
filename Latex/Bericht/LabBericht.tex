@@ -499,7 +499,7 @@ tabsize=3
     Then checking for closed paths inside the graph reduces to checking whether the inserted edge is a loop and cases 2.2 and 4 get obsolete.
     Also the elimination of linear combinations of cycles becomes very easy, since cycles consist of much smaller circuits in the graph.
     We therefore added an option to compute actions in this manner and observed the computation speed.
-    Instead of the already few $\sim 30$ seconds for 1000 nodes we only need $\sim 15$ seconds for the whole persistent homology computation.
+    This improvement actually allows us to half the already optimized computation time of persistence diagram.
 
     \section{Modified Wasserstein distance}\label{sec:distance-measures}
 

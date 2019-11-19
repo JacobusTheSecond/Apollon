@@ -32,8 +32,9 @@ public class EdgeFaceAction extends Action {
 
     @Override
     public void execute(@NotNull Homology homology) {
+        boolean loop = source.equals(target);
         homology.addEdge(source, target, edge, false, getRadius());
-        if (!homology.isContractEdges() || source.equals(target)) {
+        if (!homology.isContractEdges() || loop) {
             homology.addRelation(circuit, getRadius());
         }
     }
