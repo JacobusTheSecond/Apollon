@@ -126,9 +126,9 @@ tabsize=3
     A tool well suited for the discrete analysis of rough shapes is homology.
     This is the case, since homologous or ''warped'' data produce the same or very similar homology.
     And this is precisely what we are interested in.
-    In order to calculate homologies, we first need a manifold, or in the case of a computer a necessarily discrete representation, a cell complex.
-    We begin by defining the cell complex, we will be working with, namely the Čech-complex for a given point set.
-    The Čech-complex is interesting for us, since it models the ''squinting'' part.
+    In order to calculate homologies, we first need a manifold, or in the case of a computer a necessarily discrete representation, a CW complex.
+    We begin by defining the CW complex, we will be working with, namely the Čech complex for a given point set.
+    The Čech complex is interesting for us, since it models the ''squinting'' part.
     It can be thought of as letting balls grow around each point from some point set and looking at the resulting shape.
 
     \begin{definition}[Čech complex]
@@ -139,17 +139,18 @@ tabsize=3
     \end{definition}
 
 	By the Nerve-Theorem the Čech complex $C_\varepsilon(X)$ is homotopy equivalent to the union of balls $\bigcup_{x_i\in X} B_\varepsilon(x_i)$ (see\ \cite{eat}).
+	See fig.~\ref{czech} for an example of a Čech complex.\\
     Note, that for any finite $X$ there is $\mathcal{E}>0$, such that for any $\varepsilon\geq\mathcal{E}$ we have $\check C_\varepsilon(X) = \check C_\mathcal{E}(X)$.
-    Call this stabilizing cell-complex $C(X):=\check C_\mathcal{E}(X)$.
-    Define a filtration $f$ on $C(X)$ via $f:C(X)\rightarrow\bR$, $\sigma\mapsto\min\{\varepsilon|\sigma\in \check C_\varepsilon(X)\}$.
+    Call this stabilizing CW complex $C(X):=\check C_\mathcal{E}(X)$.\\
+    We define a filtration $f$ on $C(X)$ via $f:C(X)\rightarrow\bR$, $\sigma\mapsto\min\{\varepsilon|\sigma\in \check C_\varepsilon(X)\}$.
     Note that this filtration is well-defined, since for every sub-cell $\sigma'\subset\sigma$ it holds, that $f(\sigma')\leq f(\sigma)$.
     Since $X$ is finite, and hence $C(X)$, $\im(f)$ must also be finite.
     Let $\im(f)=\{\varepsilon_i|0\leq i\leq N\}$.
-    We now get a sequence of cell-complexes \[\check C_{\varepsilon_1}(X)\hookrightarrow \check C_{\varepsilon_2}(X)\hookrightarrow \ldots \hookrightarrow \check C_{\varepsilon_{N-1}}(X)\hookrightarrow \check C_{\varepsilon_N}(X).\]
-    With this sequence we will now define persistent homology.
+    We now get a sequence of CW complexes \[\check C_{\varepsilon_1}(X)\hookrightarrow \check C_{\varepsilon_2}(X)\hookrightarrow \ldots \hookrightarrow \check C_{\varepsilon_{N-1}}(X)\hookrightarrow \check C_{\varepsilon_N}(X).\]
+    To extract information from this sequence, we use persistent homology. Persistent homology is looking at the evolution of the generators, as they get passed from one complex in the sequence to the next.
 
     \begin{definition}[Persistent homology]
-        Let \[X_1\xhookrightarrow{\iota_1} X_2\xhookrightarrow{\iota_2} \ldots\xhookrightarrow{\iota_{n-2}} X_{n-1}\xhookrightarrow{\iota_{n-1}} X_n\] be a sequence of cell-complex embeddings.
+        Let \[X_1\xhookrightarrow{\iota_1} X_2\xhookrightarrow{\iota_2} \ldots\xhookrightarrow{\iota_{n-2}} X_{n-1}\xhookrightarrow{\iota_{n-1}} X_n\] be a sequence of CW complex embeddings.
         For every $k\geq 0$ this implies a sequence of homology groups
         \[H_k(X_1)\xrightarrow{\iota_{1}^*} H_k(X_2)\xrightarrow{\iota_{2}^*}\ldots \xrightarrow{\iota_{n-2}^*} H_k(X_{n-1})\xrightarrow{\iota_{n-1}^*} H_k(X_n).\]
         For every $0\leq i<j\leq n$ we begin with $\mathcal{L}_i^j(X)_k$ the set of generators $\sigma\in\coker(\iota_{i-1}^*)$, such that $\iota_{j-2}^*\circ\cdots\circ\iota_{i}^*(\sigma)\neq0$ but $\iota_{j-1}^*\circ\cdots\circ\iota_{i}^*(\sigma)=0$.
@@ -202,11 +203,12 @@ tabsize=3
             \draw (h) -- (b);
             \end{scope}
         \end{tikzpicture}
-        \caption{\textit{A Čech-complex for a given $\varepsilon$ and generating point set.}}
+        \caption{\textit{A Čech complex for a given $\varepsilon$ and generating point set.}}
+        \label{czech}
     \end{figure}
 	In essence persistent homology stores the lives and deaths of various generators.
-	If we input the sequence we got from the Čech-complex into the persistent homology, we can analyse the resulting ''shape'' of the input data after ''squinting''.\\
-    We want to calculate this persistent homology for the Čech-Complex of given sets of $2$-dimensional points efficiently and will take a look at different approaches to calculate these.
+	If we input the sequence we got from the Čech complex into the persistent homology, we can analyse the resulting ''shape'' of the input data after ''squinting''.\\
+    We want to calculate this persistent homology for the Čech complex of given sets of $2$-dimensional points efficiently and will take a look at different approaches to calculate these.
     \subsubsection{Persistence Diagrams}\label{subsec:persistence-diagrams}
     In order to work with persistent homology more intuitively we want to visualize these.
     A particular type of visualization we want to work with are persistence diagrams.
@@ -244,7 +246,7 @@ tabsize=3
 
 	Note that the points marked in this way are always above the diagonal $\Delta=\{(x,x)\in\bR^2|x\in\bR\}$, where points directly on the diagonal represent generators that die quickly after birth, and points far from the diagonal represent generators that live very long.
     Fig.\ \ref{fig2} is an example for a persistence diagram which shows generators of the zeroth and first homology.
-    One can see that the generators of the zeroth homology, which represent connected components, are all born at time $0$ and die when these merge.\\
+    One can see that the generators of the zeroth homology, which represent connected components, are all born at time $0$ and die when the connected components merge.\\
     \subsection{Wasserstein distance}\label{subsec:wasserstein-distance}
 
     Now let two such persistence diagrams be given.
@@ -268,7 +270,7 @@ tabsize=3
     \section{Persistent homology}\label{sec:persistent-homology2}
 
     In this chapter we want to focus on the implementation for the computation of the Čech complex, as well as the calculation of persistent homology and persistence diagrams.
-    Since we limit ourselves to $2$-dimensional point sets $X$, it is sufficient to limit the cell complex $C(X)$ to its $2$-skeleton, since all higher homologies vanish.
+    Since we limit ourselves to $2$-dimensional point sets $X$, it is sufficient to limit $C(X)$ to its $2$-skeleton, since all higher homologies vanish.
 
 
     \subsection{Computation of the Čech complex}\label{subsec:čech-complex}
@@ -288,14 +290,14 @@ tabsize=3
     This is where the following case distinction comes into play.
     Looking at the convex hull of the points $x_1,\ldots x_{k-1}\in X$, whose Voronoi regions intersect in $v$, it can happen that $v$ is inside or outside the convex hull.
     If the point $v$ is inside the convex hull, the filtration value must be chosen as the distance of $v$ to some $x_i$, which is the same for all different $x_j$, since otherwise $v$ is not the intersection of these regions.
-    Note that this value $f([x_1,\ldots,x_{k-1}])=||v-x_1||$ corresponds to the exact value, at which point the ''hole'' enclosed by balls of radius $\varepsilon$ around $x_1,\ldots,x_{k-1}$ dies.\\
+    Note that this value $f([x_1,\ldots,x_{k-1}])=||v-x_1||$ corresponds to the exact value, at which point the ''hole'' enclosed by balls of radius $||v-x_1||$ around $x_1,\ldots,x_{k-1}$ dies.\\
     \input{snippet1.tex}
     In the other case, the $k-1$ balls around $x_1,\ldots,x_{k-1}$ intersect as soon, as all $1$-cells $[x_i,x_{i+1}]$ exist, or geometrically all pairs of balls around $x_i$ and $x_{i+1}$ intersect.
     So $f([x_1,\ldots,x_{k-1}])=\max_{1\leq i<k} f(\{x_i,x_{i+1}\})$, where $x_k=x_1$ for convenience.
     We want to call these $2$-cells \textit{degenerate}.
     For the implementation in Java we decided to use a library which calculates the Voronoi diagram.
-    We calculate the planar dual graph based on the library, as shown in Fig.~\ref{fig3}.
-    Furthermore, we see that in the case of degenerate $2$-cells we use a \texttt{EdgeFaceAction} to insert the $1$-cell with highest filtration value of the circuit and the $2$-cell in the same time step corresponding to equal filtration values.
+    We calculate the planar dual graph based on the output of the Voronoi Library.
+    We see in fig.~\ref{fig3}, that in the case of degenerate $2$-cells we use a \texttt{EdgeFaceAction} to insert the $1$-cell with highest filtration value of the circuit and the $2$-cell in the same time step corresponding to equal filtration values.
     What exactly insertion means will be covered in Section~\ref{subsec:calculation-of-persistent-homology}.\\
     Note that calling $0$-cells vertices, $1$-cells edges and $2$-cells faces makes sense geometrically.
 
@@ -303,11 +305,12 @@ tabsize=3
 
     Since the $1$-skeleton is the same as a digraph, we save the complex as a graph and keep an additional list of lists of edges given by the boundary of $2$-cells.
     And since the second (and higher) homology is always zero, due to our choice of $2$-dimensional data, this suffices.\\
-    We now insert all  the $0$-, $1$- and $2$-cells one by one, according to their filtration values.
+    We now insert all  the $0$-, $1$- and $2$-cells one by one into the graph/list, according to their filtration values from small to big.
+    These insertions we may also call actions, since later on, we will not only insert but also modify data.
     This corresponds to growing the balls around each point and looking at the resulting union.
     However only the filtration values are interesting, in the sense, that something in the structure of the union changes.\\
     To respect the ''elder rule'', we need to make a choice for $0$-cells which vertices are older than other vertices.
-    Since the choice has no influence on the homology persistence diagram, we number the vertices randomly.
+    Since the choice has no influence on the homology, and this on the persistence diagram, we number the vertices arbitrarily.
     We use this numbering when calculating the first homology as an orientation of the edges.\\
     The main task in our implementation is the calculation of the first homology.
     For the zeroth homology we only have to remember whenever we add an edge whether the two vertices are in the same or different connected components.
@@ -319,9 +322,9 @@ tabsize=3
     To find circuits, we check whenever we add an edge $e=(v,w)$ (corresponding to the $1$-cell $[v,w]$) whether $v$ and $w$ are in the same connected component.
     If this is the case, we find a $v,w$-path $P$ in $G\setminus \{e\}$.
     Then we add the circuit $P\cup \{e\}$ to the set of generators of the first homology.
-    At the time this generator is added, $e$ is completely new to the graph and is not yet contained in any edge of a $2$-cell or other circuit, so the circuit $P\cup\{e\}$ is definitely a living generator for a little time at least.\\
+    At the time this generator is added, $e$ is completely new to the graph and is not yet contained in any edge of a $2$-cell or other circuit, so the circuit $P\cup\{e\}$ is linearly independent from all other circuits and relations until at least the next insertion.\\
     If a $2$-cell is added, the circuit describing the boundary of the $2$-cell is added to the list of $2$-cells.
-    Every time a $2$-cell is added, we have to check if a circle dies.
+    Every time a $2$-cell is added, we have to check if a circuit dies.
     For this we check the kernel of the matrix:
     \[\begin{Bmatrix}
           c_{11} & c_{21} & \ldots &c_{n1} & r_{11} & \ldots  & r_{k1}\\
@@ -329,8 +332,9 @@ tabsize=3
           \vdots & \vdots & \ddots & \vdots & \vdots & \ddots & \vdots \\
           c_{1m} & c_{2m} & \ldots &c_{nm} & r_{1m} & \ldots  & r_{km}
     \end{Bmatrix}\]
-    Where $c_{ij} = \sum_{e_j\in P_i} 1 - \sum_{e_j*\in P_i}1$ and $r_{ij} = \sum_{e_j\in R_i} 1 - \sum_{e_j^*\in R_i}1$, where $P_i$ is the generator circuits and $R_i$ is the relation circuits, and $e_j$ is an edge and $e_j^*$ is the inverted edge.
+    Where $c_{ij} = \sum_{e_j\in P_i} 1 - \sum_{e_j*\in P_i}1$ and $r_{ij} = \sum_{e_j\in R_i} 1 - \sum_{e_j^*\in R_i}1$, where $P_i$ are the generator circuits and $R_i$ are the relation circuits, and $e_j$ is an edge and $e_j^*$ is the inverted edge.
     \begin{figure}
+    	\centering
         \begin{tikzpicture}
             \filldraw (0,0) coordinate(a) circle (3pt);
             \filldraw (-1,1) coordinate(b) circle (3pt);
@@ -400,7 +404,7 @@ tabsize=3
             \draw[-{Latex[length=2mm,width=2mm]},color=blue] (g) -- (h);
             \draw[-{Latex[length=2mm,width=2mm]},color=blue] (b) -- (h);
         \end{tikzpicture}
-        \caption{An example for generators, that die, due to a relation.
+        \caption{An example for generators, that die due to a relation.
         In red is the boundary of a $2$-cell, in blue are two generators that are identified with each other via the $2$-cell.}
         \label{fig4}
     \end{figure}\\
@@ -418,7 +422,7 @@ tabsize=3
             -1 & -1 & 0\\
             1 & 1 & 0
     \end{Bmatrix}\]
-    And thus get a non-empty kernel, $A(1,-1,-1)^T=0$.
+    And thus get a non-empty kernel, $A(1,-1,1)^T=0$.
     This corresponds to the two $1$-boundaries $P_1=[a,-c,-d,\ldots,i]$ and $P_2=[b,-c,-d,\ldots,i]$ being identified via the $2$-cell $R_1=[-a,b,-c]$.
     And this again corresponds to $P_1-P_2=-R_1\in C_2(C_\varepsilon(X))$, meaning $P_1 = P_2$ in $H_1(C_\varepsilon(X))$.
     So we know that the two generators are identified with each other and we may remove the younger one out of the generator list.\\
@@ -427,7 +431,7 @@ tabsize=3
 
     \subsubsection{Optimizations}\label{subsec:optimizations}
 
-    Since this algorithm is not that efficient ($\sim5$ seconds for $100$ nodes, $\sim20$ seconds for $200$ nodes) we optimised it using contractions on the graph and get almost linear runtime ($\sim10$ seconds for $1000$ nodes).
+    Since this method is not that efficient ($\sim5$ seconds for $100$ nodes, $\sim20$ seconds for $200$ nodes) we optimised it using contractions on the graph and get almost linear runtime ($\sim10$ seconds for $1000$ nodes).
     The main idea here is to handle the effect of each relation as operation on the underlying graph instead of maintaining a list of relations.
     That removes the necessity of computing kernels of a growing matrix in each face step, but is not trivial to implement due to special cases in face contractions.\\
     Let us recap first.
@@ -452,8 +456,8 @@ tabsize=3
     We are now starting to modify edges and nodes inside the graph, which means that all future actions and all existing cycles have to be updated in the same way as well.
     Otherwise the modified graph would not be consistent with existing cycles and upcoming actions.
     To simplify this, we introduce circuits on the graph, which are defined by a list of oriented edges.
-    Cycles and faces can both be represented by circuits, so that we can apply the following operations simply to the graph and circuits.
-    Homology is commutative but since we are representing cycles and faces as oriented paths, we cannot use the commutativity and have to be more careful about modifying these.
+    Boundaries and faces can both be represented by circuits, so that we can apply the following operations simply to the graph and circuits.
+    Homology is commutative but since we are representing boundaries and faces as oriented paths, we cannot use the commutativity and have to be more careful about modifying these.
     The lack of commutativity will later be handled by eliminating linear combinations of cycles.\\
     Let us now discuss how we replace nodes and replace and remove edges.
     Replacing nodes can for example be done by maintaining a node mapping table, but we decided to do that by having each graph node be an optional pointer to a target node.
@@ -462,25 +466,31 @@ tabsize=3
     Since we are replacing edges no matter the orientation, we have to replace all occurrences of that edge with the desired orientation and possibly inverse order (see Fig.\ \ref{fig5} \texttt{replace()}).
     Analogously we remove all occurrences of a single edge no matter the orientation when removing an edge from a circuit (see Fig.\ \ref{fig5} \texttt{remove()}).
     After both of those operations we try to reduce the circuit as far as possible by successively removing pairs of edges and their inverses (see Fig.\ \ref{fig5} \texttt{revalidate()}).\\
-    \input{snippet2.tex}\newpage
+    \input{snippet2.tex}
     Now we have all the tools we need to actually evaluate face actions (see Fig.\ \ref{fig6}).\\
-    \input{snippet3.tex}
     Case 1 actually never occurs, since that would mean that the relation is a linear combination of other relations.\\
     Case 2.1 removes exactly one loop and case 2.2 occurs at the very start of the algorithm, where nothing has yet been contracted (see Fig.\ \ref{contractions} top left, bottom left).\\
     Case 3 first searches for a loop, that only occurs once (which is always possible, since otherwise all edges would have been gone through twice, which is impossible in a planar graph).
     Then it solves the relation for that loop, so that it can be replaced by the resulting sequence of other loops.
     For example in Fig.\ \ref{contractions} top right having the relation $[a, b, b, -c]$ we can find $a$ to be a single edge and replace it with $[c, -b, -b]$.
     That way we get rid of every occurrence of $a$ using the relation and delete it afterwards.\\
-    Case 4 is the last case, where loops as well as non-loops occur in the relation.
+    Case 4 is the last case, where some $k$ loops as well as non-loops occur in the relation.
     Here we search for a single non-loop and replace it using the relation, just like as in case 3.
-    Then we additionally contract all non-loops of the relation, since they cannot form a linearly independent circuit anymore.
-    In the example in Fig.\ \ref{contractions} bottom right we find edge $b$ to be occurring only once and can replace it with $[-c, -a]$ using the relation.
-    Then we can merge the two nodes and therefore get $c$ to be a loop now.
-    This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.\\
+    %TODO: correct the following sentence!!!!!!
+    Then we additionally contract all non-loops of the relation. We can do this, since the original boundary of the face was homologous to a $k+1$-bouquet.
+    Gluing a face onto a $k+1$-bouquet results in a $k$-bouquet, where one of the loops gets identified with all other.
+    So we pick one of the non-loops that forms (together with all other non-loops) part of the loop to be identified.
+    We identify all other non-loops with $0$ via homotopy, and contract all the vertices to a single vertex.
+    The selected non-loop gets mapped to all the other loops in the bouquet respecting the orientation and then gets deleted as well.
+    In the example in Fig.\ \ref{contractions} bottom right we find edge $b$ to be occurring only once.
+    We merge the two nodes, delete both edges and add the mappings $b$ to $[-c,-a]$ and $c$ to $0$.
+    This way we eliminate all non-loops, that are part of the given relation each time and drastically reduce the size of the graph over time.
+    \input{snippet3.tex}
+    \input{contractions.tex}\\
     Afterwards we kill empty cycles and linear combinations of cycles.
     The elimination of linear combinations is still done by computing the null space of the edge matrix of all living cycles.
-    This last step is also the part, that brings the commutativity of homology back in.
-    \input{contractions.tex}
+    However this matrix grows much slower and sometimes even shrinks in size, compared to the other method.
+    This last step is also the part, that respects the commutativity of homology.
 
     \section{Modified Wasserstein distance}\label{sec:distance-measures}
 
@@ -491,13 +501,13 @@ tabsize=3
     Then we define \[W_p'(X,Y):=\min_{\varphi:X\rightarrow Y}\left(\sum_{x\in X}|||x-\varphi(x)||^p + \sum_{y\in Y\setminus \in(\varphi)}\gamma(y)^p\right)^\frac{1}{p}.\]
     This approach seemed promising at first, but the error term was too big.
     The problem is that $||x-\varphi(x)||$ is the $\ell_2$ distance of $x$ and $\varphi(x)$, whereas $\gamma(y)$ is the $\ell_1$ distance of $y$ and $\Delta$.
-    Hence we define $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$ instead, to get the $\ell_2$ distance of $y$ and $\Delta$ instead.
+    Hence we define $\gamma(x,y)=\frac{y-x}{\sqrt{2}}$, to get the $\ell_2$ distance of $y$ and $\Delta$ instead.
     However we noticed that this distance is too restrictive.
     We also want to allow points from $X$ not to be mapped.
     So now we define the final version of our modified Wasserstein distance, where we apply the error term to any point from $X$ that is not mapped, as well as any point from $Y$ that is not hit.
     \[V_p(X,Y):=\min_{Z\subset{X}}\min_{\varphi:Z\rightarrow Y}\left(\sum_{z\in Z}||z-\varphi(z)||^p + \sum_{y\in (Y\setminus \im(\varphi))\cup X\setminus Z}\gamma(y)^p\right)^\frac{1}{p}.\]
 
-    We call the bottleneck distance $B(X,Y) := V_\infty(X,Y)$.
+    We call the Bottleneck distance $B(X,Y) := V_\infty(X,Y)$.
     Since we now have three different Wasserstein distances, we want to make clear, that the function $V_p(\_,\_)$ will be the distance in question from now on.\\
     In Figure\ \ref{distances} an example of all the different distances, a single point from the set $X$ has to consider is shown.
     We want to find a mapping the reduces the sum of the selected lengths, or the maximum such length respectively.
@@ -536,7 +546,7 @@ tabsize=3
     We quickly noticed that the whole problem can be modelled quiet easily via a min-cost-flow problem.
     This reduces the computations required from basically checking exponentially many mappings to finding a min-cost-flow, which can be done in polynomial time.\\
     So for $V_p(X,Y)$ we define the following graph.
-    $V := X\cup Y\cup {s,t,h,h'}$ and $E := (X\cup h)\times (Y\cup h') \cup {s}\times (X\cup h) \cup (Y\cup h')\times t$.
+    $V := X\cup Y\cup {s,t,h,h'}$ and $E := \big((X\cup h)\times (Y\cup h')\big) \cup \big({s}\times (X\cup h)\big) \cup \big((Y\cup h')\times t\big)$.
     \begin{figure}
         \centering
         \begin{tikzpicture}[scale = .95]
@@ -617,7 +627,7 @@ tabsize=3
     \end{figure}
 
     Weights are selected as follows.
-    For edges in ${s}\times (X\cup h) \cup (Y\cup h')\times t \cup \{(h,h')\}$ they are always 0.
+    For edges in $\big({s}\times (X\cup h)\big) \cup \big((Y\cup h')\times t\big) \cup \{(h,h')\}$ they are always 0.
     For edges of the form $(x,y)\in X\times Y$ the costs are exactly $||x-y||$, and for edges of the form $(x,h')\in X\times \{h'\}$ resp. $(h,y)\in \{h\}\times Y$ we select $\gamma(x)$ or $\gamma(y)$.
     As capacities we choose $|Y|,|Y|$ and $\min(|X|,|Y|)$ for $(s,h),(h',t)$ and $(h,h')$ respectively and $1$ for all other edges.
     And finally the flow requirements $b(s) = -b(t) = |X|+|Y|$, and $b(v)=0$ for all others.
@@ -646,8 +656,13 @@ tabsize=3
     Since the Bottleneck distance is given by the cheapest edge, so that with all cheaper edges a feasible flow is still possible, one can determine the Bottleneck distance with logarithmically many calls of a min-cost-flow algorithm with a procedure like binary search.
     This reduction follows from the fact, that the error term that is to be minimized in the Wasserstein distance is the same as the $p$-norm.
     The Bottleneck distance hence is the same as the $\infty$-norm, and is described by the maximum.
-    Hence the Bottleneck distance reduces to finding the value \[\min_{\varphi:Z\subset X \rightarrow Y} \max\bigg(\max_{x\in Z}||x - \varphi(x)||,\max_{y\in Y\setminus\im\varphi\cup X\setminus Z}\gamma(y)\bigg).\]\\
-    This leaves us with the following run time for both distances.\\
+    Hence the Bottleneck distance reduces to finding the value 
+    \begin{gather*}
+    	\min_{\varphi:Z\subset X \rightarrow Y} \max\bigg(\max_{x\in Z}||x - \varphi(x)||,\max_{y\in Y\setminus\im\varphi\cup X\setminus Z}\gamma(y)\bigg)\\
+    	= \min\bigg\{C\in\bR \bigg| (V,E_C) \text{ permits an |X|+|Y| flow}\bigg\},
+    \end{gather*}\\
+    where $E_C=\{e\in E | c(e) < C\}$.
+	This leaves us with the following run time for both distances.\\
     Let $X$ and $Y$ again be arbitrary.
     Then the graph consists of $n=2+|X|+|Y|$ vertices and $m=3+2|X|+2|Y|+|X||Y|$ edges.
     Assuming a runtime of $O(n^2 m)$ for Dinic's algorithm, we have a runtime of $O(|X||Y|^3 + |X|^3|Y|)$ for the Wasserstein distance.
@@ -664,7 +679,8 @@ tabsize=3
     That is because we are trying to represent image structures with points, which is not possible to do in an accurate manner, if the feature detection outputs only a ''probability'' for an edge or corner.\\
     Next up is the harris operator, which highlights corners inside an image.
     One could think, that this is exactly what we need, but in fact we need to describe lines as series of points and not only start and end point.
-    That rules out the Harris operator for our case as well.\\
+    That rules out the Harris operator for our case as well.
+    \input{snippet4.tex}\\
     Finally we tested the Canny operator, which only outputs either 0 or 1 for each pixel, given a threshold.
     Its used for edge detection and given the previous explanation exactly what we need.
     There might be some dynamic threshold computation left to do, so that the user doesn't have to choose that parameter on its own.
@@ -672,11 +688,10 @@ tabsize=3
     Now we have a feature detection, that outputs a bitmap with ones for all edges in the image.
     The next thing to do is to convert that bitmap into 2D points, that will be used to compute the persistent homology.
     The idea behind the used algorithm is inspired by Poisson-Disc sampling and works as follows:
-    We sample the area above the threshold by only sampling points, that are at least twice a given radius $r$ away from all other samples.
+    We sample the area above the threshold by only sampling points, that are at least twice a given radius $r$ away from all other samples (see fig.~\ref{fig8}).\\
     The result is a set of points, that resemble the original area, and we could put discs of radius $r$ around each sampled point, without any discs intersecting.
     That way we have control over the granularity of the sampling using only a radius parameter.
     The given space between each sample also ensures, that the numerical accuracy of the Voronoi algorithm does not have to be that exact.
-    \input{snippet4.tex}
     \section*{Conclusion}\addcontentsline{toc}{section}{Conclusion}
     In this work we have presented two different ways to compute the persistent homology of a given $2$-dimensional point set.
     We began with a very na\"{\i}ve way, where we simply built up a big matrix, and continuously solved it for its kernel.
@@ -684,13 +699,13 @@ tabsize=3
     The second approach was much more involved, and made changes to the underlying graph, to keep the complexity of the problem small from the very beginning.
     For this we had to be careful, to respect the homology.\\
     We then used the calculated persistent homology, to compute their difference.
-    For this we changed the Wasserstein- and Bottleneck-distances to also accept differently sized point sets and made this change in a way, that it respects the significance of the underlying data - namely the persistent homology.\\
+    For this we changed the Wasserstein and Bottleneck distances to also accept differently sized point sets and made this change in a way, that it respects the significance of the underlying data - namely the persistent homology.\\
     To compute this, we reduced the problem to a flow-instance, and showed, that the distances can be computed in polynomial time.
     Namely for $|X|=n$ and $|Y|=m$ we achieved a run time of $O(nm^3+n^3 m)$ and $O(\log(nm)(nm^3+n^3 m))$ respectively.\\
     To put all of this to use, we presented some already well-known methods, to reduce an input image to a set of points, that represent the shape of the object in the image well.
     We also presented a method, of how to reduce the number of these point sets to increase the speed of our method without loosing much of the accuracy.\\
     An important limitation however is, that this handcrafted approach really only works well with $2$-dimensional data.
-    It would be interesting to see, if there is a similar approach to the contractions on the graph for higher dimensional input data/a Čech-Complex with higher non-trivial homologies.\\
+    It would be interesting to see, if there is a similar approach to the contractions on the graph for higher dimensional input data/a Čech complex with higher non-trivial homologies.\\
     Another limitation is, that this distance is quite reliant on scale, since a scaled image produce scaled persistence diagrams.
     And since our Wasserstein distance version does not consider different scales, this produces big distances between scaled images.
     \newpage
@@ -713,6 +728,7 @@ tabsize=3
     You can add points by left- or right-clicking with the mouse.\\
     Keyboard shortcuts:
     \begin{itemize}
+    	\itemsep0em 
         \item Space: Compute distances
         \item Delete: Delete all points
         \item W: Toggle rendering of Wasserstein distance
@@ -720,10 +736,11 @@ tabsize=3
         \item I: Load red points from file
         \item O: Load blue points from file
         \item P: Set specific $p$ for the Wasserstein distance
-    \end{itemize}\\\\
+    \end{itemize}
     FeatureApp:\\
     Keyboard shortcuts:
     \begin{itemize}
+    	\itemsep0em 
         \item O: Open image from file
         \item L: Compute Laplace operator
         \item H: Compute Harris operator
@@ -733,12 +750,13 @@ tabsize=3
         \item Space: Sample the filtered image using disc sampling
         \item R: Reset to opened image
         \item Escape: Close the application
-    \end{itemize}\\\\
+    \end{itemize}
     HomologyApp:\\
     You can add points using left- and remove them using right-clicks.
     Existing points can be dragged using the left mouse button.\\
     Keyboard shortcuts:
     \begin{itemize}
+    	\itemsep0em 
         \item Ctrl+O: Open a saved point file
         \item Ctrl+S: Save current point set to a file
         \item Ctrl+Shift+O: Import sampling from an image file
@@ -756,16 +774,13 @@ tabsize=3
         \item Ctrl+V: Toggle display of Voronoi vertices
         \item Ctrl+Scroll-wheel: Increase/decrease vertex size (visualisation of persistence diagram)
         \item Ctrl+P: Plot persistence diagram using GNU plot (you will be asked to locate the gnuplot.exe)
-    \end{itemize}\\\\
+    \end{itemize}
     MainApp:\\
     You will be asked to open two image files and then the application computes and outputs the Wasserstein distance for $p=1$ and the Bottleneck distance.
-
-    %TODO Symbol table? Conclusion own page?
+    
     %TODO Konsistenz (Rechtschreibung)
-    %TODO \ before math functions (min, max, im,...)
-    %TODO \ldots -> \cdots?
-    %TODO - consistency (Wassersteindistanz, Czech complex, n-cells, ...)
-    %TODO reference all images
+    %TODO why the fuck white points in poisson disc sampling
+    
 
     \newpage
     \addcontentsline{toc}{section}{Literatur}

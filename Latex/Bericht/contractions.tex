@@ -87,11 +87,10 @@
             \draw (0,1) -- (c);
 
             \path  [-{Latex[length=2mm,width=2mm]},red] (c) edge [xshift=2pt,loop above,min distance=15mm,in=-60,out=10,looseness=10] node [right] {$a$} (c);
-            \path  [-{Latex[length=2mm,width=2mm]},red] (c) edge [yshift=2pt,loop above,min distance=15mm,in=170,out=100,looseness=10] node [above] {$c$} (c);
         \end{scope}
 
 
-        \draw [-{Latex[length=2mm,width=2mm]},thick] (1.7,0) -- node [above] {Face $[b,a,c]$} node [below] {$b\mapsto [-c,-a]$} ({\off-0.7},0);
+        \draw [-{Latex[length=2mm,width=2mm]},thick] (1.7,0) -- node [above] {Face $[b,a,c]$} node [below,text width=3cm,align=center] {$b\mapsto [-c,-a]$\\$c\mapsto 0$} ({\off-0.7},0);
     \end{tikzpicture}
     }
     \caption{From top left to bottom right, examples for Case $2.1$, $3$, $2.2$ and $4$. The Face is described above the arrow, the resulting additional mappings of edges is described below the arrow.}
