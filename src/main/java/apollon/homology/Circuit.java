@@ -6,17 +6,17 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.IntStream;
 
-public class Circle implements EdgeContainer, Iterable<Integer> {
+public class Circuit implements EdgeContainer, Iterable<Integer> {
     private final List<Integer> edges = new ArrayList<>();
 
-    public Circle() {}
+    public Circuit() {}
 
-    public Circle(@NotNull int... edges) {
+    public Circuit(@NotNull int... edges) {
         IntStream.of(edges).forEach(this::append);
     }
 
     @NotNull
-    public Circle append(int edge) {
+    public Circuit append(int edge) {
         edges.add(edge);
         return this;
     }

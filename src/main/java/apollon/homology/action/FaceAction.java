@@ -1,22 +1,22 @@
 package apollon.homology.action;
 
-import apollon.homology.Circle;
+import apollon.homology.Circuit;
 import apollon.homology.Homology;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 
 public class FaceAction extends Action {
-    private final Circle circle;
+    private final Circuit circuit;
 
-    public FaceAction(@NotNull Circle circle, double radius) {
+    public FaceAction(@NotNull Circuit circuit, double radius) {
         super(radius);
-        this.circle = circle;
+        this.circuit = circuit;
     }
 
     @Override
     public void execute(@NotNull Homology homology) {
-        homology.addRelation(circle, getRadius());
+        homology.addRelation(circuit, getRadius());
     }
 
     @NotNull
@@ -33,21 +33,21 @@ public class FaceAction extends Action {
     @NotNull
     @Override
     public int[] getRemovedEdges() {
-        return circle.getEdgeIndices();
+        return circuit.getEdgeIndices();
     }
 
     @Override
     public void remove(@NotNull int... edges) {
-        circle.remove(edges);
+        circuit.remove(edges);
     }
 
     @Override
     public void replace(int edge, @NotNull int... edges) {
-        circle.replace(edge, edges);
+        circuit.replace(edge, edges);
     }
 
     @Override
     public String toString() {
-        return "Face: " + circle;
+        return "Face: " + circuit;
     }
 }

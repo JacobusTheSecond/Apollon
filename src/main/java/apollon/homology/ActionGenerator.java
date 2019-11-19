@@ -63,16 +63,16 @@ public class ActionGenerator {
     }
 
     @NotNull
-    private Circle createCircle(@NotNull VEdge[] edges) {
-        Circle circle = new Circle();
+    private Circuit createCircle(@NotNull VEdge[] edges) {
+        Circuit circuit = new Circuit();
         int current = edges[0].getOtherSite(edges[1]);
         int next;
         for (VEdge edge : edges) {
             next = edge.getOtherSite(current);
-            circle.append(current <= next ? edge.getIndex() : Graph.inverse(edge.getIndex()));
+            circuit.append(current <= next ? edge.getIndex() : Graph.inverse(edge.getIndex()));
             current = next;
         }
-        return circle;
+        return circuit;
     }
 
     @NotNull
