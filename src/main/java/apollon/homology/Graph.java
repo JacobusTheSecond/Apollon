@@ -32,20 +32,20 @@ public class Graph {
     }
 
     @NotNull
-    public Optional<Circle> find(@NotNull Site source, @NotNull Site target) {
+    public Optional<Circuit> find(@NotNull Site source, @NotNull Site target) {
         GraphPath<Site, Integer> path = new DijkstraShortestPath<>(graph).getPath(source, target);
         if (path == null) {
             return Optional.empty();
         }
-        Circle circle = new Circle();
+        Circuit circuit = new Circuit();
         Site current = path.getStartVertex();
         Site next;
         for (int edge : path.getEdgeList()) {
             next = getOtherSite(edge, current);
-            circle.append(graph.getEdgeSource(edge).equals(current) ? edge : Graph.inverse(edge));
+            circuit.append(graph.getEdgeSource(edge).equals(current) ? edge : Graph.inverse(edge));
             current = next;
         }
-        return Optional.of(circle);
+        return Optional.of(circuit);
     }
 
     @NotNull
@@ -128,8 +128,8 @@ public class Graph {
         return graph.toString();
     }
 
-    public boolean hasNoLoops(@NotNull Circle circle) {
-        return circle.stream().noneMatch(this::isLoop);
+    public boolean hasNoLoops(@NotNull Circuit circuit) {
+        return circuit.stream().noneMatch(this::isLoop);
     }
 
     private boolean isNonLoop(int edge) {
@@ -141,8 +141,8 @@ public class Graph {
         return graph.getEdgeSource(edge).equals(graph.getEdgeTarget(edge));
     }
 
-    public boolean hasOnlyLoops(@NotNull Circle circle) {
-        return circle.stream().noneMatch(this::isNonLoop);
+    public boolean hasOnlyLoops(@NotNull Circuit circuit) {
+        return circuit.stream().noneMatch(this::isNonLoop);
     }
 
     public void remove(@NotNull int... edges) {
@@ -170,18 +170,18 @@ public class Graph {
         });
     }
 
-    public int getSingleNonLoop(@NotNull Circle circle) {
-        for (int edge : circle.getSingleEdges()) {
+    public int getSingleNonLoop(@NotNull Circuit circuit) {
+        for (int edge : circuit.getSingleEdges()) {
             if (isNonLoop(edge)) {
                 return edge;
             }
         }
-        throw new RuntimeException("Cannot find single non-loop: " + circle);
+        throw new RuntimeException("Cannot find single non-loop: " + circuit);
     }
 
     @NotNull
-    public int[] getNonLoops(@NotNull Circle circle) {
-        return circle.stream().filter(this::isNonLoop).map(Graph::positive).toArray();
+    public int[] getNonLoops(@NotNull Circuit circuit) {
+        return circuit.stream().filter(this::isNonLoop).map(Graph::positive).toArray();
     }
 
     public static boolean equals(int a, int b) {

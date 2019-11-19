@@ -36,7 +36,7 @@
         }
 
         public void revalidate() {
-            // Iterate through the circle and reduce inverse oriented consecutive edges
+            // Iterate through the circuit and reduce inverse oriented consecutive edges
             for (int i = 0; i < size(); i++) {
                 int j = (i + 1) % size();
                 if (get(i) == Graph.inverse(get(j))) {

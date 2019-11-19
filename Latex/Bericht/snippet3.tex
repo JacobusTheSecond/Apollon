@@ -1,23 +1,23 @@
 \lstset{language=Java}
 \begin{figure}
     \begin{lstlisting}[frame=single]
-        public void addRelation(Circle circle, double radius) {
-            if (circle.isEmpty()) { // Case 1
+        public void addRelation(Circuit circuit, double radius) {
+            if (circuit.isEmpty()) { // Case 1
                 // Empty relations have no effect
                 return;
             }
-            if (circle.size() == 1 || graph.hasNoLoops(circle)) { // Case 2.1, 2.2
-                // If the circle has size 1, the single edge is a loop and can simply be removed
+            if (circuit.size() == 1 || graph.hasNoLoops(circuit)) { // Case 2.1, 2.2
+                // If the circuit has size 1, the single edge is a loop and can simply be removed
                 // If the relation has no loops, every edge can be contracted and all involved nodes be replaced using the elder rule
-                remove(circle.getEdges());
+                remove(circuit.getEdges());
             }
-            else if (graph.hasOnlyLoops(circle)) { // Case 3
+            else if (graph.hasOnlyLoops(circuit)) { // Case 3
                 // Find a single loop and replace it with the other loops
-                replaceLoop(circle);
+                replaceLoop(circuit);
             }
             else { // Case 4: Both loops and non-loops
                 // Find a non-loop, replace it with the other edges and contract all non-loops
-                replaceNonLoop(circle);
+                replaceNonLoop(circuit);
             }
             // Kill cycles, that are now empty
             killEmptyCycles(radius);

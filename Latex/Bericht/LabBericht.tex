@@ -491,6 +491,15 @@ tabsize=3
     The elimination of linear combinations is still done by computing the null space of the edge matrix of all living cycles.
     However this matrix grows much slower and sometimes even shrinks in size, compared to the other method.
     This last step is also the part, that respects the commutativity of homology.
+    \subsection{Further optimizations}\label{subsec:further-optimizations}
+    When further analysing case 4 of the previous subsection we discovered, that there is actually more room for improvement.
+    In that case we contract every non-loop edge, that was not mapped using the face relation due to simplifying the underlying graph.
+    That can be done as can be seen in Fig.\ \ref{figBLA} because the resulting graph is homotopy equivalent to the previous one.%TODO Image ref
+    But why not use the homotopy equivalence already when adding any edge?
+    Then checking for closed paths inside the graph reduces to checking whether the inserted edge is a loop and cases 2.2 and 4 get obsolete.
+    Also the elimination of linear combinations of cycles becomes very easy, since cycles consist of much smaller circuits in the graph.
+    We therefore added an option to compute actions in this manner and observed the computation speed.
+    This improvement actually allows us to half the already optimized computation time of persistence diagram.
 
     \section{Modified Wasserstein distance}\label{sec:distance-measures}
 
@@ -765,6 +774,7 @@ tabsize=3
         \item Space: Execute the next action
         \item Enter: Execute all (remaining) actions
         \item Ctrl+R: Reset cycles and actions
+        \item Ctrl+Shift+C: Contract all new edges if possible (see\ \ref{subsec:further-optimizations})
         \item Delete: Remove all points
         \item Ctrl+Shift+R: Add $10$ random points
         \item Ctrl+C: Toggle display of cycles (top left)

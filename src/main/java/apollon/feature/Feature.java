@@ -38,7 +38,7 @@ public class Feature {
 
     public static void addSamples(@NotNull Mat matrix) {
         int radius = computeRadius(matrix);
-        List<PointD> samples = sample(matrix, radius);
+        List<PointD> samples = sample(matrix, radius, false);
         for (PointD sample : samples) {
             Imgproc.circle(matrix, new Point(sample.x, sample.y), radius, new Scalar(255));
         }
@@ -50,11 +50,11 @@ public class Feature {
 
     @NotNull
     public static List<PointD> sample(@NotNull Mat matrix) {
-        return sample(matrix, computeRadius(matrix));
+        return sample(matrix, computeRadius(matrix), true);
     }
 
     @NotNull
-    public static List<PointD> sample(@NotNull Mat matrix, int radius) {
+    public static List<PointD> sample(@NotNull Mat matrix, int radius, boolean scalePoints) {
         int width = matrix.cols();
         int height = matrix.rows();
         long sum = 0;
@@ -80,6 +80,9 @@ public class Feature {
             points.removeIf(point -> point.subtract(sample).length() < 2 * radius);
         }
         int max = samples.stream().mapToDouble(point -> Math.max(point.x, point.y)).mapToInt(Util::round).max().orElse(-1);
+        if (!scalePoints) {
+            return samples;
+        }
         double scale = max >= 0 ? 1000. / max : 1;
         return samples.stream().map(point -> new PointD(scale * point.x, scale * point.y)).collect(Collectors.toList());
     }

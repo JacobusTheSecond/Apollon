@@ -6,14 +6,14 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 
 public class Cycle implements EdgeContainer, Comparable<Cycle> {
-    private final Circle circle;
+    private final Circuit circuit;
 
     private final double born;
 
     private double died = Double.POSITIVE_INFINITY;
 
-    public Cycle(@NotNull Circle circle, double born) {
-        this.circle = circle;
+    public Cycle(@NotNull Circuit circuit, double born) {
+        this.circuit = circuit;
         this.born = born;
     }
 
@@ -38,28 +38,28 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
     }
 
     @NotNull
-    public Circle getCircle() {
-        return circle;
+    public Circuit getCircuit() {
+        return circuit;
     }
 
     @Override
     public void remove(@NotNull int[] edges) {
-        circle.remove(edges);
+        circuit.remove(edges);
     }
 
     @Override
     public void replace(int edge, @NotNull int[] edges) {
-        circle.replace(edge, edges);
+        circuit.replace(edge, edges);
     }
 
     public void killIfEmpty(double radius) {
-        if (circle.isEmpty()) {
+        if (circuit.isEmpty()) {
             kill(radius);
         }
     }
 
     public boolean containsAny(@NotNull Set<Integer> edges) {
-        return circle.containsAny(edges);
+        return circuit.containsAny(edges);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Cycle implements EdgeContainer, Comparable<Cycle> {
     @Override
     public String toString() {
         if (isAlive()) {
-            return "Alive: (" + Util.display(born) + ") " + circle;
+            return "Alive: (" + Util.display(born) + ") " + circuit;
         }
         return "Dead: (" + Util.display(born) + " - " + Util.display(died) + ") " + Util.display(died - born);
     }

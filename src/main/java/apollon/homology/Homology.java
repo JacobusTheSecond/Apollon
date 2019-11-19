@@ -5,6 +5,8 @@ import apollon.voronoi.Voronoi;
 import org.apache.commons.lang3.ArrayUtils;
 import org.ejml.simple.SimpleMatrix;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.List;
@@ -15,6 +17,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Homology {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Homology.class);
+
     private final List<Cycle> cycles = new ArrayList<>();
 
     private final List<Action> actions = new ArrayList<>();
@@ -29,9 +33,20 @@ public class Homology {
 
     private double scale;
 
+    private boolean contractEdges = false;
+
     public Homology(@NotNull Voronoi voronoi) {
         this.voronoi = voronoi;
         generator = new ActionGenerator(voronoi, graph);
+    }
+
+    public void toggleContractEdges() {
+        contractEdges = !contractEdges;
+        compute();
+    }
+
+    public boolean isContractEdges() {
+        return contractEdges;
     }
 
     public void compute() {
@@ -58,9 +73,13 @@ public class Homology {
     }
 
     public synchronized void executeActions() {
+        LOGGER.info("==> Executing actions...");
+        long start = System.currentTimeMillis();
         while (!actions.isEmpty()) {
             executeAction();
         }
+        start = System.currentTimeMillis() - start;
+        LOGGER.info("<== Executed actions in {} ms", start);
     }
 
     public synchronized void executeNextAction() {
@@ -76,13 +95,32 @@ public class Homology {
         }
     }
 
-    public void addEdgeAndCycle(@NotNull Site source, @NotNull Site target, int edge, double radius) {
-        Optional<Circle> optionalCircle = graph.find(source, target);
+    public void addEdge(@NotNull Site source, @NotNull Site target, int edge, boolean addCycle, double radius) {
+        if (contractEdges) {
+            addAndContractEdge(source, target, edge, addCycle, radius);
+            return;
+        }
+        if (!addCycle) {
+            addEdge(source, target, edge, radius);
+            return;
+        }
+        Optional<Circuit> optionalCircle = graph.find(source, target);
         addEdge(source, target, edge, radius);
         optionalCircle.ifPresent(circle -> addCycle(circle.append(Graph.inverse(edge)), radius));
     }
 
-    public void addEdge(@NotNull Site source, @NotNull Site target, int edge, double radius) {
+    private void addAndContractEdge(@NotNull Site source, @NotNull Site target, int edge, boolean addCycle, double radius) {
+        addEdge(source, target, edge, radius);
+        if (addCycle && source.equals(target)) {
+            addCycle(new Circuit(edge), radius);
+            return;
+        }
+        if (!source.equals(target)) {
+            remove(edge);
+        }
+    }
+
+    private void addEdge(@NotNull Site source, @NotNull Site target, int edge, double radius) {
         addZero(source, target, radius);
         graph.addEdge(source, target, edge);
     }
@@ -99,40 +137,40 @@ public class Homology {
         max.setComponent(min);
     }
 
-    private void addCycle(@NotNull Circle circle, double radius) {
-        cycles.add(new Cycle(circle, radius));
+    private void addCycle(@NotNull Circuit circuit, double radius) {
+        cycles.add(new Cycle(circuit, radius));
         cycles.sort(Comparator.naturalOrder());
     }
 
-    public void addRelation(@NotNull Circle circle, double radius) {
-        if (circle.isEmpty()) {
+    public void addRelation(@NotNull Circuit circuit, double radius) {
+        if (circuit.isEmpty()) {
             return;
         }
-        if (circle.size() == 1 || graph.hasNoLoops(circle)) {
-            remove(circle.getEdges());
+        if (circuit.size() == 1 || graph.hasNoLoops(circuit)) {
+            remove(circuit.getEdges());
         }
-        else if (graph.hasOnlyLoops(circle)) {
-            replaceLoop(circle);
+        else if (graph.hasOnlyLoops(circuit)) {
+            replaceLoop(circuit);
         }
         else {
-            replaceNonLoop(circle);
+            replaceNonLoop(circuit);
         }
         killEmptyCycles(radius);
         killObsoleteCycles(radius);
     }
 
-    private void replaceLoop(@NotNull Circle circle) {
-        int edge = circle.getSingleEdge();
-        int[] edges = circle.getInverse(edge);
+    private void replaceLoop(@NotNull Circuit circuit) {
+        int edge = circuit.getSingleEdge();
+        int[] edges = circuit.getInverse(edge);
         replace(edge, edges);
         graph.remove(edge);
     }
 
-    private void replaceNonLoop(@NotNull Circle circle) {
-        int edge = graph.getSingleNonLoop(circle);
-        int[] edges = circle.getInverse(edge);
+    private void replaceNonLoop(@NotNull Circuit circuit) {
+        int edge = graph.getSingleNonLoop(circuit);
+        int[] edges = circuit.getInverse(edge);
         replace(edge, edges);
-        remove(graph.getNonLoops(circle));
+        remove(graph.getNonLoops(circuit));
     }
 
     private void replace(int edge, @NotNull int[] edges) {
@@ -183,7 +221,7 @@ public class Homology {
     @NotNull
     private SimpleMatrix createMatrix(@NotNull List<Cycle> cycles) {
         int[] allEdges = graph.getEdgeIndices();
-        double[][] columns = cycles.stream().map(Cycle::getCircle).map(Circle::getEdges).map(edges -> getColumn(edges, allEdges)).toArray(double[][]::new);
+        double[][] columns = cycles.stream().map(Cycle::getCircuit).map(Circuit::getEdges).map(edges -> getColumn(edges, allEdges)).toArray(double[][]::new);
         SimpleMatrix matrix = new SimpleMatrix(allEdges.length, columns.length);
         for (int i = 0; i < columns.length; i++) {
             matrix.setColumn(i, 0, columns[i]);

@@ -30,7 +30,7 @@ public class EdgeAction extends Action {
 
     @Override
     public void execute(@NotNull Homology homology) {
-        homology.addEdgeAndCycle(source, target, edge, getRadius());
+        homology.addEdge(source, target, edge, true, getRadius());
     }
 
     @NotNull

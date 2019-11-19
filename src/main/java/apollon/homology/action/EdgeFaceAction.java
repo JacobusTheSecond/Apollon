@@ -1,6 +1,6 @@
 package apollon.homology.action;
 
-import apollon.homology.Circle;
+import apollon.homology.Circuit;
 import apollon.homology.Homology;
 import apollon.homology.Site;
 import org.jetbrains.annotations.NotNull;
@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.OptionalInt;
 
 public class EdgeFaceAction extends Action {
-    private final Circle circle;
+    private final Circuit circuit;
 
     private final Site source;
 
@@ -17,9 +17,9 @@ public class EdgeFaceAction extends Action {
 
     private final int edge;
 
-    public EdgeFaceAction(@NotNull Site a, @NotNull Site b, int edge, @NotNull Circle circle, double radius) {
+    public EdgeFaceAction(@NotNull Site a, @NotNull Site b, int edge, @NotNull Circuit circuit, double radius) {
         super(radius);
-        this.circle = circle;
+        this.circuit = circuit;
         if (a.index() > b.index()) {
             Site temp = b;
             b = a;
@@ -32,8 +32,11 @@ public class EdgeFaceAction extends Action {
 
     @Override
     public void execute(@NotNull Homology homology) {
-        homology.addEdge(source, target, edge, getRadius());
-        homology.addRelation(circle, getRadius());
+        boolean loop = source.equals(target);
+        homology.addEdge(source, target, edge, false, getRadius());
+        if (!homology.isContractEdges() || loop) {
+            homology.addRelation(circuit, getRadius());
+        }
     }
 
     @NotNull
@@ -56,21 +59,21 @@ public class EdgeFaceAction extends Action {
     @NotNull
     @Override
     public int[] getRemovedEdges() {
-        return circle.getEdgeIndices();
+        return circuit.getEdgeIndices();
     }
 
     @Override
     public void remove(@NotNull int... edges) {
-        circle.remove(edges);
+        circuit.remove(edges);
     }
 
     @Override
     public void replace(int edge, @NotNull int... edges) {
-        circle.replace(edge, edges);
+        circuit.replace(edge, edges);
     }
 
     @Override
     public String toString() {
-        return "EdgeFace: " + edge + " (" + source + " - " + target + ") " + circle;
+        return "EdgeFace: " + edge + " (" + source + " - " + target + ") " + circuit;
     }
 }

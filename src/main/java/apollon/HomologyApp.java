@@ -129,6 +129,7 @@ public class HomologyApp extends AbstractApp {
         menu.add(createResetMenuItem());
         menu.addSeparator();
         menu.add(createClearMenuItem());
+        menu.add(createContractEdgesMenuItem());
         menu.add(createRandomizeMenuItem());
         return menu;
     }
@@ -174,6 +175,16 @@ public class HomologyApp extends AbstractApp {
         item.setMnemonic('C');
         item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
         item.addActionListener(e -> clear());
+        return item;
+    }
+
+    @NotNull
+    private JMenuItem createContractEdgesMenuItem() {
+        JCheckBoxMenuItem item = new JCheckBoxMenuItem("Contract edges");
+        item.setState(false);
+        item.setMnemonic('e');
+        item.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK));
+        item.addActionListener(e -> homology.toggleContractEdges());
         return item;
     }
 
