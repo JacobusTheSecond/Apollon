@@ -491,15 +491,22 @@ tabsize=3
     The elimination of linear combinations is still done by computing the null space of the edge matrix of all living cycles.
     However this matrix grows much slower and sometimes even shrinks in size, compared to the other method.
     This last step is also the part, that respects the commutativity of homology.
+    
     \subsection{Further optimizations}\label{subsec:further-optimizations}
     When further analysing case 4 of the previous subsection we discovered, that there is actually more room for improvement.
-    In that case we contract every non-loop edge, that was not mapped using the face relation due to simplifying the underlying graph.
-    That can be done as can be seen in Fig.\ \ref{figBLA} because the resulting graph is homotopy equivalent to the previous one.%TODO Image ref
-    But why not use the homotopy equivalence already when adding any edge?
+    As shown in Fig.~\ref{cases} The actions performed in case 4 do not destroy any information in the homotopy.
+    \input{caseanalysis}
+    The homotopy equivalence is given by sending the edges $b$,$c$ and $d$ to the null-loop.
+    This is a homotopy equivalence, since the contracted set $\{a,b,c\}$ is null-homotopic.\\
+    However we noticed, that alot of steps can be skipped, if we respect this homotopy when we add edges already.
+    So we changed the algorithm slightly, so that any edge, that does not form a loop gets contracted right after insertion.
+    Only edges that form a loop upon insertion are kept.
     Then checking for closed paths inside the graph reduces to checking whether the inserted edge is a loop and cases 2.2 and 4 get obsolete.
     Also the elimination of linear combinations of cycles becomes very easy, since cycles consist of much smaller circuits in the graph.
     We therefore added an option to compute actions in this manner and observed the computation speed.
-    This improvement actually allows us to half the already optimized computation time of persistence diagram.
+    This improvement actually allows us to half the already optimized computation time of persistence diagram.\\
+    It turns out, that this very small modification of only the insertion step regarding edges speeds up the algorithm significantly. 
+    While the run time is of course dependent on the instance itself, we experienced a performance increase in this regard of a factor between two and three.
 
     \section{Modified Wasserstein distance}\label{sec:distance-measures}
 
@@ -790,8 +797,6 @@ tabsize=3
     
     %TODO Konsistenz (Rechtschreibung)
     %TODO why the fuck white points in poisson disc sampling
-    
-    \input{caseanalysis}
 
     \newpage
     \addcontentsline{toc}{section}{Literatur}
