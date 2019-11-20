@@ -685,7 +685,7 @@ tabsize=3
 	This leaves us with the following run time for both distances.\\
     Let $X$ and $Y$ again be arbitrary.
     Then the graph consists of $n=2+|X|+|Y|$ vertices and $m=3+2|X|+2|Y|+|X||Y|$ edges.
-    Assuming a runtime of $O(n^2 m)$ for Dinic's algorithm, we have a runtime of $O(|X||Y|^3 + |X|^3|Y|)$ for the Wasserstein distance.
+    Assuming a runtime of $O(n^2 m)$ (see \cite{din}) for Dinic's algorithm, we have a runtime of $O(|X||Y|^3 + |X|^3|Y|)$ for the Wasserstein distance.
     For the Bottleneck distance we get a runtime of $O(\log(|X||Y|)(|X||Y|^3 + |X|^3|Y|))$.
     Note that Dinic's Algorithm is not necessarily the fastest for this type of problem, since the very easy structure of the graph opens the door to more specialized algorithms.
 
